@@ -1,0 +1,72 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-cream-50: #fffdf9;
+    --color-cream-100: #faf7f2;
+    --color-cream-200: #f5f0e8;
+    --color-cream-300: #ebe3d5;
+
+    --color-leaf-50: #f0fdf4;
+    --color-leaf-100: #dcfce7;
+    --color-leaf-500: #40916c;
+    --color-leaf-600: #2d6a4f;
+    --color-leaf-700: #1b4332;
+    --color-leaf-800: #14532d;
+
+    --color-earth-400: #a67c52;
+    --color-earth-500: #8b6914;
+    --color-earth-600: #6b4c3b;
+    --color-earth-700: #5c4033;
+    --color-earth-800: #3d2c1e;
+    --color-earth-900: #2c1f14;
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 bg-leaf-600 hover:bg-leaf-700 text-white font-semibold px-6 py-3 rounded-xl transition shadow-sm hover:shadow-md;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 bg-earth-600 hover:bg-earth-700 text-white font-semibold px-6 py-3 rounded-xl transition;
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 border-2 border-leaf-600 text-leaf-700 hover:bg-leaf-600 hover:text-white font-semibold px-6 py-3 rounded-xl transition;
+    }
+
+    .card {
+        @apply bg-cream-50 rounded-2xl border border-cream-300 shadow-sm hover:shadow-lg transition duration-300 overflow-hidden;
+    }
+
+    .section-title {
+        @apply text-2xl md:text-3xl font-bold text-earth-800;
+    }
+
+    .section-subtitle {
+        @apply text-earth-600 mt-2;
+    }
+
+    .input-field {
+        @apply w-full border border-cream-300 bg-white rounded-xl px-4 py-3 text-earth-800 placeholder:text-earth-400 focus:ring-2 focus:ring-leaf-500 focus:border-leaf-500 focus:outline-none transition;
+    }
+
+    .badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+    }
+
+    .suggest-dropdown {
+        @apply absolute top-full left-0 right-0 mt-2 bg-white border border-cream-300 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto hidden;
+    }
+
+    .suggest-dropdown.active {
+        @apply block;
+    }
+}
