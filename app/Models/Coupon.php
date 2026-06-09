@@ -10,6 +10,7 @@ class Coupon extends Model
         'code',
         'type',
         'value',
+        'applicable_category_ids',
         'min_order_amount',
         'starts_at',
         'expires_at',
@@ -22,6 +23,7 @@ class Coupon extends Model
     {
         return [
             'value' => 'decimal:2',
+            'applicable_category_ids' => 'array',
             'min_order_amount' => 'decimal:2',
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
@@ -62,5 +64,20 @@ class Coupon extends Model
             'free_shipping' => $shippingFee,
             default => 0,
         };
+    }
+
+    /**
+     * Determine if this coupon applies to any of the provided category ids.
+     * If coupon has no applicable_category_ids set, it applies to all categories.
+     *
+     * @param int[] $categoryIds
+     */
+    public function appliesToCategories(array $categoryIds): bool
+    {
+        if (empty($this->applicable_category_ids) || count($this->applicable_category_ids) === 0) {
+            return true;
+        }
+
+        return count(array_intersect($this->applicable_category_ids, $categoryIds)) > 0;
     }
 }

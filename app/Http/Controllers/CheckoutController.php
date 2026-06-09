@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\CartService;
+use App\Models\Coupon;
+use App\Models\Category;
 use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
@@ -19,11 +21,28 @@ class CheckoutController extends Controller
         $subtotal = $cart->subtotal();
         $shipping = $subtotal >= 300000 ? 0 : 30000;
 
+        // compute available coupons for this cart
+        $items = $cart->items();
+        $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
+
+        $availableCoupons = Coupon::where('is_active', true)->get()->filter(function (Coupon $c) use ($subtotal, $categoryIds) {
+            return $c->isValid($subtotal) && $c->appliesToCategories($categoryIds);
+        })->values()->map(function (Coupon $c) {
+            $names = [];
+            if (!empty($c->applicable_category_ids)) {
+                $names = Category::whereIn('id', $c->applicable_category_ids)->pluck('name')->toArray();
+            }
+            $c->category_names = $names;
+            return $c;
+        });
+
         return view('checkout.index', [
             'subtotal' => $subtotal,
             'shipping' => $shipping,
             'total' => $subtotal + $shipping,
             'addresses' => Auth::user()->shippingAddresses,
+            'appliedCoupon' => session('applied_coupon'),
+            'availableCoupons' => $availableCoupons,
         ]);
     }
 

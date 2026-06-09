@@ -45,12 +45,21 @@
                     @foreach ($recipe->ingredients as $ingredient)
                         @php $v = $ingredient->productVariant; @endphp
                         <li class="flex justify-between items-center text-sm border-b border-cream-300 pb-3">
-                            <div>
-                                <p class="font-medium text-earth-800">{{ $v->product->name }}</p>
-                                <p class="text-earth-500">{{ $ingredient->quantity_label }} ({{ $v->name }})</p>
-                            </div>
-                            <span class="text-leaf-700 font-semibold">{{ number_format($v->effectivePrice()) }}đ</span>
-                        </li>
+                                <div>
+                                    <p class="font-medium text-earth-800">{{ $v->product->name }}</p>
+                                    <p class="text-earth-500">{{ $ingredient->quantity_label }} ({{ $v->name }})</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-leaf-700 font-semibold">{{ number_format($v->effectivePrice()) }}đ</span>
+
+                                    <form method="POST" action="{{ route('products.add-to-cart', $v->product->slug) }}">
+                                        @csrf
+                                        <input type="hidden" name="variant_id" value="{{ $v->id }}">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="px-3 py-1 rounded-lg bg-leaf-600 text-white text-sm hover:bg-leaf-700 transition">Thêm</button>
+                                    </form>
+                                </div>
+                            </li>
                     @endforeach
                 </ul>
 

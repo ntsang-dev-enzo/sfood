@@ -16,6 +16,10 @@ use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/promo/collect', [App\Http\Controllers\PromoController::class, 'collect'])->name('promo.collect');
+Route::post('/promo/collect', [App\Http\Controllers\PromoController::class, 'store'])->name('promo.store');
+Route::post('/coupon/validate', [App\Http\Controllers\CouponController::class, 'validateForCart'])->name('coupon.validate');
+Route::post('/coupon/remove', [App\Http\Controllers\CouponController::class, 'remove'])->name('coupon.remove');
 
 Route::get('/goi-y', [SearchController::class, 'suggest'])->name('search.suggest');
 

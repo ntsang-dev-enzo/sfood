@@ -19,6 +19,9 @@ class VariantsRelationManager extends RelationManager
             Forms\Components\TextInput::make('sku')->required()->unique(ignoreRecord: true),
             Forms\Components\TextInput::make('price')->numeric()->required()->prefix('đ'),
             Forms\Components\TextInput::make('sale_price')->numeric()->prefix('đ'),
+            Forms\Components\TextInput::make('flash_sale_price')->numeric()->prefix('đ'),
+            Forms\Components\DateTimePicker::make('flash_sale_starts_at'),
+            Forms\Components\DateTimePicker::make('flash_sale_ends_at'),
             Forms\Components\TextInput::make('stock')->numeric()->default(0),
             Forms\Components\FileUpload::make('image')->image()->directory('variants'),
             Forms\Components\Toggle::make('is_active')->default(true),
@@ -31,6 +34,7 @@ class VariantsRelationManager extends RelationManager
             Tables\Columns\TextColumn::make('name'),
             Tables\Columns\TextColumn::make('sku'),
             Tables\Columns\TextColumn::make('price')->money('VND'),
+            Tables\Columns\TextColumn::make('flash_sale_price')->label('Flash Price')->money('VND'),
             Tables\Columns\TextColumn::make('stock'),
             Tables\Columns\IconColumn::make('is_active')->boolean(),
         ])->headerActions([

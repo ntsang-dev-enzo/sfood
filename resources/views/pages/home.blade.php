@@ -75,6 +75,24 @@
     {{-- Best sellers --}}
     <section class="bg-cream-50 py-14">
         <div class="max-w-7xl mx-auto px-4">
+            {{-- Flash sale --}}
+            @if(!empty($flashSales) && $flashSales->count())
+                <div class="mb-8">
+                    <div class="flex justify-between items-end mb-4">
+                        <div>
+                            <h2 class="section-title">Flash Sale</h2>
+                            <p class="section-subtitle">Giá sốc trong thời gian có hạn — mua ngay</p>
+                        </div>
+                        <a href="{{ route('promo.collect') }}" class="text-leaf-700 font-semibold hover:text-leaf-800 transition hidden sm:inline">Nhận mã & phí ship →</a>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-6">
+                        @foreach($flashSales as $p)
+                            @include('partials.product-card', ['product' => $p])
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div class="flex justify-between items-end mb-8">
                 <div>
                     <h2 class="section-title">Sản phẩm bán chạy</h2>

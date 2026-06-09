@@ -15,6 +15,9 @@ class ProductVariant extends Model
         'sku',
         'price',
         'sale_price',
+        'flash_sale_price',
+        'flash_sale_starts_at',
+        'flash_sale_ends_at',
         'stock',
         'image',
         'is_active',
@@ -25,8 +28,22 @@ class ProductVariant extends Model
         return [
             'price' => 'decimal:2',
             'sale_price' => 'decimal:2',
+            'flash_sale_price' => 'decimal:2',
+            'flash_sale_starts_at' => 'datetime',
+            'flash_sale_ends_at' => 'datetime',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function isFlashActive(): bool
+    {
+        if (empty($this->flash_sale_price)) return false;
+
+        $now = now();
+        if ($this->flash_sale_starts_at && $now->lt($this->flash_sale_starts_at)) return false;
+        if ($this->flash_sale_ends_at && $now->gt($this->flash_sale_ends_at)) return false;
+
+        return true;
     }
 
     public function product(): BelongsTo

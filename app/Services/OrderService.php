@@ -34,11 +34,14 @@ class OrderService
             if (! empty($data['coupon_code'])) {
                 $coupon = Coupon::where('code', $data['coupon_code'])->first();
                 if ($coupon && $coupon->isValid($subtotal)) {
-                    $discount = $coupon->calculateDiscount($subtotal, $shippingFee);
-                    if ($coupon->type === 'free_shipping') {
-                        $shippingFee = 0;
+                    $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
+                    if ($coupon->appliesToCategories($categoryIds)) {
+                        $discount = $coupon->calculateDiscount($subtotal, $shippingFee);
+                        if ($coupon->type === 'free_shipping') {
+                            $shippingFee = 0;
+                        }
+                        $coupon->increment('used_count');
                     }
-                    $coupon->increment('used_count');
                 }
             }
 
