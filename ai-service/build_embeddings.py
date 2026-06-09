@@ -74,6 +74,7 @@ with engine.begin() as conn:
             product_image_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             image_path VARCHAR(1024) NULL,
             embedding LONGTEXT NOT NULL,
+            color_hist LONGTEXT NULL,
             created_at DATETIME,
             updated_at DATETIME,
             UNIQUE KEY ux_product_image (product_id, product_image_id),
@@ -106,6 +107,14 @@ with engine.begin() as conn:
         pass
 
     try:
+        conn.execute(text("ALTER TABLE product_embeddings ADD COLUMN IF NOT EXISTS color_hist LONGTEXT NULL;"))
+    except Exception:
+        try:
+            conn.execute(text("ALTER TABLE product_embeddings ADD COLUMN color_hist LONGTEXT NULL;"))
+        except Exception:
+            pass
+
+    try:
         conn.execute(text("CREATE UNIQUE INDEX ux_product_image ON product_embeddings (product_id, product_image_id);"))
     except Exception:
         pass
@@ -136,6 +145,18 @@ with engine.begin() as conn:
             print("Embedding:", image_path)
             embedding = generate_embedding(image_path)
 
+            # compute a simple color histogram (RGB channels, 16 bins each -> 48-dim)
+            img = Image.open(image_path).convert('RGB')
+            arr = np.array(img)
+            hist = []
+            for c in range(3):
+                h, _ = np.histogram(arr[..., c].ravel(), bins=16, range=(0, 255))
+                hist.extend(h.tolist())
+            hist = np.array(hist, dtype=np.float32)
+            if hist.sum() > 0:
+                hist = hist / (hist.sum())
+            color_hist = hist.tolist()
+
             conn.execute(
                 text("""
                     INSERT INTO product_embeddings
@@ -152,10 +173,34 @@ with engine.begin() as conn:
                     "product_image_id": pimgid,
                     "image_path": rel_path,
                     "embedding": json.dumps(embedding),
+                    "color_hist": json.dumps(color_hist),
                 },
             )
 
-            print(f"Embedded product {pid} image {pimgid}")
+            # try to update color_hist as well using separate update (handles older MySQL)
+            try:
+                conn.execute(text("""
+                    INSERT INTO product_embeddings
+                    (product_id, product_image_id, image_path, embedding, color_hist, created_at, updated_at)
+                    VALUES
+                    (:product_id, :product_image_id, :image_path, :embedding, :color_hist, NOW(), NOW())
+                    ON DUPLICATE KEY UPDATE
+                        embedding = :embedding,
+                        image_path = :image_path,
+                        color_hist = :color_hist,
+                        updated_at = NOW()
+                """),
+                {
+                    "product_id": pid,
+                    "product_image_id": pimgid,
+                    "image_path": rel_path,
+                    "embedding": json.dumps(embedding),
+                    "color_hist": json.dumps(color_hist),
+                })
+            except Exception:
+                print(f"Embedded product {pid} image {pimgid} (color_hist update skipped)")
+            else:
+                print(f"Embedded product {pid} image {pimgid}")
 
         except Exception as e:
             print("Failed:", e)
