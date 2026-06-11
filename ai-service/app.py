@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from transformers import CLIPModel, CLIPProcessor
+from transformers import CLIPModel, CLIPProcessor, AutoModelForCausalLM, AutoTokenizer, pipeline
 from PIL import Image
 import re
 
@@ -69,6 +69,22 @@ print("Loading CLIP...")
 model = CLIPModel.from_pretrained(MODEL_NAME)
 processor = CLIPProcessor.from_pretrained(MODEL_NAME)
 print("CLIP loaded")
+
+# =========================
+# LLM (Qwen2.5-0.5B-Instruct)
+# =========================
+
+LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
+print("Loading LLM...")
+try:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    llm_tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
+    llm_model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_NAME, torch_dtype=torch.float16).to(device)
+    llm_pipeline = pipeline("text-generation", model=llm_model, tokenizer=llm_tokenizer, max_new_tokens=512)
+    print(f"LLM loaded on {device}")
+except Exception as e:
+    print("Failed to load LLM:", e)
+    llm_pipeline = None
 
 
 # =========================
@@ -233,9 +249,15 @@ def search():
                     })
 
             # combine scores: embedding, color, and text
-            EMB_W = 0.6
-            COLOR_W = 0.2
-            TEXT_W = 0.2
+            # Normalize embeddings to 0-1 range to match color and text scales
+            embs = [r.get('embedding_sim', 0.0) for r in results]
+            min_emb = min(embs) if embs else 0.0
+            max_emb = max(embs) if embs else 1.0
+            range_emb = (max_emb - min_emb) if (max_emb - min_emb) > 0 else 1.0
+
+            EMB_W = 0.75
+            COLOR_W = 0.10
+            TEXT_W = 0.15
 
             def text_score_for(name, keywords):
                 if not keywords or not name:
@@ -250,14 +272,20 @@ def search():
             final_results = []
             for r in results:
                 ts = text_score_for(r.get('name'), ocr_keywords)
-                emb = r.get('embedding_sim', 0.0)
+                
+                # Normalize emb
+                raw_emb = r.get('embedding_sim', 0.0)
+                norm_emb = (raw_emb - min_emb) / range_emb
+                
                 col = r.get('color_sim', 0.0)
-                final_score = EMB_W * emb + COLOR_W * col + TEXT_W * ts
+                final_score = EMB_W * norm_emb + COLOR_W * col + TEXT_W * ts
+                
                 # boost strongly if text exact match appears in name
-                if ts > 0.8:
-                    final_score += 0.15
+                if ts > 0.5:
+                    final_score += 0.2
+                    
                 # expose 'similarity' for backward compatibility (Laravel expects this)
-                entry = {**r, 'text_score': ts, 'score': final_score}
+                entry = {**r, 'text_score': ts, 'score': final_score, 'raw_emb': float(raw_emb), 'norm_emb': float(norm_emb)}
                 entry['similarity'] = float(final_score)
                 final_results.append(entry)
 
@@ -299,6 +327,106 @@ def search():
     results = sorted(results, key=lambda x: x["similarity"], reverse=True)[:12]
 
     return jsonify({"success": True, "results": results, "ocr_text": ocr_text, "ocr_keywords": ocr_keywords})
+
+
+@app.route("/chat-rag", methods=["POST"])
+def chat_rag():
+    data = request.json or {}
+    messages = data.get('messages', [])
+    
+    if not messages:
+        return jsonify({"success": False, "error": "No messages provided"}), 400
+        
+    last_user_msg = ""
+    for msg in reversed(messages):
+        if msg.get('role') == 'user':
+            last_user_msg = msg.get('content', '')
+            break
+            
+    if not last_user_msg:
+        return jsonify({"success": False, "error": "No user message found"}), 400
+
+    # 1. Search DB using CLIP features of the user's text
+    results = []
+    recipes = []
+    if faiss_index is not None and faiss_ids is not None:
+        try:
+            inputs = processor(text=[last_user_msg], return_tensors="pt", padding=True)
+            with torch.no_grad():
+                text_features = model.get_text_features(**inputs)
+            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+            emb_np = text_features.cpu().numpy()
+            
+            distances, indices = faiss_index.search(emb_np, 4) # Top 4
+            found_ids = [int(faiss_ids[idx]) for idx in indices[0] if idx != -1]
+            
+            if found_ids:
+                placeholders = ', '.join(['%s'] * len(found_ids))
+                query = text(f"SELECT id, name, min_price as price, slug FROM products WHERE id IN ({placeholders}) AND is_active = 1")
+                with engine.connect() as conn:
+                    rows = conn.execute(query, tuple(found_ids)).fetchall()
+                    for row in rows:
+                        results.append({
+                            "id": row[0],
+                            "name": row[1],
+                            "price": float(row[2]) if row[2] else 0,
+                            "slug": row[3] if len(row) > 3 else str(row[0])
+                        })
+                    
+                    recipe_query = text(f"SELECT DISTINCT r.title, r.slug FROM recipes r JOIN recipe_ingredients ri ON r.id = ri.recipe_id WHERE ri.product_id IN ({placeholders}) AND r.is_published = 1 LIMIT 3")
+                    r_rows = conn.execute(recipe_query, tuple(found_ids)).fetchall()
+                    for rr in r_rows:
+                        recipes.append({"title": rr[0], "slug": rr[1]})
+                        
+                    if not recipes:
+                        pop_query = text("SELECT title, slug FROM recipes WHERE is_published = 1 ORDER BY view_count DESC LIMIT 2")
+                        pop_rows = conn.execute(pop_query).fetchall()
+                        for pr in pop_rows:
+                            recipes.append({"title": pr[0], "slug": pr[1]})
+        except Exception as e:
+            print("Search error:", e)
+
+    # 2. Build system prompt
+    context_str = "Danh sách sản phẩm tìm được:\n"
+    if results:
+        for p in results:
+            context_str += f"- Sản phẩm: {p['name']} (Giá: {p['price']}đ, Link: /products/{p['slug']})\n"
+    else:
+        context_str += "Không tìm thấy sản phẩm cụ thể nào phù hợp.\n"
+
+    if recipes:
+        context_str += "\nDanh sách món ăn/công thức có thể gợi ý:\n"
+        for r in recipes:
+            context_str += f"- Món ăn: {r['title']} (Link: /recipes/{r['slug']})\n"
+
+    system_prompt = (
+        "Bạn là trợ lý ảo thân thiện của SFood. "
+        "Bạn trả lời bằng tiếng Việt, ngắn gọn, tự nhiên. "
+        "Nếu người dùng muốn mua nguyên liệu, hãy gợi ý sản phẩm. Nếu người dùng hỏi 'hôm nay ăn gì' hoặc muốn nấu ăn, hãy gợi ý các món ăn/công thức. "
+        "ĐẶC BIỆT: Nếu người dùng yêu cầu 'mở', 'xem chi tiết', 'chuyển hướng' đến một sản phẩm hoặc món ăn, HÃY CHÈN CHUỖI [REDIRECT:slug] vào cuối câu trả lời (với slug là mã link của sản phẩm/món ăn đó). "
+        "Dưới đây là ngữ cảnh từ cơ sở dữ liệu: \n" + context_str
+    )
+
+    # Prepend system prompt to messages
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+
+    # 3. Generate response using LLM
+    if llm_pipeline is None:
+        return jsonify({"success": False, "error": "LLM not loaded", "results": results}), 500
+        
+    try:
+        prompt = llm_tokenizer.apply_chat_template(full_messages, tokenize=False, add_generation_prompt=True)
+        outputs = llm_pipeline(prompt, max_new_tokens=512, do_sample=True, temperature=0.7, top_p=0.9)
+        generated_text = outputs[0]["generated_text"]
+        
+        # Extract the assistant's reply part
+        # Qwen uses <|im_start|>assistant ...
+        reply = generated_text.split("<|im_start|>assistant\n")[-1].split("<|im_end|>")[0].strip()
+        
+        return jsonify({"success": True, "reply": reply, "results": results, "recipes": recipes})
+    except Exception as e:
+        print("LLM Error:", e)
+        return jsonify({"success": False, "error": str(e), "results": results, "recipes": recipes}), 500
 
 
 # =========================
@@ -378,6 +506,18 @@ def embed_single():
                     })
                 except Exception as e:
                     return jsonify({'success': False, 'error': str(e)}), 500
+
+        # Rebuild and reload FAISS index
+        import subprocess
+        try:
+            subprocess.run(["python", "faiss_build.py"], cwd=os.path.dirname(os.path.abspath(__file__)), check=True)
+            global faiss_index, faiss_ids
+            if HAS_FAISS and os.path.exists(FAISS_INDEX_PATH) and os.path.exists(FAISS_IDS_PATH):
+                faiss_index = faiss.read_index(FAISS_INDEX_PATH)
+                faiss_ids = _np.load(FAISS_IDS_PATH)
+                print('Reloaded FAISS index with', faiss_ids.shape[0], 'ids')
+        except Exception as e:
+            print("Failed to rebuild/reload FAISS:", e)
 
         return jsonify({'success': True, 'product_id': int(product_id) if product_id is not None else None, 'product_image_id': int(product_image_id) if product_image_id is not None else None})
     finally:

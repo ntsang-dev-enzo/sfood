@@ -27,9 +27,11 @@ class CategoryResource extends Resource
         return $form->schema([
             Forms\Components\TextInput::make('name')->label('Tên danh mục')->required()->live(onBlur: true)
                 ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', \Illuminate\Support\Str::slug($state))),
+            Forms\Components\TextInput::make('name_en')->label('Tên tiếng Anh'),
             Forms\Components\TextInput::make('slug')->label('Đường dẫn')->required()->unique(ignoreRecord: true),
             Forms\Components\FileUpload::make('thumbnail')->label('Ảnh đại diện')->image()->directory('categories'),
             Forms\Components\Textarea::make('description')->label('Mô tả'),
+            Forms\Components\Textarea::make('description_en')->label('Mô tả tiếng Anh'),
             Forms\Components\Toggle::make('is_active')->label('Đang hoạt động')->default(true),
             Forms\Components\TextInput::make('sort_order')->label('Thứ tự hiển thị')->numeric()->default(0),
         ]);

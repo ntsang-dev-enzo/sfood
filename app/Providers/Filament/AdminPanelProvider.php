@@ -40,6 +40,18 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
+                fn (): string => \Illuminate\Support\Facades\Blade::render('
+                    <div class="flex items-center gap-2 mx-4">
+                        @if(session(\'locale\', \'vi\') === \'en\')
+                            <a href="{{ route(\'lang.switch\', \'vi\') }}" class="flex items-center justify-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="Tiếng Việt">🇻🇳</a>
+                        @else
+                            <a href="{{ route(\'lang.switch\', \'en\') }}" class="flex items-center justify-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" title="English">🇺🇸</a>
+                        @endif
+                    </div>
+                ')
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -16,8 +16,9 @@ class ProductController extends Controller
         $categorySlug = $request->get('category', '');
         $minPrice = $request->get('min_price');
         $maxPrice = $request->get('max_price');
+        $sort = $request->get('sort', 'popular'); // default to popular
 
-        $products = Product::with(['category', 'variants'])
+        $productsQuery = Product::with(['category', 'variants'])
             ->where('is_active', true)
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($categorySlug, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $categorySlug)))
@@ -33,10 +34,38 @@ class ProductController extends Controller
                             }
                         });
                 });
-            })
-            ->orderByDesc('view_count')
-            ->paginate(12)
-            ->withQueryString();
+            });
+
+        // Áp dụng sắp xếp
+        switch ($sort) {
+            case 'price_asc':
+                $productsQuery->select('products.*')
+                    ->join('product_variants', 'products.id', '=', 'product_variants.product_id')
+                    ->groupBy('products.id')
+                    ->orderByRaw('MIN(COALESCE(product_variants.sale_price, product_variants.price)) ASC');
+                break;
+            case 'price_desc':
+                $productsQuery->select('products.*')
+                    ->join('product_variants', 'products.id', '=', 'product_variants.product_id')
+                    ->groupBy('products.id')
+                    ->orderByRaw('MAX(COALESCE(product_variants.sale_price, product_variants.price)) DESC');
+                break;
+            case 'name_asc':
+                $productsQuery->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $productsQuery->orderBy('name', 'desc');
+                break;
+            case 'newest':
+                $productsQuery->orderBy('created_at', 'desc');
+                break;
+            case 'popular':
+            default:
+                $productsQuery->orderByDesc('view_count');
+                break;
+        }
+
+        $products = $productsQuery->paginate(12)->withQueryString();
 
         return view('products.index', [
             'products' => $products,
@@ -45,7 +74,9 @@ class ProductController extends Controller
             'categorySlug' => $categorySlug,
             'minPrice' => $minPrice,
             'maxPrice' => $maxPrice,
+            'sort' => $sort,
             'aiResults' => session('ai_results'),
+
         ]);
     }
 
@@ -109,6 +140,10 @@ class ProductController extends Controller
             $cart->add((int) $data['variant_id'], (int) $data['quantity']);
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
+        }
+
+        if ($request->input('action') === 'buy_now') {
+            return redirect()->route('checkout');
         }
 
         return back()->with('success', 'Đã thêm vào giỏ hàng!');

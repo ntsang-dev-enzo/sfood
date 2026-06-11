@@ -14,7 +14,7 @@ class OrderController extends Controller
     {
         $status = $request->get('status');
 
-        $orders = Order::with('items')
+        $orders = Order::with(['items', 'reviews'])
             ->where('user_id', Auth::id())
             ->when($status, function ($query, $status) {
                 return $query->where('order_status', $status);

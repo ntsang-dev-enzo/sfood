@@ -31,16 +31,16 @@ class TopProductsWidget extends BaseWidget
 
         // Get top 5 selling products from OrderItem within the period
         $topProductsIds = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
             ->whereNotIn('orders.order_status', ['cancelled'])
             ->whereNotIn('orders.payment_status', ['failed', 'refunded'])
             ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->where('order_items.buyable_type', Product::class)
-            ->select('order_items.buyable_id', DB::raw('SUM(order_items.quantity) as total_sold'))
-            ->groupBy('order_items.buyable_id')
+            ->select('product_variants.product_id', DB::raw('SUM(order_items.quantity) as total_sold'))
+            ->groupBy('product_variants.product_id')
             ->orderByDesc('total_sold')
             ->limit(5)
             ->get()
-            ->pluck('total_sold', 'buyable_id');
+            ->pluck('total_sold', 'product_id');
 
         return $table
             ->query(

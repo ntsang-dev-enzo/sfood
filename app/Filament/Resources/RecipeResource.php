@@ -28,8 +28,10 @@ class RecipeResource extends Resource
         return $form->schema([
             Forms\Components\TextInput::make('title')->label('Tiêu đề')->required()->live(onBlur: true)
                 ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', \Illuminate\Support\Str::slug($state))),
+            Forms\Components\TextInput::make('title_en')->label('Tiêu đề tiếng Anh'),
             Forms\Components\TextInput::make('slug')->label('Đường dẫn')->required()->unique(ignoreRecord: true),
             Forms\Components\Textarea::make('description')->label('Mô tả')->columnSpanFull(),
+            Forms\Components\Textarea::make('description_en')->label('Mô tả tiếng Anh')->columnSpanFull(),
             Forms\Components\FileUpload::make('thumbnail')->label('Ảnh đại diện')->image()->directory('recipes'),
             Forms\Components\TextInput::make('video_url')->url()->label('Video URL (YouTube hoặc file)'),
             Forms\Components\TextInput::make('cook_time')->label('Thời gian nấu')->numeric()->suffix('phút'),

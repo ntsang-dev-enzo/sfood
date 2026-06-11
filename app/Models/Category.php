@@ -9,12 +9,31 @@ class Category extends Model
 {
     protected $fillable = [
         'name',
+        'name_en',
         'slug',
         'thumbnail',
         'description',
+        'description_en',
+        'icon',
         'is_active',
         'sort_order',
     ];
+
+    public function getNameAttribute($value)
+    {
+        if (app()->getLocale() === 'en' && !empty($this->attributes['name_en'])) {
+            return $this->attributes['name_en'];
+        }
+        return $value;
+    }
+
+    public function getDescriptionAttribute($value)
+    {
+        if (app()->getLocale() === 'en' && !empty($this->attributes['description_en'])) {
+            return $this->attributes['description_en'];
+        }
+        return $value;
+    }
 
     protected function casts(): array
     {

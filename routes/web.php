@@ -38,6 +38,7 @@ Route::post('/lien-he', [PageController::class, 'sendContact'])->name('contact.s
 Route::get('/hoi-dap', [PageController::class, 'faq'])->name('faq');
 Route::get('/chinh-sach', [PageController::class, 'policy'])->name('policy');
 
+Route::post('/ai-chat', [\App\Http\Controllers\ChatController::class, 'send'])->name('ai.chat');
 Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
 Route::post('/san-pham/ai-search', [ProductController::class, 'aiSearch'])->name('products.ai-search');
 Route::get('/san-pham/{product:slug}', [ProductController::class, 'show'])->name('products.show');
@@ -76,6 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/tai-khoan/dia-chi/{address}', [ProfileController::class, 'updateAddress'])->name('profile.address.update');
     Route::delete('/tai-khoan/dia-chi/{address}', [ProfileController::class, 'destroyAddress'])->name('profile.address.destroy');
     Route::post('/tai-khoan/dia-chi/{address}/default', [ProfileController::class, 'setDefaultAddress'])->name('profile.address.default');
+    Route::post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
 });
 
 Route::get('/dang-nhap', [AuthController::class, 'showLogin'])->name('login');

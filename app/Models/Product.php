@@ -14,17 +14,49 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'name_en',
         'slug',
+        'short_description',
+        'short_description_en',
         'description',
+        'description_en',
         'thumbnail',
         'is_active',
+        'is_hot',
+        'is_new',
         'view_count',
     ];
+
+    public function getNameAttribute($value)
+    {
+        if (app()->getLocale() === 'en' && !empty($this->attributes['name_en'])) {
+            return $this->attributes['name_en'];
+        }
+        return $value;
+    }
+
+    public function getShortDescriptionAttribute($value)
+    {
+        if (app()->getLocale() === 'en' && !empty($this->attributes['short_description_en'])) {
+            return $this->attributes['short_description_en'];
+        }
+        return $value;
+    }
+
+    public function getDescriptionAttribute($value)
+    {
+        if (app()->getLocale() === 'en' && !empty($this->attributes['description_en'])) {
+            return $this->attributes['description_en'];
+        }
+        return $value;
+    }
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'is_hot' => 'boolean',
+            'is_new' => 'boolean',
         ];
     }
 
@@ -43,16 +75,67 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function averageRating(): float
+    {
+        return (float) $this->reviews()->avg('rating');
+    }
+
     public function defaultVariant(): ?ProductVariant
     {
         return $this->variants()->where('is_active', true)->orderBy('price')->first();
     }
 
-    public function minPrice(): float
+    public function minPrice($filterMin = null, $filterMax = null): float
     {
-        return (float) ($this->variants()->where('is_active', true)->min('sale_price')
-            ?? $this->variants()->where('is_active', true)->min('price')
-            ?? 0);
+        $query = $this->variants()->where('is_active', true);
+        
+        if ($filterMin) {
+            $query->whereRaw('COALESCE(sale_price, price) >= ?', [$filterMin]);
+        }
+        if ($filterMax) {
+            $query->whereRaw('COALESCE(sale_price, price) <= ?', [$filterMax]);
+        }
+
+        $val = $query->min(\Illuminate\Support\Facades\DB::raw('COALESCE(sale_price, price)'));
+
+        if ($val === null && ($filterMin || $filterMax)) {
+            $val = $this->variants()->where('is_active', true)->min(\Illuminate\Support\Facades\DB::raw('COALESCE(sale_price, price)'));
+        }
+
+        if ($val === null) {
+            $val = $this->variants()->where('is_active', true)->min('price');
+        }
+
+        return (float) ($val ?? 0);
+    }
+
+    public function getFilteredImage($filterMin = null, $filterMax = null): ?string
+    {
+        if (!$filterMin && !$filterMax) {
+            return $this->thumbnail;
+        }
+
+        $query = $this->variants()->where('is_active', true);
+        
+        if ($filterMin) {
+            $query->whereRaw('COALESCE(sale_price, price) >= ?', [$filterMin]);
+        }
+        if ($filterMax) {
+            $query->whereRaw('COALESCE(sale_price, price) <= ?', [$filterMax]);
+        }
+
+        $variant = $query->whereNotNull('image')->where('image', '!=', '')->orderBy('price')->first();
+        
+        if ($variant) {
+            return $variant->image;
+        }
+
+        return $this->thumbnail;
     }
 
     public function favoritedBy(): BelongsToMany

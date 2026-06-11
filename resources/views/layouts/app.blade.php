@@ -19,29 +19,48 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-cream-100 text-earth-800 font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-cream-100 dark:bg-[#121212] text-earth-800 dark:text-gray-300 font-sans antialiased min-h-screen flex flex-col">
     {{-- Top bar --}}
-    <div class="bg-earth-800 text-cream-200 text-xs hidden sm:block">
-        <div class="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
-            <span>🚚 Miễn phí giao hàng đơn từ 300.000đ</span>
-            <div class="flex gap-4">
-                <a href="{{ route('about') }}" class="hover:text-white transition">Giới thiệu</a>
-                <a href="{{ route('contact') }}" class="hover:text-white transition">Liên hệ</a>
-                <a href="{{ route('faq') }}" class="hover:text-white transition">Hỏi đáp</a>
+    <div class="bg-earth-800 text-cream-200 text-[11px] sm:text-xs">
+        <div class="max-w-7xl mx-auto px-4 py-1.5 flex justify-between items-center">
+            <span class="truncate">{{ __('app.free_shipping') }}<span class="sm:hidden">{{ __('app.freeship_short') }}</span></span>
+            <div class="flex items-center gap-3 sm:gap-4">
+                <a href="{{ route('about') }}" class="hover:text-white transition hidden sm:inline">{{ __('app.about') }}</a>
+                <a href="{{ route('contact') }}" class="hover:text-white transition hidden sm:inline">{{ __('app.contact') }}</a>
+                <a href="{{ route('faq') }}" class="hover:text-white transition hidden sm:inline">{{ __('app.faq') }}</a>
+                
+                <div class="flex items-center gap-2 sm:border-l sm:border-earth-600 sm:pl-3 pl-1">
+                    {{-- Language Switcher (Small) --}}
+                    @if(session('locale', 'vi') === 'en')
+                        <a href="{{ route('lang.switch', 'vi') }}" class="hover:scale-110 transition text-sm leading-none" title="Tiếng Việt">🇻🇳</a>
+                    @else
+                        <a href="{{ route('lang.switch', 'en') }}" class="hover:scale-110 transition text-sm leading-none" title="English">🇺🇸</a>
+                    @endif
+
+                    {{-- Dark Mode Toggle (Small) --}}
+                    <button type="button" id="theme-toggle" class="hover:text-white transition text-cream-200 ml-0.5" title="Đổi giao diện">
+                        <svg id="theme-toggle-light-icon" class="hidden w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
+                        </svg>
+                        <svg id="theme-toggle-dark-icon" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Header --}}
-    <header class="bg-cream-50 border-b border-cream-300 sticky top-0 z-40 shadow-sm">
+    <header class="bg-cream-50 dark:bg-[#1e1e1e] border-b border-cream-300 dark:border-gray-800 sticky top-0 z-40 shadow-sm">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center gap-4 py-4">
                 <a href="{{ route('home') }}" class="flex items-center gap-2 flex-shrink-0">
                     <span
                         class="w-10 h-10 rounded-xl bg-leaf-600 flex items-center justify-center text-white text-xl font-bold">S</span>
                     <div class="hidden sm:block">
-                        <p class="font-bold text-lg text-earth-800 leading-tight">SFood</p>
-                        <p class="text-[10px] text-earth-500 uppercase tracking-widest">Fresh & Organic</p>
+                        <p class="font-bold text-lg text-earth-800 dark:text-white leading-tight">SFood</p>
+                        <p class="text-[10px] text-earth-500 dark:text-gray-400 uppercase tracking-widest">Fresh & Organic</p>
                     </div>
                 </a>
 
@@ -51,24 +70,6 @@
 
                 <div class="flex items-center gap-2 ml-auto">
 
-                    {{-- Language Switcher --}}
-                    @if(session('locale', 'vi') === 'en')
-                        <a href="{{ route('lang.switch', 'vi') }}" class="p-2 rounded-xl hover:bg-cream-200 transition text-lg" title="Tiếng Việt">🇻🇳</a>
-                    @else
-                        <a href="{{ route('lang.switch', 'en') }}" class="p-2 rounded-xl hover:bg-cream-200 transition text-lg" title="English">🇺🇸</a>
-                    @endif
-
-                    {{-- Dark Mode Toggle --}}
-                    <button type="button" id="theme-toggle" class="p-2.5 rounded-xl hover:bg-cream-200 transition text-earth-700" title="Đổi giao diện">
-                        {{-- Sun icon (hidden in light mode, shown in dark mode) --}}
-                        <svg id="theme-toggle-light-icon" class="hidden w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
-                        </svg>
-                        {{-- Moon icon (shown in light mode, hidden in dark mode) --}}
-                        <svg id="theme-toggle-dark-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-                        </svg>
-                    </button>
 
 
                     @auth
@@ -80,13 +81,14 @@
                         </a>
                     @endauth
                     <a href="{{ route('cart') }}"
-                        class="relative p-2.5 rounded-xl hover:bg-cream-200 transition text-earth-700" title="Giỏ hàng">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="relative px-4 py-2.5 rounded-2xl bg-leaf-600 text-white hover:bg-leaf-700 hover:shadow-lg hover:-translate-y-0.5 transition duration-300 flex items-center gap-2" title="Giỏ hàng">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
+                        <span class="font-bold text-sm hidden sm:inline">{{ __('app.cart') }}</span>
                         <span data-cart-count
-                            class="absolute -top-0.5 -right-0.5 bg-earth-600 text-cream-50 text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold {{ ($cartCount ?? 0) > 0 ? '' : 'hidden' }}">{{ $cartCount ?? 0 }}</span>
+                            class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-cream-50 {{ ($cartCount ?? 0) > 0 ? '' : 'hidden' }}">{{ $cartCount ?? 0 }}</span>
                     </a>
 
                     @auth
@@ -227,6 +229,47 @@
         </div>
     </footer>
 
+    {{-- AI Chatbox --}}
+    <div id="ai-chatbox-container" class="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
+        <!-- Chat Window -->
+        <div id="ai-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-leaf-600 to-leaf-500 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🤖</span>
+                    <div>
+                        <h4 class="font-bold">SFood AI Assistant</h4>
+                        <p class="text-[10px] text-leaf-100">Tìm kiếm sản phẩm nhanh chóng</p>
+                    </div>
+                </div>
+                <button type="button" id="close-chat-btn" class="text-white hover:text-cream-200 focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <!-- Messages -->
+            <div id="ai-chat-messages" class="flex-1 p-4 h-80 overflow-y-auto bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
+                <div class="flex gap-2 w-5/6">
+                    <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-200">
+                        Chào bạn! Mình có thể giúp bạn tìm kiếm món gì hôm nay? (Ví dụ: "tôi muốn mua thịt bò")
+                    </div>
+                </div>
+            </div>
+            <!-- Input -->
+            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex gap-2">
+                <input type="text" id="ai-chat-input" class="flex-1 bg-cream-50 dark:bg-gray-900 border border-cream-200 dark:border-gray-700 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-leaf-500 text-earth-800 dark:text-gray-300" placeholder="Nhập tin nhắn..." autocomplete="off">
+                <button type="button" id="send-chat-btn" class="bg-leaf-600 hover:bg-leaf-700 text-white rounded-xl px-4 py-2 transition shadow-sm">
+                    <svg class="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Toggle Button -->
+        <button type="button" id="toggle-chat-btn" class="pointer-events-auto w-14 h-14 bg-gradient-to-tr from-leaf-600 to-green-400 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-leaf-500/50 transition-all duration-300 focus:outline-none z-50">
+            <svg id="chat-icon-msg" class="w-6 h-6 absolute transition-transform duration-300 scale-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+            <svg id="chat-icon-close" class="w-6 h-6 absolute transition-transform duration-300 scale-0 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+
 <script>
     var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
     var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
@@ -263,8 +306,132 @@
             }
         }
     });
+
+    // AI Chatbox Logic
+    const toggleChatBtn = document.getElementById('toggle-chat-btn');
+    const closeChatBtn = document.getElementById('close-chat-btn');
+    const chatWindow = document.getElementById('ai-chat-window');
+    const chatIconMsg = document.getElementById('chat-icon-msg');
+    const chatIconClose = document.getElementById('chat-icon-close');
+    const chatInput = document.getElementById('ai-chat-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const chatMessages = document.getElementById('ai-chat-messages');
+
+    let isChatOpen = false;
+
+    function toggleChat() {
+        isChatOpen = !isChatOpen;
+        if (isChatOpen) {
+            chatWindow.classList.remove('hidden');
+            // small delay for transition
+            setTimeout(() => {
+                chatWindow.classList.remove('opacity-0', 'scale-95');
+                chatWindow.classList.add('opacity-100', 'scale-100');
+            }, 10);
+            chatIconMsg.classList.replace('scale-100', 'scale-0');
+            chatIconMsg.classList.add('-rotate-90');
+            chatIconClose.classList.replace('scale-0', 'scale-100');
+            chatIconClose.classList.remove('rotate-90');
+            chatInput.focus();
+        } else {
+            chatWindow.classList.remove('opacity-100', 'scale-100');
+            chatWindow.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => chatWindow.classList.add('hidden'), 300);
+            chatIconMsg.classList.replace('scale-0', 'scale-100');
+            chatIconMsg.classList.remove('-rotate-90');
+            chatIconClose.classList.replace('scale-100', 'scale-0');
+            chatIconClose.classList.add('rotate-90');
+        }
+    }
+
+    toggleChatBtn.addEventListener('click', toggleChat);
+    closeChatBtn.addEventListener('click', toggleChat);
+
+    // Chat History Array
+    let chatHistory = [];
+
+    function appendMessage(msg, isUser = false) {
+        const div = document.createElement('div');
+        div.className = `flex gap-2 max-w-[85%] ${isUser ? 'self-end justify-end' : 'self-start'}`;
+        const innerClass = isUser 
+            ? 'bg-leaf-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm border border-leaf-700 text-sm'
+            : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm markdown-body';
+        
+        div.innerHTML = `<div class="${innerClass}">${msg}</div>`;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendChatMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        appendMessage(text, true);
+        chatInput.value = '';
+        chatInput.disabled = true;
+        sendChatBtn.disabled = true;
+
+        // typing indicator
+        const typingId = 'typing-' + Date.now();
+        const typingDiv = document.createElement('div');
+        typingDiv.id = typingId;
+        typingDiv.className = 'flex gap-2 self-start w-5/6';
+        typingDiv.innerHTML = `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+        </div>`;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            const res = await fetch('{{ route('ai.chat') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ 
+                    message: text,
+                    history: chatHistory
+                })
+            });
+            const data = await res.json();
+            document.getElementById(typingId).remove();
+            appendMessage(data.reply, false);
+
+            if (data.redirect) {
+                appendMessage('<span class="text-sm italic text-gray-500">Đang chuyển hướng bạn đến trang sản phẩm...</span>', false);
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1500);
+            }
+
+            // Save to history
+            chatHistory.push({ role: 'user', content: text });
+            chatHistory.push({ role: 'assistant', content: data.reply });
+            
+            // Keep history short (e.g. max 10 messages)
+            if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
+
+        } catch (e) {
+            document.getElementById(typingId).remove();
+            appendMessage('<span class="text-red-500">Lỗi kết nối.</span>', false);
+        } finally {
+            chatInput.disabled = false;
+            sendChatBtn.disabled = false;
+            chatInput.focus();
+        }
+    }
+
+    sendChatBtn.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendChatMessage();
+    });
+
 </script>
 @stack('scripts')
 </body>
 </html>
+
 

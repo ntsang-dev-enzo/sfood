@@ -29,10 +29,16 @@ class ProductResource extends Resource
             Forms\Components\Select::make('category_id')->label('Danh mục')->relationship('category', 'name')->required(),
             Forms\Components\TextInput::make('name')->label('Tên sản phẩm')->required()->live(onBlur: true)
                 ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', \Illuminate\Support\Str::slug($state))),
+            Forms\Components\TextInput::make('name_en')->label('Tên tiếng Anh'),
             Forms\Components\TextInput::make('slug')->label('Đường dẫn')->required()->unique(ignoreRecord: true),
-            Forms\Components\Textarea::make('description')->label('Mô tả')->columnSpanFull(),
+            Forms\Components\Textarea::make('short_description')->label('Mô tả ngắn')->columnSpanFull()->maxLength(500),
+            Forms\Components\Textarea::make('short_description_en')->label('Mô tả ngắn tiếng Anh')->columnSpanFull()->maxLength(500),
+            Forms\Components\RichEditor::make('description')->label('Mô tả')->columnSpanFull()->fileAttachmentsDirectory('products/descriptions'),
+            Forms\Components\RichEditor::make('description_en')->label('Mô tả tiếng Anh')->columnSpanFull()->fileAttachmentsDirectory('products/descriptions'),
             Forms\Components\FileUpload::make('thumbnail')->label('Ảnh đại diện')->image()->directory('products'),
             Forms\Components\Toggle::make('is_active')->label('Kích hoạt')->default(true),
+            Forms\Components\Toggle::make('is_hot')->label('Sản phẩm Hot')->default(false),
+            Forms\Components\Toggle::make('is_new')->label('Sản phẩm Mới')->default(false),
         ]);
     }
 
@@ -42,6 +48,8 @@ class ProductResource extends Resource
             Tables\Columns\TextColumn::make('name')->label('Tên sản phẩm')->searchable()->sortable(),
             Tables\Columns\TextColumn::make('category.name')->label('Danh mục')->sortable(),
             Tables\Columns\IconColumn::make('is_active')->label('Trạng thái')->boolean()->sortable(),
+            Tables\Columns\IconColumn::make('is_hot')->label('Hot')->boolean()->sortable(),
+            Tables\Columns\IconColumn::make('is_new')->label('Mới')->boolean()->sortable(),
             Tables\Columns\TextColumn::make('view_count')->label('Lượt xem')->sortable(),
             Tables\Columns\TextColumn::make('variants_count')->label('Số biến thể')->counts('variants')->sortable(),
         ])->filters([

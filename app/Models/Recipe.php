@@ -10,14 +10,32 @@ class Recipe extends Model
 {
     protected $fillable = [
         'title',
+        'title_en',
         'slug',
         'description',
+        'description_en',
         'thumbnail',
         'video_url',
         'cook_time',
         'view_count',
         'is_published',
     ];
+
+    public function getTitleAttribute($value)
+    {
+        if (app()->getLocale() === 'en' && !empty($this->attributes['title_en'])) {
+            return $this->attributes['title_en'];
+        }
+        return $value;
+    }
+
+    public function getDescriptionAttribute($value)
+    {
+        if (app()->getLocale() === 'en' && !empty($this->attributes['description_en'])) {
+            return $this->attributes['description_en'];
+        }
+        return $value;
+    }
 
     protected function casts(): array
     {
