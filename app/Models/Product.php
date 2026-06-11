@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Jobs\EmbedImage;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +53,21 @@ class Product extends Model
         return (float) ($this->variants()->where('is_active', true)->min('sale_price')
             ?? $this->variants()->where('is_active', true)->min('price')
             ?? 0);
+    }
+
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'favorites')
+            ->withTimestamps();
+    }
+
+    public function isFavoritedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $this->favoritedBy()->where('user_id', $user->id)->exists();
     }
 
     public function getRouteKeyName(): string

@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageController;
@@ -54,6 +55,8 @@ Route::post('/gio-hang/xoa', [CartController::class, 'remove'])->name('cart.remo
 Route::post('/gio-hang/xoa-tat-ca', [CartController::class, 'clear'])->name('cart.clear');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/yeu-thich', [FavoriteController::class, 'index'])->name('favorites.index');
+
     Route::get('/thanh-toan', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/thanh-toan', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/don-hang', [OrderController::class, 'index'])->name('orders.index');

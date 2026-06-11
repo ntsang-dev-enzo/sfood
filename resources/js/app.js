@@ -1,11 +1,13 @@
 import './bootstrap';
 import { initCartPage } from './cart';
+import { initFavoriteButton } from './favorites';
 
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
     initVoiceSearch();
     initSearchAutocomplete();
     initCartPage();
+    initFavoriteButton();
 });
 
 function initMobileMenu() {

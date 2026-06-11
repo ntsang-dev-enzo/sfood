@@ -138,7 +138,16 @@
                         <button type="submit" class="flex-1 h-14 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold transition shadow-md shadow-green-200 text-sm">
                             🛒 Thêm vào giỏ hàng
                         </button>
-                        <button type="button" class="h-14 px-6 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition text-base">❤️</button>
+                        <button type="button"
+                            id="favorite-btn"
+                            data-url="{{ route('products.favorite', $product) }}"
+                            data-favorited="{{ $isFavorited ? 'true' : 'false' }}"
+                            data-login-url="{{ route('login') }}"
+                            data-authenticated="{{ auth()->check() ? 'true' : 'false' }}"
+                            class="favorite-btn h-14 px-6 rounded-xl border transition text-base {{ $isFavorited ? 'bg-red-50 border-red-300 text-red-500' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
+                            @guest title="Đăng nhập để yêu thích" @endguest>
+                            <span class="favorite-icon">{{ $isFavorited ? '❤️' : '🤍' }}</span>
+                        </button>
                     </div>
                 </form>
             </div>

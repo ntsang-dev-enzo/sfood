@@ -47,7 +47,7 @@ class ProductController extends Controller
             'product' => $product,
             'defaultVariantId' => $product->defaultVariant()?->id,
             'suggestions' => $suggestions,
-            'isFavorited' => auth()->check() ? \Illuminate\Support\Facades\DB::table('favorites')->where('user_id', auth()->id())->where('product_id', $product->id)->exists() : false,
+            'isFavorited' => $product->isFavoritedBy(auth()->user()),
         ]);
     }
 
@@ -99,31 +99,14 @@ class ProductController extends Controller
     public function toggleFavorite(Request $request, Product $product)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $exists = \Illuminate\Support\Facades\DB::table('favorites')
-            ->where('user_id', $user->id)
-            ->where('product_id', $product->id)
-            ->exists();
+        $favorited = $user->favoriteProducts()->toggle($product->id);
 
-        if ($exists) {
-            \Illuminate\Support\Facades\DB::table('favorites')
-                ->where('user_id', $user->id)
-                ->where('product_id', $product->id)
-                ->delete();
-
-            return response()->json(['favorited' => false]);
-        }
-
-        \Illuminate\Support\Facades\DB::table('favorites')->insert([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'created_at' => now(),
-            'updated_at' => now(),
+        return response()->json([
+            'favorited' => ! empty($favorited['attached']),
         ]);
-
-        return response()->json(['favorited' => true]);
     }
 }

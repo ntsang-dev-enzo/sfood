@@ -47,6 +47,7 @@
                 </div>
 
                 <div class="flex items-center gap-2 ml-auto">
+
                     {{-- Language Switcher --}}
                     @if(session('locale', 'vi') === 'en')
                         <a href="{{ route('lang.switch', 'vi') }}" class="p-2 rounded-xl hover:bg-cream-200 transition text-lg" title="Tiếng Việt">🇻🇳</a>
@@ -66,6 +67,12 @@
                         </svg>
                     </button>
 
+
+                    @auth
+                        <a href="{{ route('favorites.index') }}" class="p-2.5 rounded-xl hover:bg-cream-200 transition text-earth-700 {{ request()->routeIs('favorites.*') ? 'bg-cream-200' : '' }}" title="Yêu thích">
+                            <span class="text-xl leading-none">❤️</span>
+                        </a>
+                    @endauth
                     <a href="{{ route('cart') }}" class="relative p-2.5 rounded-xl hover:bg-cream-200 transition text-earth-700" title="Giỏ hàng">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -106,7 +113,12 @@
                 <a href="{{ route('about') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('about') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.about') }}</a>
                 <a href="{{ route('contact') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('contact') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.contact') }}</a>
                 @auth
+<<<<<<< HEAD
                     <a href="{{ route('orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('orders.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.orders') }}</a>
+=======
+                    <a href="{{ route('favorites.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('favorites.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Yêu thích</a>
+                    <a href="{{ route('orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('orders.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Đơn hàng</a>
+>>>>>>> a401c00 (BE,FE - Tính năng yêu thích sản phẩm)
                 @endauth
             </nav>
         </div>
@@ -119,8 +131,14 @@
             <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.about') }}</a>
             <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.contact') }}</a>
             @auth
+<<<<<<< HEAD
                 <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.account') }}</a>
                 <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.orders') }}</a>
+=======
+                <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Tài khoản</a>
+                <a href="{{ route('favorites.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Yêu thích</a>
+                <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Đơn hàng</a>
+>>>>>>> a401c00 (BE,FE - Tính năng yêu thích sản phẩm)
             @else
                 <a href="{{ route('login') }}" class="block px-3 py-2 rounded-lg bg-leaf-600 text-white text-center mt-2">{{ __('nav.login') }}</a>
             @endauth
