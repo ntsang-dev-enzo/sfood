@@ -10,22 +10,69 @@
 
     <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="card p-6 mb-8">
-            <form method="GET" action="{{ route('products.index') }}"
-                class="flex flex-col lg:flex-row gap-4 items-start lg:items-end mb-6">
-                <div class="flex-1 w-full">
-                    <label class="block text-sm font-medium text-earth-700 mb-2">Tìm kiếm có gợi ý</label>
-                    @include('partials.search-box', ['value' => $search, 'standalone' => false])
+            <form method="GET" action="{{ route('products.index') }}" id="filter-form" class="flex flex-col gap-6 mb-6">
+                <!-- Search and Category -->
+                <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-earth-700 mb-2">Tìm kiếm</label>
+                        @include('partials.search-box', ['value' => $search, 'standalone' => false])
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-earth-700 mb-2">Danh mục</label>
+                        <select name="category" onchange="this.form.submit()" class="input-field !w-auto min-w-[160px]">
+                            <option value="">Tất cả</option>
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->slug }}" @selected($categorySlug === $cat->slug)>{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary !py-3 !px-8">Lọc</button>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-earth-700 mb-2">Danh mục</label>
-                    <select name="category" onchange="this.form.submit()" class="input-field !w-auto min-w-[160px]">
-                        <option value="">Tất cả</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat->slug }}" @selected($categorySlug === $cat->slug)>{{ $cat->name }}</option>
+
+                <!-- Price Filter -->
+                <div class="pt-6 border-t border-cream-200">
+                    <label class="block text-sm font-medium text-earth-700 mb-3">Khoảng giá</label>
+
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        @php
+                            $ranges = [
+                                ['label' => 'Dưới 100k', 'min' => 0, 'max' => 100000],
+                                ['label' => '100k - 200k', 'min' => 100000, 'max' => 200000],
+                                ['label' => '200k - 500k', 'min' => 200000, 'max' => 500000],
+                                ['label' => 'Trên 500k', 'min' => 500000, 'max' => ''],
+                            ];
+                        @endphp
+                        @foreach ($ranges as $range)
+                            @php
+                                $isActive = ($minPrice == $range['min'] && $maxPrice == $range['max'] && $maxPrice !== '')
+                                    || ($minPrice == $range['min'] && $range['max'] === '' && ($maxPrice === null || $maxPrice === ''));
+                            @endphp
+                            <button type="button" onclick="applyPriceRange('{{ $range['min'] }}', '{{ $range['max'] }}')"
+                                class="px-4 py-1.5 rounded-full border text-sm transition-all {{ $isActive ? 'bg-leaf-600 border-leaf-600 text-white' : 'border-earth-200 text-earth-600 hover:border-leaf-600 hover:text-leaf-600 bg-white shadow-sm' }}">
+                                {{ $range['label'] }}
+                            </button>
                         @endforeach
-                    </select>
+                        <button type="button" onclick="applyPriceRange('', '')"
+                            class="px-4 py-1.5 rounded-full border border-earth-100 text-sm text-earth-400 hover:border-red-300 hover:text-red-500 transition-all bg-white">
+                            Xóa lọc
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="relative w-36">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-earth-400 text-sm">đ</span>
+                            <input type="number" name="min_price" id="min_price" value="{{ $minPrice }}" placeholder="Từ"
+                                class="input-field !pl-7 !py-2 text-sm" min="0">
+                        </div>
+                        <span class="text-earth-300">—</span>
+                        <div class="relative w-36">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-earth-400 text-sm">đ</span>
+                            <input type="number" name="max_price" id="max_price" value="{{ $maxPrice }}" placeholder="Đến"
+                                class="input-field !pl-7 !py-2 text-sm" min="0">
+                        </div>
+                        <button type="submit" class="btn-secondary !py-2 !px-4 !text-sm">Áp dụng</button>
+                    </div>
                 </div>
-                <button type="submit" class="btn-primary !py-3 !px-5">Tìm</button>
             </form>
 
             <form method="POST" action="{{ route('products.ai-search') }}" enctype="multipart/form-data"
@@ -33,6 +80,8 @@
                 @csrf
                 <input type="hidden" name="search" value="{{ $search }}">
                 <input type="hidden" name="category" value="{{ $categorySlug }}">
+                <input type="hidden" name="min_price" value="{{ $minPrice }}">
+                <input type="hidden" name="max_price" value="{{ $maxPrice }}">
                 <h3 class="font-semibold text-leaf-800 mb-1">🤖 Tìm kiếm bằng hình ảnh (CLIP AI)</h3>
                 <p class="text-sm text-leaf-700 mb-3">Tải ảnh thực phẩm, AI nhận diện và gợi ý sản phẩm tương tự.</p>
                 <div class="flex flex-wrap gap-3 items-center">
@@ -107,4 +156,11 @@
 
         <div class="mt-10">{{ $products->links() }}</div>
     </div>
+    <script>
+        function applyPriceRange(min, max) {
+            document.getElementById('min_price').value = min;
+            document.getElementById('max_price').value = max;
+            document.getElementById('filter-form').submit();
+        }
+    </script>
 @endsection

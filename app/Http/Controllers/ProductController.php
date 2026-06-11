@@ -14,11 +14,26 @@ class ProductController extends Controller
     {
         $search = $request->get('search', '');
         $categorySlug = $request->get('category', '');
+        $minPrice = $request->get('min_price');
+        $maxPrice = $request->get('max_price');
 
         $products = Product::with(['category', 'variants'])
             ->where('is_active', true)
-            ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
-            ->when($categorySlug, fn ($q) => $q->whereHas('category', fn ($c) => $c->where('slug', $categorySlug)))
+            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($categorySlug, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $categorySlug)))
+            ->when($minPrice || $maxPrice, function ($q) use ($minPrice, $maxPrice) {
+                $q->whereHas('variants', function ($v) use ($minPrice, $maxPrice) {
+                    $v->where('is_active', true)
+                        ->where(function ($vq) use ($minPrice, $maxPrice) {
+                            if ($minPrice) {
+                                $vq->whereRaw('COALESCE(sale_price, price) >= ?', [$minPrice]);
+                            }
+                            if ($maxPrice) {
+                                $vq->whereRaw('COALESCE(sale_price, price) <= ?', [$maxPrice]);
+                            }
+                        });
+                });
+            })
             ->orderByDesc('view_count')
             ->paginate(12)
             ->withQueryString();
@@ -28,6 +43,8 @@ class ProductController extends Controller
             'categories' => Category::where('is_active', true)->orderBy('sort_order')->get(),
             'search' => $search,
             'categorySlug' => $categorySlug,
+            'minPrice' => $minPrice,
+            'maxPrice' => $maxPrice,
             'aiResults' => session('ai_results'),
         ]);
     }
@@ -51,9 +68,10 @@ class ProductController extends Controller
         ]);
     }
 
-    public function suggestions(Product $product,
-        \Illuminate\Http\Request $request)
-    {
+    public function suggestions(
+        Product $product,
+        \Illuminate\Http\Request $request
+    ) {
         $offset = (int) $request->get('offset', 0);
         $limit = (int) $request->get('limit', 8);
 
@@ -62,7 +80,7 @@ class ProductController extends Controller
             ->orderByDesc('view_count')
             ->skip($offset)
             ->take($limit)
-            ->get(['id','name','slug','thumbnail']);
+            ->get(['id', 'name', 'slug', 'thumbnail']);
 
         return response()->json(['data' => $rows]);
     }
@@ -76,7 +94,7 @@ class ProductController extends Controller
         $results = $aiSearch->searchByImage($request->file('ai_image'));
 
         return redirect()
-            ->route('products.index', $request->only(['search', 'category']))
+            ->route('products.index', $request->only(['search', 'category', 'min_price', 'max_price']))
             ->with('ai_results', $results);
     }
 
@@ -99,14 +117,14 @@ class ProductController extends Controller
     public function toggleFavorite(Request $request, Product $product)
     {
         $user = $request->user();
-        if (! $user) {
+        if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $favorited = $user->favoriteProducts()->toggle($product->id);
 
         return response()->json([
-            'favorited' => ! empty($favorited['attached']),
+            'favorited' => !empty($favorited['attached']),
         ]);
     }
 }
