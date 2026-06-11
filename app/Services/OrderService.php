@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\ShippingAddress;
+use App\Notifications\OrderUpdated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,7 +16,8 @@ class OrderService
 {
     public function __construct(
         protected CartService $cartService,
-    ) {}
+    ) {
+    }
 
     public function create(array $data): Order
     {
@@ -37,14 +39,13 @@ class OrderService
             $discount = 0;
             $coupon = null;
 
+
             // Backend hard guarantee: if frontend/controller passed shipping_fee=0, keep it.
             // (Đặt sớm để tránh bị override bởi các rule khác)
             if (array_key_exists('shipping_fee', $data) && (float) ($data['shipping_fee'] ?? 0) === 0.0) {
                 $shippingFee = 0;
             }
-
             if (! empty($data['coupon_code'])) {
-
                 $coupon = Coupon::where('code', $data['coupon_code'])->first();
                 if ($coupon && $coupon->isValid($subtotal)) {
                     $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
@@ -73,9 +74,7 @@ class OrderService
             $address = $this->resolveAddress($data);
 
             $order = Order::create([
-
-
-                'order_code' => 'SF'.strtoupper(Str::random(8)),
+                'order_code' => 'SF' . strtoupper(Str::random(8)),
                 'user_id' => Auth::id(),
                 'subtotal' => $subtotal,
                 'shipping_fee' => $shippingFee,
@@ -115,13 +114,21 @@ class OrderService
 
             $this->cartService->clear();
 
+            // Gửi thông báo cho người dùng
+            $order->user->notify(new OrderUpdated([
+                'title' => 'Đặt hàng thành công 🌿',
+                'message' => 'Đơn hàng ' . $order->order_code . ' đã được đặt thành công. Cảm ơn bạn đã tin dùng SFood!',
+                'url' => route('orders.show', $order),
+                'type' => 'order',
+            ]));
+
             return $order->load('items', 'payment');
         });
     }
 
     protected function resolveAddress(array $data): array
     {
-        if (! empty($data['shipping_address_id'])) {
+        if (!empty($data['shipping_address_id'])) {
             $address = ShippingAddress::where('user_id', Auth::id())
                 ->findOrFail($data['shipping_address_id']);
 

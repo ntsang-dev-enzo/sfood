@@ -65,6 +65,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/don-hang/{order}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
 
+    Route::get('/thong-bao', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/thong-bao/read-all', [App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.read-all');
+
     Route::get('/tai-khoan', [ProfileController::class, 'edit'])->name('profile');
     Route::put('/tai-khoan', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/tai-khoan/mat-khau', [ProfileController::class, 'updatePassword'])->name('profile.password');
