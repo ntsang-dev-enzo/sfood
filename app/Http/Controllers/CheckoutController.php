@@ -9,6 +9,7 @@ use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
@@ -46,8 +47,13 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function store(Request $request, CartService $cart, OrderService $orderService, PaymentService $paymentService)
-    {
+    public function store(
+        Request $request,
+        CartService $cart,
+        OrderService $orderService,
+        PaymentService $paymentService
+    ) {
+
         if ($cart->items()->isEmpty()) {
             return redirect()->route('cart');
         }
@@ -57,37 +63,179 @@ class CheckoutController extends Controller
             'coupon_code' => 'nullable|string',
             'payment_gateway' => 'required|in:cod,vnpay,momo,payos',
             'notes' => 'nullable|string',
+
+            // shipping fee từ frontend
+            'shipping_fee' => 'nullable|numeric|min:0',
         ];
 
         if (! $request->shipping_address_id) {
+
             $rules += [
                 'recipient_name' => 'required|string|max:255',
                 'phone' => 'required|string|max:20',
                 'address_line' => 'required|string|max:500',
                 'city' => 'required|string|max:100',
+                'district' => 'nullable|string|max:100',
+                'ward' => 'nullable|string|max:100',
             ];
         }
 
         $data = $request->validate($rules);
 
+        // If user selected a saved shipping address, load its fields
+        if (!empty($data['shipping_address_id'])) {
+            $saved = Auth::user()->shippingAddresses()->find($data['shipping_address_id']);
+            if ($saved) {
+                $data['recipient_name'] = $saved->recipient_name ?? ($data['recipient_name'] ?? '');
+                $data['phone'] = $saved->phone ?? ($data['phone'] ?? '');
+                $data['address_line'] = $saved->address_line ?? ($data['address_line'] ?? '');
+                $data['ward'] = $saved->ward ?? ($data['ward'] ?? '');
+                $data['district'] = $saved->district ?? ($data['district'] ?? '');
+                $data['city'] = $saved->city ?? ($data['city'] ?? '');
+            }
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | VERIFY SHIPPING BACKEND
+    |--------------------------------------------------------------------------
+    */
+
+        $subtotal = $cart->subtotal();
+
+        $shipping = 30000;
+
+        // free ship nội thành Cần Thơ (normalize text to handle diacritics/casing)
+        // Lỗi đang gặp thường do khác format chuỗi (khoảng trắng/dấu gạch) giữa frontend & request backend.
+        $cityRaw = (string) ($data['city'] ?? '');
+        $districtRaw = (string) ($data['district'] ?? '');
+
+        $cityNorm = Str::ascii(mb_strtolower($cityRaw));
+        $districtNorm = Str::ascii(mb_strtolower($districtRaw));
+
+        // collapse multiple spaces and trim
+        $cityNorm = trim(preg_replace('/\s+/', ' ', $cityNorm) ?? '');
+        $districtNorm = trim(preg_replace('/\s+/', ' ', $districtNorm) ?? '');
+
+        $isCanTho = str_contains($cityNorm, 'can tho');
+        $isNinhKieu = (bool) preg_match('/ninh\s*kieu|ninh-kieu/', $districtNorm);
+        $isCaiRang = (bool) preg_match('/cai\s*rang|cai-rang/', $districtNorm);
+
+        if ($isCanTho && ($isNinhKieu || $isCaiRang)) {
+            $shipping = 0;
+        }
+
+
+        // free ship đơn trên 1 triệu
+        if ($subtotal >= 1000000) {
+            $shipping = 0;
+        }
+
+        // If coupon grants free shipping, override shipping to 0
+        if (!empty($data['coupon_code'])) {
+            $coupon = Coupon::where('code', $data['coupon_code'])->first();
+            if ($coupon && $coupon->isValid($subtotal)) {
+                // determine categories in cart to validate applicability
+                $items = $cart->items();
+                $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
+                if ($coupon->appliesToCategories($categoryIds) && $coupon->type === 'free_shipping') {
+                    $shipping = 0;
+                }
+            }
+        }
+
+        // Recompute discount and apply free shipping if net total after discount >= 1_000_000
+        $discount = 0;
+        if (!empty($data['coupon_code'])) {
+            $coupon = $coupon ?? Coupon::where('code', $data['coupon_code'])->first();
+            if ($coupon && $coupon->isValid($subtotal)) {
+                $items = $cart->items();
+                $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
+                if ($coupon->appliesToCategories($categoryIds)) {
+                    $discount = $coupon->calculateDiscount($subtotal, $shipping);
+                }
+            }
+        }
+
+        $netTotal = $subtotal - ($discount ?: 0);
+        if ($netTotal >= 1000000) {
+            $shipping = 0;
+        }
+
+        // overwrite frontend shipping
+        $data['shipping_fee'] = (float) $shipping;
+
+
+        /*
+    |--------------------------------------------------------------------------
+    | CREATE ORDER
+    |--------------------------------------------------------------------------
+    */
+
         $order = $orderService->create([
-            'shipping_address_id' => $data['shipping_address_id'] ?? null,
-            'recipient_name' => $data['recipient_name'] ?? '',
-            'phone' => $data['phone'] ?? '',
-            'address_line' => $data['address_line'] ?? '',
-            'ward' => $data['ward'] ?? '',
-            'district' => $data['district'] ?? '',
-            'city' => $data['city'] ?? '',
-            'coupon_code' => $data['coupon_code'] ?? '',
-            'payment_gateway' => $data['payment_gateway'],
-            'notes' => $data['notes'] ?? null,
+
+            'shipping_address_id' =>
+            $data['shipping_address_id'] ?? null,
+
+            'recipient_name' =>
+            $data['recipient_name'] ?? '',
+
+            'phone' =>
+            $data['phone'] ?? '',
+
+            'address_line' =>
+            $data['address_line'] ?? '',
+
+            'ward' =>
+            $data['ward'] ?? '',
+
+            'district' =>
+            $data['district'] ?? '',
+
+            'city' =>
+            $data['city'] ?? '',
+
+            'coupon_code' =>
+            $data['coupon_code'] ?? '',
+
+            'payment_gateway' =>
+            $data['payment_gateway'],
+
+            'notes' =>
+            $data['notes'] ?? null,
+
+            // dùng shipping mới
+            'shipping_fee' =>
+            $data['shipping_fee'],
         ]);
 
-        if (in_array($data['payment_gateway'], ['vnpay', 'momo', 'payos'])) {
-            $url = $paymentService->initiateOnlinePayment($order, $data['payment_gateway']);
+        /*
+    |--------------------------------------------------------------------------
+    | ONLINE PAYMENT
+    |--------------------------------------------------------------------------
+    */
+
+        if (
+            in_array(
+                $data['payment_gateway'],
+                ['vnpay', 'momo', 'payos']
+            )
+        ) {
+
+            $url = $paymentService
+                ->initiateOnlinePayment(
+                    $order,
+                    $data['payment_gateway']
+                );
 
             return redirect()->away($url);
         }
+
+        /*
+    |--------------------------------------------------------------------------
+    | COD SUCCESS
+    |--------------------------------------------------------------------------
+    */
 
         return redirect()
             ->route('orders.show', $order)

@@ -20,27 +20,32 @@ class RecipeResource extends Resource
 
     protected static ?string $navigationGroup = 'Nội dung';
 
+    protected static ?string $modelLabel = 'Công thức';
+    protected static ?string $pluralModelLabel = 'Công thức';
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('title')->required()->live(onBlur: true)
+            Forms\Components\TextInput::make('title')->label('Tiêu đề')->required()->live(onBlur: true)
                 ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', \Illuminate\Support\Str::slug($state))),
-            Forms\Components\TextInput::make('slug')->required()->unique(ignoreRecord: true),
-            Forms\Components\Textarea::make('description')->columnSpanFull(),
-            Forms\Components\FileUpload::make('thumbnail')->image()->directory('recipes'),
+            Forms\Components\TextInput::make('slug')->label('Đường dẫn')->required()->unique(ignoreRecord: true),
+            Forms\Components\Textarea::make('description')->label('Mô tả')->columnSpanFull(),
+            Forms\Components\FileUpload::make('thumbnail')->label('Ảnh đại diện')->image()->directory('recipes'),
             Forms\Components\TextInput::make('video_url')->url()->label('Video URL (YouTube hoặc file)'),
-            Forms\Components\TextInput::make('cook_time')->numeric()->suffix('phút'),
-            Forms\Components\Toggle::make('is_published')->default(true),
+            Forms\Components\TextInput::make('cook_time')->label('Thời gian nấu')->numeric()->suffix('phút'),
+            Forms\Components\Toggle::make('is_published')->label('Xuất bản')->default(true),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('title')->searchable(),
-            Tables\Columns\TextColumn::make('cook_time')->suffix(' phút'),
-            Tables\Columns\TextColumn::make('view_count'),
-            Tables\Columns\IconColumn::make('is_published')->boolean(),
+            Tables\Columns\TextColumn::make('title')->label('Tiêu đề')->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('cook_time')->label('Thời gian nấu')->suffix(' phút')->sortable(),
+            Tables\Columns\TextColumn::make('view_count')->label('Lượt xem')->sortable(),
+            Tables\Columns\IconColumn::make('is_published')->label('Xuất bản')->boolean()->sortable(),
+        ])->filters([
+            Tables\Filters\TernaryFilter::make('is_published')->label('Đã xuất bản'),
         ])->actions([
             Tables\Actions\EditAction::make(),
         ]);
@@ -68,8 +73,12 @@ class RecipeResource extends Resource
 
     public static function getRelations(): array
     {
-        return [IngredientsRelationManager::class];
+        // Recipe combo: hiển thị sản phẩm theo công thức (ingredients => product_variant)
+        return [
+            IngredientsRelationManager::class,
+        ];
     }
+
 
     public static function getPages(): array
     {

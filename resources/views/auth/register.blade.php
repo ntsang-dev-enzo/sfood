@@ -12,19 +12,23 @@
             @csrf
             <div>
                 <label class="text-sm font-medium text-earth-700">Họ tên</label>
-                <input type="text" name="name" value="{{ old('name') }}" required class="input-field mt-1">
+                <input type="text" name="name" value="{{ old('name') }}" required class="input-field mt-1 @error('name') border-red-500 @enderror">
+                @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
             <div>
                 <label class="text-sm font-medium text-earth-700">Email</label>
-                <input type="email" name="email" value="{{ old('email') }}" required class="input-field mt-1">
+                <input type="email" name="email" value="{{ old('email') }}" required class="input-field mt-1 @error('email') border-red-500 @enderror">
+                @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
             <div>
                 <label class="text-sm font-medium text-earth-700">Số điện thoại</label>
-                <input type="text" name="phone" value="{{ old('phone') }}" class="input-field mt-1">
+                <input type="text" name="phone" value="{{ old('phone') }}" class="input-field mt-1 @error('phone') border-red-500 @enderror">
+                @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
             <div>
                 <label class="text-sm font-medium text-earth-700">Mật khẩu</label>
-                <input type="password" name="password" required class="input-field mt-1">
+                <input type="password" name="password" required class="input-field mt-1 @error('password') border-red-500 @enderror">
+                @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
             <div>
                 <label class="text-sm font-medium text-earth-700">Xác nhận mật khẩu</label>

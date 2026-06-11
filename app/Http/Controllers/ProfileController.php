@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Models\ShippingAddress;
 
 class ProfileController extends Controller
 {
@@ -14,6 +15,84 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => Auth::user(),
         ]);
+    }
+
+    public function storeAddress(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($user->shippingAddresses()->count() >= 5) {
+            return back()->with('error', 'Bạn chỉ được lưu tối đa 5 địa chỉ.');
+        }
+
+        $data = $request->validate([
+            'recipient_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'address_line' => 'required|string|max:500',
+            'city' => 'required|string|max:100',
+            'district' => 'nullable|string|max:100',
+            'ward' => 'nullable|string|max:100',
+            'is_default' => 'nullable|boolean',
+        ]);
+
+        if (!empty($data['is_default'])) {
+            $user->shippingAddresses()->update(['is_default' => false]);
+        }
+
+        $user->shippingAddresses()->create($data);
+
+        return back()->with('success', 'Đã lưu địa chỉ giao hàng.');
+    }
+
+    public function updateAddress(Request $request, ShippingAddress $address)
+    {
+        $user = Auth::user();
+        if ($address->user_id !== $user->id) abort(403);
+
+        $data = $request->validate([
+            'recipient_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'address_line' => 'required|string|max:500',
+            'city' => 'required|string|max:100',
+            'district' => 'nullable|string|max:100',
+            'ward' => 'nullable|string|max:100',
+            'is_default' => 'nullable|boolean',
+        ]);
+
+        if (!empty($data['is_default'])) {
+            $user->shippingAddresses()->update(['is_default' => false]);
+        }
+
+        $address->update($data);
+
+        return back()->with('success', 'Đã cập nhật địa chỉ.');
+    }
+
+    public function destroyAddress(Request $request, ShippingAddress $address)
+    {
+        $user = Auth::user();
+        if ($address->user_id !== $user->id) abort(403);
+
+        $wasDefault = $address->is_default;
+        $address->delete();
+
+        if ($wasDefault) {
+            $first = $user->shippingAddresses()->first();
+            if ($first) $first->update(['is_default' => true]);
+        }
+
+        return back()->with('success', 'Đã xoá địa chỉ.');
+    }
+
+    public function setDefaultAddress(Request $request, ShippingAddress $address)
+    {
+        $user = Auth::user();
+        if ($address->user_id !== $user->id) abort(403);
+
+        $user->shippingAddresses()->update(['is_default' => false]);
+        $address->update(['is_default' => true]);
+
+        return back()->with('success', 'Đã đặt địa chỉ mặc định.');
     }
 
     public function update(Request $request)

@@ -8,6 +8,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=be-vietnam-pro:400,500,600,700" rel="stylesheet" />
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-cream-100 text-earth-800 font-sans antialiased min-h-screen flex flex-col">
@@ -40,6 +47,25 @@
                 </div>
 
                 <div class="flex items-center gap-2 ml-auto">
+                    {{-- Language Switcher --}}
+                    @if(session('locale', 'vi') === 'en')
+                        <a href="{{ route('lang.switch', 'vi') }}" class="p-2 rounded-xl hover:bg-cream-200 transition text-lg" title="Tiếng Việt">🇻🇳</a>
+                    @else
+                        <a href="{{ route('lang.switch', 'en') }}" class="p-2 rounded-xl hover:bg-cream-200 transition text-lg" title="English">🇺🇸</a>
+                    @endif
+
+                    {{-- Dark Mode Toggle --}}
+                    <button type="button" id="theme-toggle" class="p-2.5 rounded-xl hover:bg-cream-200 transition text-earth-700" title="Đổi giao diện">
+                        {{-- Sun icon (hidden in light mode, shown in dark mode) --}}
+                        <svg id="theme-toggle-light-icon" class="hidden w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
+                        </svg>
+                        {{-- Moon icon (shown in light mode, hidden in dark mode) --}}
+                        <svg id="theme-toggle-dark-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                        </svg>
+                    </button>
+
                     <a href="{{ route('cart') }}" class="relative p-2.5 rounded-xl hover:bg-cream-200 transition text-earth-700" title="Giỏ hàng">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -74,29 +100,29 @@
 
             {{-- Nav --}}
             <nav class="hidden md:flex items-center gap-1 pb-3 border-t border-cream-200 pt-3 -mt-1">
-                <a href="{{ route('home') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('home') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Trang chủ</a>
-                <a href="{{ route('products.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('products.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Sản phẩm</a>
-                <a href="{{ route('recipes.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('recipes.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Công thức nấu ăn</a>
-                <a href="{{ route('about') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('about') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Giới thiệu</a>
-                <a href="{{ route('contact') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('contact') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Liên hệ</a>
+                <a href="{{ route('home') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('home') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.home') }}</a>
+                <a href="{{ route('products.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('products.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.products') }}</a>
+                <a href="{{ route('recipes.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('recipes.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.recipes') }}</a>
+                <a href="{{ route('about') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('about') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.about') }}</a>
+                <a href="{{ route('contact') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('contact') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.contact') }}</a>
                 @auth
-                    <a href="{{ route('orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('orders.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Đơn hàng</a>
+                    <a href="{{ route('orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('orders.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.orders') }}</a>
                 @endauth
             </nav>
         </div>
 
         {{-- Mobile menu --}}
         <div id="mobile-menu" class="hidden md:hidden border-t border-cream-300 bg-cream-50 px-4 py-3 space-y-1">
-            <a href="{{ route('home') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Trang chủ</a>
-            <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Sản phẩm</a>
-            <a href="{{ route('recipes.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Công thức</a>
-            <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Giới thiệu</a>
-            <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Liên hệ</a>
+            <a href="{{ route('home') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.home') }}</a>
+            <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.products') }}</a>
+            <a href="{{ route('recipes.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.recipes') }}</a>
+            <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.about') }}</a>
+            <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.contact') }}</a>
             @auth
-                <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Tài khoản</a>
-                <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Đơn hàng</a>
+                <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.account') }}</a>
+                <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.orders') }}</a>
             @else
-                <a href="{{ route('login') }}" class="block px-3 py-2 rounded-lg bg-leaf-600 text-white text-center mt-2">Đăng nhập</a>
+                <a href="{{ route('login') }}" class="block px-3 py-2 rounded-lg bg-leaf-600 text-white text-center mt-2">{{ __('nav.login') }}</a>
             @endauth
         </div>
     </header>
@@ -169,4 +195,42 @@
         </div>
     </footer>
 </body>
+<script>
+    var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        themeToggleLightIcon.classList.remove('hidden');
+        themeToggleDarkIcon.classList.add('hidden');
+    } else {
+        themeToggleDarkIcon.classList.remove('hidden');
+        themeToggleLightIcon.classList.add('hidden');
+    }
+
+    var themeToggleBtn = document.getElementById('theme-toggle');
+
+    themeToggleBtn.addEventListener('click', function() {
+        themeToggleDarkIcon.classList.toggle('hidden');
+        themeToggleLightIcon.classList.toggle('hidden');
+
+        if (localStorage.getItem('theme')) {
+            if (localStorage.getItem('theme') === 'light') {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        } else {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+    });
+</script>
+@stack('scripts')
 </html>

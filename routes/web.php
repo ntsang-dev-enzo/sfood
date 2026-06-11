@@ -16,6 +16,14 @@ use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/lang/{locale}', function ($locale) {
+    if (in_array($locale, ['en', 'vi'])) {
+        session(['locale' => $locale]);
+    }
+    return back();
+})->name('lang.switch');
+
 Route::get('/promo/collect', [App\Http\Controllers\PromoController::class, 'collect'])->name('promo.collect');
 Route::post('/promo/collect', [App\Http\Controllers\PromoController::class, 'store'])->name('promo.store');
 Route::post('/coupon/validate', [App\Http\Controllers\CouponController::class, 'validateForCart'])->name('coupon.validate');
@@ -50,10 +58,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/thanh-toan', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/don-hang', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/don-hang/{order}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
 
     Route::get('/tai-khoan', [ProfileController::class, 'edit'])->name('profile');
     Route::put('/tai-khoan', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/tai-khoan/mat-khau', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    // Shipping addresses management
+    Route::post('/tai-khoan/dia-chi', [ProfileController::class, 'storeAddress'])->name('profile.address.store');
+    Route::put('/tai-khoan/dia-chi/{address}', [ProfileController::class, 'updateAddress'])->name('profile.address.update');
+    Route::delete('/tai-khoan/dia-chi/{address}', [ProfileController::class, 'destroyAddress'])->name('profile.address.destroy');
+    Route::post('/tai-khoan/dia-chi/{address}/default', [ProfileController::class, 'setDefaultAddress'])->name('profile.address.default');
 });
 
 Route::get('/dang-nhap', [AuthController::class, 'showLogin'])->name('login');

@@ -20,27 +20,49 @@ class ProductResource extends Resource
 
     protected static ?string $navigationGroup = 'Sản phẩm';
 
+    protected static ?string $modelLabel = 'Sản phẩm';
+    protected static ?string $pluralModelLabel = 'Sản phẩm';
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Select::make('category_id')->relationship('category', 'name')->required(),
-            Forms\Components\TextInput::make('name')->required()->live(onBlur: true)
+            Forms\Components\Select::make('category_id')->label('Danh mục')->relationship('category', 'name')->required(),
+            Forms\Components\TextInput::make('name')->label('Tên sản phẩm')->required()->live(onBlur: true)
                 ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', \Illuminate\Support\Str::slug($state))),
-            Forms\Components\TextInput::make('slug')->required()->unique(ignoreRecord: true),
-            Forms\Components\Textarea::make('description')->columnSpanFull(),
-            Forms\Components\FileUpload::make('thumbnail')->image()->directory('products'),
-            Forms\Components\Toggle::make('is_active')->default(true),
+            Forms\Components\TextInput::make('slug')->label('Đường dẫn')->required()->unique(ignoreRecord: true),
+            Forms\Components\Textarea::make('description')->label('Mô tả')->columnSpanFull(),
+            Forms\Components\FileUpload::make('thumbnail')->label('Ảnh đại diện')->image()->directory('products'),
+            Forms\Components\Toggle::make('is_active')->label('Kích hoạt')->default(true),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('name')->searchable(),
-            Tables\Columns\TextColumn::make('category.name'),
-            Tables\Columns\IconColumn::make('is_active')->boolean(),
-            Tables\Columns\TextColumn::make('view_count'),
-            Tables\Columns\TextColumn::make('variants_count')->counts('variants'),
+            Tables\Columns\TextColumn::make('name')->label('Tên sản phẩm')->searchable()->sortable(),
+            Tables\Columns\TextColumn::make('category.name')->label('Danh mục')->sortable(),
+            Tables\Columns\IconColumn::make('is_active')->label('Trạng thái')->boolean()->sortable(),
+            Tables\Columns\TextColumn::make('view_count')->label('Lượt xem')->sortable(),
+            Tables\Columns\TextColumn::make('variants_count')->label('Số biến thể')->counts('variants')->sortable(),
+        ])->filters([
+            Tables\Filters\SelectFilter::make('category_id')->relationship('category', 'name')->label('Danh mục'),
+            Tables\Filters\TernaryFilter::make('is_active')->label('Trạng thái hoạt động'),
+            Tables\Filters\Filter::make('created_at')
+                ->form([
+                    Forms\Components\DatePicker::make('created_from')->label('Từ ngày'),
+                    Forms\Components\DatePicker::make('created_until')->label('Đến ngày'),
+                ])
+                ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    return $query
+                        ->when(
+                            $data['created_from'],
+                            fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('created_at', '>=', $date),
+                        )
+                        ->when(
+                            $data['created_until'],
+                            fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('created_at', '<=', $date),
+                        );
+                }),
         ])->actions([
             Tables\Actions\EditAction::make(),
         ]);

@@ -21,6 +21,10 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+        ], [
+            'email.required' => 'Vui lòng nhập email.',
+            'email.email' => 'Email không hợp lệ.',
+            'password.required' => 'Vui lòng nhập mật khẩu.',
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
@@ -39,12 +43,24 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        $messages = [
+            'name.required' => 'Vui lòng nhập họ tên.',
+            'name.max' => 'Họ tên không được quá 255 ký tự.',
+            'email.required' => 'Vui lòng nhập địa chỉ email.',
+            'email.email' => 'Địa chỉ email không hợp lệ.',
+            'email.unique' => 'Email này đã được sử dụng. Vui lòng chọn email khác.',
+            'phone.max' => 'Số điện thoại không được quá 20 ký tự.',
+            'password.required' => 'Vui lòng nhập mật khẩu.',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
+        ];
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'phone' => 'nullable|string|max:20',
-            'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
+            'password' => ['required', 'confirmed', 'min:8'],
+        ], $messages);
 
         $user = User::create([
             'name' => $data['name'],
@@ -54,9 +70,10 @@ class AuthController extends Controller
             'role' => 'user',
         ]);
 
-        Auth::login($user);
+        Auth::login($user, true);
+        $request->session()->regenerate();
 
-        return redirect()->route('home');
+        return redirect()->route('home')->with('success', 'Đăng ký và tự động đăng nhập thành công! Chào mừng bạn đến với SFood.');
     }
 
     public function logout(Request $request)

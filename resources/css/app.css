@@ -29,6 +29,21 @@
     --color-earth-900: #2c1f14;
 }
 
+@layer base {
+    .dark {
+        --color-cream-50: #18181b;
+        --color-cream-100: #27272a;
+        --color-cream-200: #3f3f46;
+        --color-cream-300: #52525b;
+        
+        --color-earth-800: #f4f4f5;
+        --color-earth-700: #e4e4e7;
+        --color-earth-600: #d4d4d8;
+        --color-earth-500: #a1a1aa;
+        --color-earth-400: #71717a;
+    }
+}
+
 @layer components {
     .btn-primary {
         @apply inline-flex items-center justify-center gap-2 bg-leaf-600 hover:bg-leaf-700 text-white font-semibold px-6 py-3 rounded-xl transition shadow-sm hover:shadow-md;

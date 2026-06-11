@@ -41,27 +41,37 @@
         <div>
             <div class="card p-6 sticky top-28">
                 <h2 class="font-bold text-xl text-earth-800 mb-4">🧺 Nguyên liệu</h2>
+                @php $totalPrice = 0; @endphp
                 <ul class="space-y-3 mb-6">
                     @foreach ($recipe->ingredients as $ingredient)
-                        @php $v = $ingredient->productVariant; @endphp
+                        @php 
+                            $v = $ingredient->productVariant; 
+                            $qty = max(1, (int) ceil($ingredient->quantity));
+                            $totalPrice += $qty * $v->effectivePrice();
+                        @endphp
                         <li class="flex justify-between items-center text-sm border-b border-cream-300 pb-3">
                                 <div>
                                     <p class="font-medium text-earth-800">{{ $v->product->name }}</p>
                                     <p class="text-earth-500">{{ $ingredient->quantity_label }} ({{ $v->name }})</p>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <span class="text-leaf-700 font-semibold">{{ number_format($v->effectivePrice()) }}đ</span>
+                                    <span class="text-leaf-700 font-semibold">{{ number_format($v->effectivePrice() * $qty) }}đ</span>
 
                                     <form method="POST" action="{{ route('products.add-to-cart', $v->product->slug) }}">
                                         @csrf
                                         <input type="hidden" name="variant_id" value="{{ $v->id }}">
-                                        <input type="hidden" name="quantity" value="1">
+                                        <input type="hidden" name="quantity" value="{{ $qty }}">
                                         <button type="submit" class="px-3 py-1 rounded-lg bg-leaf-600 text-white text-sm hover:bg-leaf-700 transition">Thêm</button>
                                     </form>
                                 </div>
                             </li>
                     @endforeach
                 </ul>
+
+                <div class="flex justify-between items-center mb-4 pt-2 border-t border-cream-300">
+                    <span class="font-bold text-earth-800 text-lg">Tổng tiền:</span>
+                    <span class="font-bold text-leaf-700 text-2xl">{{ number_format($totalPrice) }}đ</span>
+                </div>
 
                 <form method="POST" action="{{ route('recipes.quick-buy', $recipe) }}">
                     @csrf

@@ -27,17 +27,32 @@ class OrderService
 
         return DB::transaction(function () use ($data, $items) {
             $subtotal = $this->cartService->subtotal();
-            $shippingFee = $subtotal >= 300000 ? 0 : 30000;
+            // Prefer shipping fee computed by frontend/controller when provided
+            // Important: ensure 0 stays 0 (avoid empty-string/boolean edge cases)
+            $shippingFee = array_key_exists('shipping_fee', $data)
+                ? (float) ($data['shipping_fee'] ?? 0)
+                : ($subtotal >= 300000 ? 0 : 30000);
+
+
             $discount = 0;
             $coupon = null;
 
+            // Backend hard guarantee: if frontend/controller passed shipping_fee=0, keep it.
+            // (Đặt sớm để tránh bị override bởi các rule khác)
+            if (array_key_exists('shipping_fee', $data) && (float) ($data['shipping_fee'] ?? 0) === 0.0) {
+                $shippingFee = 0;
+            }
+
             if (! empty($data['coupon_code'])) {
+
                 $coupon = Coupon::where('code', $data['coupon_code'])->first();
                 if ($coupon && $coupon->isValid($subtotal)) {
                     $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
                     if ($coupon->appliesToCategories($categoryIds)) {
+                        // calculate discount based on current shippingFee
                         $discount = $coupon->calculateDiscount($subtotal, $shippingFee);
                         if ($coupon->type === 'free_shipping') {
+                            // coupon removes shipping
                             $shippingFee = 0;
                         }
                         $coupon->increment('used_count');
@@ -45,15 +60,28 @@ class OrderService
                 }
             }
 
+
+
+            // If net total after discount reaches threshold, grant free shipping
+
+            $netTotal = $subtotal - ($discount ?: 0);
+            if ($netTotal >= 1000000) {
+                $shippingFee = 0;
+            }
+
+
             $address = $this->resolveAddress($data);
 
             $order = Order::create([
+
+
                 'order_code' => 'SF'.strtoupper(Str::random(8)),
                 'user_id' => Auth::id(),
                 'subtotal' => $subtotal,
                 'shipping_fee' => $shippingFee,
                 'discount_amount' => $discount,
                 'total_amount' => max(0, $subtotal + $shippingFee - $discount),
+
                 'order_status' => 'pending',
                 'payment_status' => 'pending',
                 'coupon_id' => $coupon?->id,
