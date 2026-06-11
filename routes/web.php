@@ -48,6 +48,7 @@ Route::post('/san-pham/{product:slug}/favorite', [ProductController::class, 'tog
 Route::get('/cong-thuc', [RecipeController::class, 'index'])->name('recipes.index');
 Route::get('/cong-thuc/{recipe:slug}', [RecipeController::class, 'show'])->name('recipes.show');
 Route::post('/cong-thuc/{recipe:slug}/mua-nhanh', [RecipeController::class, 'quickBuy'])->name('recipes.quick-buy');
+Route::post('/cong-thuc/{recipe:slug}/favorite', [RecipeController::class, 'toggleFavorite'])->middleware('auth')->name('recipes.favorite');
 
 Route::get('/gio-hang', [CartController::class, 'index'])->name('cart');
 Route::post('/gio-hang/cap-nhat', [CartController::class, 'update'])->name('cart.update');
@@ -56,6 +57,7 @@ Route::post('/gio-hang/xoa-tat-ca', [CartController::class, 'clear'])->name('car
 
 Route::middleware('auth')->group(function () {
     Route::get('/yeu-thich', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::get('/yeu-thich-video', [FavoriteController::class, 'videos'])->name('favorites.videos');
 
     Route::get('/thanh-toan', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/thanh-toan', [CheckoutController::class, 'store'])->name('checkout.store');

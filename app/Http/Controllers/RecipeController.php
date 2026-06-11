@@ -26,7 +26,24 @@ class RecipeController extends Controller
         $recipe->load(['ingredients.productVariant.product']);
         $recipe->increment('view_count');
 
-        return view('recipes.show', compact('recipe'));
+        return view('recipes.show', [
+            'recipe' => $recipe,
+            'isFavorited' => $recipe->isFavoritedBy(auth()->user()),
+        ]);
+    }
+
+    public function toggleFavorite(Request $request, Recipe $recipe)
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $favorited = $user->favoriteRecipes()->toggle($recipe->id);
+
+        return response()->json([
+            'favorited' => ! empty($favorited['attached']),
+        ]);
     }
 
     public function quickBuy(Recipe $recipe, CartService $cart)

@@ -3,10 +3,12 @@
 @section('content')
 <div class="bg-earth-800 text-cream-50 py-12">
     <div class="max-w-7xl mx-auto px-4">
-        <h1 class="text-3xl font-bold">Sản phẩm yêu thích</h1>
+        <h1 class="text-3xl font-bold">Yêu thích</h1>
         <p class="text-cream-300 mt-2">{{ $products->count() }} sản phẩm</p>
     </div>
 </div>
+
+@include('favorites._tabs')
 
 <div class="max-w-7xl mx-auto px-4 py-8">
     @if ($products->isEmpty())

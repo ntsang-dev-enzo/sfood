@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Recipe extends Model
@@ -28,6 +29,21 @@ class Recipe extends Model
     public function ingredients(): HasMany
     {
         return $this->hasMany(RecipeIngredient::class);
+    }
+
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'recipe_favorites')
+            ->withTimestamps();
+    }
+
+    public function isFavoritedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $this->favoritedBy()->where('user_id', $user->id)->exists();
     }
 
     public function getRouteKeyName(): string

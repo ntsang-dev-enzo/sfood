@@ -113,12 +113,14 @@
                 <a href="{{ route('about') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('about') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.about') }}</a>
                 <a href="{{ route('contact') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('contact') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.contact') }}</a>
                 @auth
-<<<<<<< HEAD
+
                     <a href="{{ route('orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('orders.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.orders') }}</a>
-=======
+
                     <a href="{{ route('favorites.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('favorites.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Yêu thích</a>
+
+
                     <a href="{{ route('orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('orders.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Đơn hàng</a>
->>>>>>> a401c00 (BE,FE - Tính năng yêu thích sản phẩm)
+
                 @endauth
             </nav>
         </div>
@@ -131,14 +133,13 @@
             <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.about') }}</a>
             <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.contact') }}</a>
             @auth
-<<<<<<< HEAD
+
                 <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.account') }}</a>
                 <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.orders') }}</a>
-=======
+
                 <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Tài khoản</a>
-                <a href="{{ route('favorites.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Yêu thích</a>
                 <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Đơn hàng</a>
->>>>>>> a401c00 (BE,FE - Tính năng yêu thích sản phẩm)
+
             @else
                 <a href="{{ route('login') }}" class="block px-3 py-2 rounded-lg bg-leaf-600 text-white text-center mt-2">{{ __('nav.login') }}</a>
             @endauth

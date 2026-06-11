@@ -17,4 +17,16 @@ class FavoriteController extends Controller
 
         return view('favorites.index', compact('products'));
     }
+
+    public function videos()
+    {
+        $recipes = Auth::user()
+            ->favoriteRecipes()
+            ->where('is_published', true)
+            ->whereNotNull('video_url')
+            ->orderByPivot('created_at', 'desc')
+            ->get();
+
+        return view('favorites.videos', compact('recipes'));
+    }
 }

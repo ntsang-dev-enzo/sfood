@@ -8,7 +8,20 @@
 
     <div class="grid lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2">
-            <h1 class="text-3xl font-bold text-earth-800 mb-4">{{ $recipe->title }}</h1>
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <h1 class="text-3xl font-bold text-earth-800">{{ $recipe->title }}</h1>
+                @if ($recipe->video_url)
+                    <button type="button"
+                        class="favorite-btn flex-shrink-0 p-3 rounded-xl border transition {{ $isFavorited ? 'bg-red-50 border-red-300 text-red-500' : 'border-cream-300 bg-cream-50 hover:bg-cream-200 text-earth-700' }}"
+                        data-url="{{ route('recipes.favorite', $recipe) }}"
+                        data-favorited="{{ $isFavorited ? 'true' : 'false' }}"
+                        data-login-url="{{ route('login') }}"
+                        data-authenticated="{{ auth()->check() ? 'true' : 'false' }}"
+                        @guest title="Đăng nhập để yêu thích" @endguest>
+                        <span class="favorite-icon text-xl">{{ $isFavorited ? '❤️' : '🤍' }}</span>
+                    </button>
+                @endif
+            </div>
 
             @if ($recipe->video_url)
                 <div class="card aspect-video mb-6">
