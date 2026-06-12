@@ -45,4 +45,9 @@ class AdminAuthorization
     {
         return self::user()?->isAdmin() ?? false;
     }
+
+    public static function canManageInteractions(): bool
+    {
+        return in_array(self::user()?->role, ['admin', 'staff', 'customer_service']);
+    }
 }
