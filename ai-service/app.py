@@ -45,6 +45,21 @@ else:
     else:
         print('FAISS index files not found; build with faiss_build.py')
 
+FAISS_RECIPE_INDEX_PATH = os.path.join(os.path.dirname(__file__), 'index', 'recipe_index.faiss')
+FAISS_RECIPE_IDS_PATH = os.path.join(os.path.dirname(__file__), 'index', 'recipe_ids.npy')
+
+faiss_recipe_index = None
+faiss_recipe_ids = None
+if HAS_FAISS and os.path.exists(FAISS_RECIPE_INDEX_PATH) and os.path.exists(FAISS_RECIPE_IDS_PATH):
+    try:
+        faiss_recipe_index = faiss.read_index(FAISS_RECIPE_INDEX_PATH)
+        faiss_recipe_ids = _np.load(FAISS_RECIPE_IDS_PATH)
+        print('Loaded FAISS recipe index with', faiss_recipe_ids.shape[0], 'ids')
+    except Exception as e:
+        print('Failed to load FAISS recipe index:', e)
+        faiss_recipe_index = None
+        faiss_recipe_ids = None
+
 # =========================
 # APP
 # =========================
@@ -377,8 +392,34 @@ def chat_rag():
                     r_rows = conn.execute(recipe_query, tuple(found_ids)).fetchall()
                     for rr in r_rows:
                         recipes.append({"title": rr[0], "slug": rr[1]})
-                        
-                    if not recipes:
+        except Exception as e:
+            print("FAISS error in chat-rag:", e)
+            
+    # Fallback: Simple keyword search in DB if no results from FAISS
+    if not results:
+        try:
+            # Extract potential keywords (very basic)
+            keywords = [word for word in last_user_msg.split() if len(word) > 2 and word.lower() not in ['tôi', 'muốn', 'mua', 'cho', 'xin', 'cái', 'làm', 'sao']]
+            if keywords:
+                with engine.connect() as conn:
+                    for kw in keywords:
+                        kw_like = f"%{kw}%"
+                        q = text("SELECT id, name, min_price as price, slug FROM products WHERE is_active = 1 AND name LIKE :kw LIMIT 4")
+                        rows = conn.execute(q, {"kw": kw_like}).fetchall()
+                        for row in rows:
+                            if not any(r['id'] == row[0] for r in results):
+                                results.append({
+                                    "id": row[0],
+                                    "name": row[1],
+                                    "price": float(row[2]) if row[2] else 0,
+                                    "slug": row[3] if len(row) > 3 else str(row[0])
+                                })
+                        if len(results) >= 4:
+                            break
+                            
+                # Popular recipes fallback
+                if not recipes:
+                    with engine.connect() as conn:
                         pop_query = text("SELECT title, slug FROM recipes WHERE is_published = 1 ORDER BY view_count DESC LIMIT 2")
                         pop_rows = conn.execute(pop_query).fetchall()
                         for pr in pop_rows:
@@ -526,6 +567,232 @@ def embed_single():
         except Exception:
             pass
 
+@app.route("/embed_recipe", methods=["POST"])
+def embed_recipe():
+    recipe_id = request.form.get('recipe_id')
+    image_path_field = request.form.get('image_path')
+
+    if 'image' not in request.files:
+        return jsonify({'success': False, 'error': 'No image uploaded'}), 400
+
+    file = request.files['image']
+    if file.filename == "":
+        return jsonify({'success': False, 'error': 'Empty filename'}), 400
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1] or '.jpg') as tmp:
+        file.save(tmp.name)
+        tmp_path = tmp.name
+
+    try:
+        emb = generate_embedding(tmp_path)
+        try:
+            color_hist = compute_color_hist_from_image(tmp_path).tolist()
+        except Exception:
+            color_hist = None
+
+        with engine.begin() as conn:
+            try:
+                conn.execute(text("""
+                    INSERT INTO recipe_embeddings
+                    (recipe_id, image_path, embedding, color_hist, created_at, updated_at)
+                    VALUES
+                    (:recipe_id, :image_path, :embedding, :color_hist, NOW(), NOW())
+                    ON DUPLICATE KEY UPDATE
+                        embedding = :embedding,
+                        image_path = :image_path,
+                        color_hist = :color_hist,
+                        updated_at = NOW()
+                """),
+                {
+                    'recipe_id': int(recipe_id) if recipe_id is not None else 0,
+                    'image_path': image_path_field,
+                    'embedding': json.dumps(emb.tolist() if hasattr(emb, 'tolist') else emb),
+                    'color_hist': json.dumps(color_hist) if color_hist is not None else None,
+                })
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)}), 500
+
+        import subprocess
+        try:
+            subprocess.run(["python", "faiss_build.py"], cwd=os.path.dirname(os.path.abspath(__file__)), check=True)
+            global faiss_recipe_index, faiss_recipe_ids
+            if HAS_FAISS and os.path.exists(FAISS_RECIPE_INDEX_PATH) and os.path.exists(FAISS_RECIPE_IDS_PATH):
+                faiss_recipe_index = faiss.read_index(FAISS_RECIPE_INDEX_PATH)
+                faiss_recipe_ids = _np.load(FAISS_RECIPE_IDS_PATH)
+                print('Reloaded FAISS recipe index with', faiss_recipe_ids.shape[0], 'ids')
+        except Exception as e:
+            print("Failed to rebuild/reload FAISS:", e)
+
+        return jsonify({'success': True, 'recipe_id': int(recipe_id) if recipe_id is not None else None})
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+
+@app.route("/search_recipe", methods=["POST"])
+def search_recipe():
+    if "image" not in request.files:
+        return jsonify({"error": "No image"}), 400
+
+    file = request.files["image"]
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1] or ".jpg") as tmp:
+        file.save(tmp.name)
+        try:
+            query_embedding = generate_embedding(tmp.name)
+        finally:
+            try:
+                os.unlink(tmp.name)
+            except Exception:
+                pass
+
+    results = []
+    if faiss_recipe_index is not None:
+        try:
+            k = 100
+            q = _np.asarray(query_embedding, dtype=_np.float32).reshape(1, -1)
+            D, I = faiss_recipe_index.search(q, k)
+            ids = []
+            sims = []
+            for dist, idx in zip(D[0], I[0]):
+                if idx < 0:
+                    continue
+                pid = int(faiss_recipe_ids[idx])
+                ids.append(pid)
+                sims.append(float(dist))
+
+            if ids:
+                placeholders = ','.join([':id' + str(i) for i in range(len(ids))])
+                params = {('id' + str(i)): ids[i] for i in range(len(ids))}
+                recipes_info = {}
+                with engine.connect() as conn:
+                    rows = conn.execute(text(f"SELECT id, title as name, slug, thumbnail FROM recipes WHERE id IN ({placeholders}) AND is_published=1"), params).fetchall()
+                    for r in rows:
+                        recipes_info[int(r.id)] = {"name": r.name, "slug": r.slug, "thumbnail": r.thumbnail}
+
+                for pid, sim in zip(ids, sims):
+                    info = recipes_info.get(pid)
+                    if not info:
+                        continue
+                    results.append({
+                        "recipe_id": pid,
+                        "name": info["name"],
+                        "slug": info["slug"],
+                        "thumbnail": info["thumbnail"],
+                        "score": sim,
+                        "similarity": sim,
+                    })
+
+            results = sorted(results, key=lambda x: x['score'], reverse=True)[:12]
+            return jsonify({"success": True, "results": results})
+        except Exception as e:
+            print('FAISS retrieval failed:', e)
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    # Fallback: FAISS recipe index not loaded, return all published recipes from DB
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(text("SELECT id, title as name, slug, thumbnail FROM recipes WHERE is_published = 1 ORDER BY view_count DESC LIMIT 6")).fetchall()
+            for r in rows:
+                results.append({
+                    "recipe_id": int(r.id),
+                    "name": r.name,
+                    "slug": r.slug,
+                    "thumbnail": r.thumbnail,
+                    "score": 0,
+                    "similarity": 0,
+                })
+        return jsonify({"success": True, "results": results})
+    except Exception as e:
+        print('DB fallback failed:', e)
+        return jsonify({"success": False, "error": "FAISS index not loaded and DB fallback failed"}), 500
+
+
+@app.route("/search_global", methods=["POST"])
+def search_global():
+    if "image" not in request.files:
+        return jsonify({"error": "No image"}), 400
+
+    file = request.files["image"]
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1] or ".jpg") as tmp:
+        file.save(tmp.name)
+        try:
+            query_embedding = generate_embedding(tmp.name)
+        finally:
+            try:
+                os.unlink(tmp.name)
+            except Exception:
+                pass
+
+    response_data = {"success": True, "products": [], "recipes": [], "label": "Thực phẩm"}
+
+    # Search Products
+    if faiss_index is not None:
+        try:
+            k = 100
+            q = _np.asarray(query_embedding, dtype=_np.float32).reshape(1, -1)
+            D, I = faiss_index.search(q, k)
+            ids = []
+            sims = []
+            for dist, idx in zip(D[0], I[0]):
+                if idx < 0:
+                    continue
+                pid = int(faiss_ids[idx])
+                ids.append(pid)
+                sims.append(float(dist))
+
+            if ids:
+                placeholders = ','.join([':id' + str(i) for i in range(len(ids))])
+                params = {('id' + str(i)): ids[i] for i in range(len(ids))}
+                products_info = {}
+                with engine.connect() as conn:
+                    rows = conn.execute(text(f"SELECT id, name FROM products WHERE id IN ({placeholders})"), params).fetchall()
+                    for r in rows:
+                        products_info[int(r.id)] = {"name": r.name}
+
+                for pid, sim in zip(ids, sims):
+                    info = products_info.get(pid)
+                    if not info:
+                        continue
+                    response_data["products"].append({
+                        "product_id": pid,
+                        "name": info["name"],
+                        "similarity": sim,
+                    })
+            response_data["products"] = sorted(response_data["products"], key=lambda x: x['similarity'], reverse=True)[:12]
+            if len(response_data["products"]) > 0:
+                response_data["label"] = response_data["products"][0]["name"]
+        except Exception as e:
+            print('FAISS product retrieval failed:', e)
+
+    # Search Recipes
+    if faiss_recipe_index is not None:
+        try:
+            k = 100
+            q = _np.asarray(query_embedding, dtype=_np.float32).reshape(1, -1)
+            D, I = faiss_recipe_index.search(q, k)
+            ids = []
+            sims = []
+            for dist, idx in zip(D[0], I[0]):
+                if idx < 0:
+                    continue
+                pid = int(faiss_recipe_ids[idx])
+                ids.append(pid)
+                sims.append(float(dist))
+
+            if ids:
+                response_data["recipes"] = [{"recipe_id": pid, "similarity": sim} for pid, sim in zip(ids, sims)]
+                response_data["recipes"] = sorted(response_data["recipes"], key=lambda x: x['similarity'], reverse=True)[:12]
+        except Exception as e:
+            print('FAISS recipe retrieval failed:', e)
+    
+    return jsonify(response_data)
 
 # =========================
 # RUN

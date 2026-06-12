@@ -12,6 +12,145 @@ use Illuminate\Support\Facades\Storage;
 
 class AiSearchService
 {
+    public function searchGlobalByImage(UploadedFile $image): array
+    {
+        $path = $image->store('ai-searches', 'public');
+        $fullPath = Storage::disk('public')->path($path);
+
+        $apiUrl = config('services.ai.url');
+        $resultProducts = [];
+        $resultRecipes = [];
+        $label = 'Không xác định';
+
+        if ($apiUrl) {
+            try {
+                $resource = fopen($fullPath, 'r');
+                $response = Http::timeout(30)
+                    ->attach('image', $resource, basename($fullPath))
+                    ->post(rtrim($apiUrl, '/').'/search_global');
+                if (is_resource($resource)) {
+                    fclose($resource);
+                }
+
+                if ($response->successful()) {
+                    $json = $response->json();
+                    if (!empty($json['success'])) {
+                        $resultProducts = $json['products'] ?? [];
+                        $resultRecipes = $json['recipes'] ?? [];
+                        $label = $json['label'] ?? 'Thực phẩm';
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Global AI Search Error: " . $e->getMessage());
+            }
+        }
+
+        // Fetch Products
+        $products = collect();
+        if (!empty($resultProducts)) {
+            $pIds = array_column($resultProducts, 'product_id');
+            $fetchedProducts = \App\Models\Product::with(['variants', 'category'])->whereIn('id', $pIds)->where('is_active', true)->get()->keyBy('id');
+            foreach ($resultProducts as $r) {
+                if (isset($fetchedProducts[$r['product_id']])) {
+                    $product = clone $fetchedProducts[$r['product_id']];
+                    $product->setAttribute('similarity', $r['similarity'] ?? 0);
+                    $products->push($product);
+                }
+            }
+        }
+
+        // Fetch Recipes
+        $recipes = collect();
+        if (!empty($resultRecipes)) {
+            $rIds = array_column($resultRecipes, 'recipe_id');
+            $fetchedRecipes = \App\Models\Recipe::whereIn('id', $rIds)->where('is_published', true)->get()->keyBy('id');
+            foreach ($resultRecipes as $r) {
+                if (isset($fetchedRecipes[$r['recipe_id']])) {
+                    $recipe = clone $fetchedRecipes[$r['recipe_id']];
+                    $recipe->setAttribute('similarity', $r['similarity'] ?? 0);
+                    $recipes->push($recipe);
+                }
+            }
+        }
+
+        AiSearchLog::create([
+            'user_id' => Auth::id(),
+            'image_path' => $path,
+            'ai_results' => ['products' => $resultProducts, 'recipes' => $resultRecipes],
+            'detected_label' => $label,
+            'confidence' => ($resultProducts[0]['similarity'] ?? $resultRecipes[0]['similarity'] ?? 0),
+        ]);
+
+        return [
+            'label' => $label,
+            'products' => $products,
+            'recipes' => $recipes,
+            'image_url' => Storage::disk('public')->url($path),
+        ];
+    }
+    public function searchRecipeByImage(UploadedFile $image): array
+    {
+        $path = $image->store('ai-searches', 'public');
+        $fullPath = Storage::disk('public')->path($path);
+
+        $apiUrl = config('services.ai.url');
+        $result = [];
+
+        if ($apiUrl) {
+            try {
+                $resource = fopen($fullPath, 'r');
+                $response = Http::timeout(30)
+                    ->attach('image', $resource, basename($fullPath))
+                    ->post(rtrim($apiUrl, '/').'/search_recipe');
+                if (is_resource($resource)) {
+                    fclose($resource);
+                }
+
+                \Illuminate\Support\Facades\Log::info("Recipe AI Search Response", [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                if ($response->successful()) {
+                    $json = $response->json();
+                    if (!empty($json['success']) && !empty($json['results']) && is_array($json['results'])) {
+                        $result = $json['results'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Recipe AI Search Error: " . $e->getMessage());
+            }
+        }
+
+        $recipes = collect();
+        if (!empty($result)) {
+            $ids = array_column($result, 'recipe_id');
+            $fetched = \App\Models\Recipe::whereIn('id', $ids)->where('is_published', true)->get()->keyBy('id');
+            foreach ($result as $r) {
+                if (isset($fetched[$r['recipe_id']])) {
+                    $recipe = clone $fetched[$r['recipe_id']];
+                    $recipe->setAttribute('similarity', $r['similarity'] ?? 0);
+                    $recipes->push($recipe);
+                }
+            }
+        }
+
+        // Fallback: if AI returned no results, return all published recipes
+        if ($recipes->isEmpty()) {
+            \Illuminate\Support\Facades\Log::info("Recipe AI Search fallback: returning all published recipes");
+            $recipes = \App\Models\Recipe::where('is_published', true)
+                ->orderByDesc('view_count')
+                ->limit(6)
+                ->get();
+        }
+
+        return [
+            'label' => $result[0]['name'] ?? 'Món ăn',
+            'confidence' => $result[0]['similarity'] ?? 0,
+            'recipes' => $recipes,
+            'image_url' => Storage::disk('public')->url($path),
+        ];
+    }
     public function searchByImage(UploadedFile $image): array
     {
         $path = $image->store('ai-searches', 'public');

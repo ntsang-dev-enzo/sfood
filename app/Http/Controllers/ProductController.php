@@ -106,30 +106,41 @@ class ProductController extends Controller
         $offset = (int) $request->get('offset', 0);
         $limit = (int) $request->get('limit', 8);
 
-        $rows = Product::where('category_id', $product->category_id)
+        $rows = Product::with('variants')
+            ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->orderByDesc('view_count')
             ->skip($offset)
             ->take($limit)
             ->get(['id', 'name', 'slug', 'thumbnail']);
 
-        return response()->json(['data' => $rows]);
+        $data = $rows->map(function ($row) {
+            return [
+                'name' => $row->name,
+                'slug' => $row->slug,
+                'thumbnail' => $row->thumbnail,
+                'price' => number_format($row->minPrice()) . 'đ',
+            ];
+        });
+
+        return response()->json(['data' => $data]);
     }
 
-    public function aiSearch(Request $request, AiSearchService $aiSearch)
+    public function aiSearch(\Illuminate\Http\Request $request, \App\Services\AiSearchService $aiSearch)
     {
         $request->validate([
             'ai_image' => 'required|image|max:5120',
         ]);
 
         $results = $aiSearch->searchByImage($request->file('ai_image'));
+        \Illuminate\Support\Facades\Log::info('AI_RESULTS_DUMP_PRODUCT', ['products' => $results['products']]);
 
         return redirect()
-            ->route('products.index', $request->only(['search', 'category', 'min_price', 'max_price']))
-            ->with('ai_results', $results);
+            ->route('products.index', $request->only(['search', 'category', 'min_price', 'max_price', 'sort']))
+            ->with('ai_results', $results['products']);
     }
 
-    public function addToCart(Request $request, CartService $cart)
+    public function addToCart(\Illuminate\Http\Request $request, \App\Services\CartService $cart)
     {
         $data = $request->validate([
             'variant_id' => 'required|exists:product_variants,id',

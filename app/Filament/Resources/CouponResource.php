@@ -34,10 +34,21 @@ class CouponResource extends Resource
             ])->required(),
             Forms\Components\TextInput::make('value')->label('Giá trị giảm')->numeric()->default(0),
             Forms\Components\TextInput::make('min_order_amount')->label('Đơn hàng tối thiểu')->numeric()->default(0),
-            Forms\Components\MultiSelect::make('applicable_category_ids')
+            Forms\Components\Select::make('applicable_category_ids')
+                ->multiple()
                 ->label('Áp dụng cho danh mục')
                 ->options(Category::pluck('name', 'id')->toArray())
                 ->helperText('Để trống nếu áp dụng cho tất cả danh mục'),
+            Forms\Components\Select::make('applicable_product_ids')
+                ->multiple()
+                ->label('Áp dụng cho sản phẩm')
+                ->options(\App\Models\Product::pluck('name', 'id')->toArray())
+                ->helperText('Để trống nếu áp dụng cho tất cả sản phẩm'),
+            Forms\Components\Select::make('applicable_variant_ids')
+                ->multiple()
+                ->label('Áp dụng cho biến thể')
+                ->options(\App\Models\ProductVariant::with('product')->get()->mapWithKeys(fn($v) => [$v->id => $v->product->name . ' - ' . $v->name])->toArray())
+                ->helperText('Để trống nếu áp dụng cho tất cả biến thể'),
             Forms\Components\DateTimePicker::make('starts_at')->label('Thời gian bắt đầu'),
             Forms\Components\DateTimePicker::make('expires_at')->label('Thời gian kết thúc'),
             Forms\Components\TextInput::make('usage_limit')->label('Giới hạn số lần dùng')->numeric(),

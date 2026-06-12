@@ -24,17 +24,30 @@ class CouponController extends Controller
             return response()->json(['valid' => false, 'message' => 'Mã không tồn tại.'], 404);
         }
 
-        if (! $coupon->isValid($subtotal)) {
-            return response()->json(['valid' => false, 'message' => 'Mã không hợp lệ cho giá trị đơn hàng hiện tại.'], 422);
+        // Tính tổng phụ chỉ dành cho các sản phẩm KHÔNG phải là flash sale
+        $eligibleSubtotal = $cart->items()
+            ->filter(fn($item) => ! $item->productVariant->isFlashActive())
+            ->sum(fn($item) => $item->subtotal());
+
+        if ($eligibleSubtotal <= 0 && $subtotal > 0) {
+            return response()->json(['valid' => false, 'message' => 'Sản phẩm đang Flash Sale không được áp dụng mã giảm giá.'], 422);
         }
 
-        // check categories applicability
-        $categoryIds = $cart->items()->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
+        if (! $coupon->isValid($eligibleSubtotal)) {
+            return response()->json(['valid' => false, 'message' => 'Mã không hợp lệ cho giá trị đơn hàng đủ điều kiện hiện tại.'], 422);
+        }
+
+        // check categories applicability (only on eligible items)
+        $categoryIds = $cart->items()
+            ->filter(fn($item) => ! $item->productVariant->isFlashActive())
+            ->pluck('productVariant.product.category_id')
+            ->filter()->unique()->values()->all();
+            
         if (! $coupon->appliesToCategories($categoryIds)) {
-            return response()->json(['valid' => false, 'message' => 'Mã không áp dụng cho sản phẩm trong giỏ hàng.'], 422);
+            return response()->json(['valid' => false, 'message' => 'Mã không áp dụng cho sản phẩm đủ điều kiện trong giỏ hàng.'], 422);
         }
 
-        $discount = $coupon->calculateDiscount($subtotal, $shipping);
+        $discount = $coupon->calculateDiscount($eligibleSubtotal, $shipping);
         if ($coupon->type === 'free_shipping') {
             $shipping = 0;
         }

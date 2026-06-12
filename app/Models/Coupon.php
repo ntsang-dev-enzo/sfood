@@ -11,6 +11,8 @@ class Coupon extends Model
         'type',
         'value',
         'applicable_category_ids',
+        'applicable_product_ids',
+        'applicable_variant_ids',
         'min_order_amount',
         'starts_at',
         'expires_at',
@@ -24,6 +26,8 @@ class Coupon extends Model
         return [
             'value' => 'decimal:2',
             'applicable_category_ids' => 'array',
+            'applicable_product_ids' => 'array',
+            'applicable_variant_ids' => 'array',
             'min_order_amount' => 'decimal:2',
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
@@ -66,12 +70,6 @@ class Coupon extends Model
         };
     }
 
-    /**
-     * Determine if this coupon applies to any of the provided category ids.
-     * If coupon has no applicable_category_ids set, it applies to all categories.
-     *
-     * @param int[] $categoryIds
-     */
     public function appliesToCategories(array $categoryIds): bool
     {
         if (empty($this->applicable_category_ids) || count($this->applicable_category_ids) === 0) {
@@ -79,5 +77,40 @@ class Coupon extends Model
         }
 
         return count(array_intersect($this->applicable_category_ids, $categoryIds)) > 0;
+    }
+
+    public function appliesToProducts(array $productIds): bool
+    {
+        if (empty($this->applicable_product_ids) || count($this->applicable_product_ids) === 0) {
+            return true;
+        }
+
+        return count(array_intersect($this->applicable_product_ids, $productIds)) > 0;
+    }
+
+    public function appliesToVariants(array $variantIds): bool
+    {
+        if (empty($this->applicable_variant_ids) || count($this->applicable_variant_ids) === 0) {
+            return true;
+        }
+
+        return count(array_intersect($this->applicable_variant_ids, $variantIds)) > 0;
+    }
+
+    public function getEligibleSubtotal($items): float
+    {
+        return $items->filter(function ($item) {
+            if ($item->productVariant->isFlashActive()) return false;
+            
+            $catId = $item->productVariant->product->category_id;
+            $prodId = $item->productVariant->product_id;
+            $varId = $item->productVariant->id;
+
+            if (!$this->appliesToCategories([$catId])) return false;
+            if (!$this->appliesToProducts([$prodId])) return false;
+            if (!$this->appliesToVariants([$varId])) return false;
+
+            return true;
+        })->sum(fn($item) => $item->subtotal());
     }
 }

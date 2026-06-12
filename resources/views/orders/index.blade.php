@@ -1,13 +1,6 @@
-@extends('layouts.app')
-@section('title', 'Đơn hàng - SFood')
-@section('content')
-<div class="bg-earth-800 text-cream-50 py-12">
-    <div class="max-w-4xl mx-auto px-4">
-        <h1 class="text-3xl font-bold">Đơn hàng của tôi</h1>
-    </div>
-</div>
-
-<div class="max-w-4xl mx-auto px-4 py-8 space-y-4">
+@extends('layouts.profile')
+@section('profile_content')
+<div class="space-y-4">
     <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
         <a href="{{ route('orders.index') }}" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium {{ !request('status') ? 'bg-leaf-600 text-white' : 'bg-cream-200 text-earth-700 hover:bg-cream-300' }}">Tất cả</a>
         <a href="{{ route('orders.index', ['status' => 'pending']) }}" class="whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium {{ request('status') == 'pending' ? 'bg-leaf-600 text-white' : 'bg-cream-200 text-earth-700 hover:bg-cream-300' }}">Chờ xử lý</a>
@@ -53,7 +46,16 @@
             <ul class="text-sm space-y-2 text-earth-600 bg-cream-100 rounded-xl p-4">
                 @foreach ($order->items as $item)
                     <li class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-cream-200 last:border-0 pb-2 last:pb-0">
-                        <span>{{ $item->product_name }} ({{ $item->variant_name }}) × {{ $item->quantity }}</span>
+                        <span>
+                            @if($item->productVariant && $item->productVariant->product)
+                                <a href="{{ route('products.show', $item->productVariant->product->slug) }}" class="font-medium hover:text-leaf-600 hover:underline transition">
+                                    {{ $item->product_name }} ({{ $item->variant_name }})
+                                </a>
+                            @else
+                                {{ $item->product_name }} ({{ $item->variant_name }})
+                            @endif
+                            × {{ $item->quantity }}
+                        </span>
                         @if($order->order_status === 'delivered')
                             @php
                                 $productId = $item->productVariant->product_id;

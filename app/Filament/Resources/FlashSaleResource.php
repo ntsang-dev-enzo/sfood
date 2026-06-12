@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Authorization\AdminAuthorization as Authz;
 use App\Filament\Resources\FlashSaleResource\Pages;
 use App\Models\ProductVariant;
 use Filament\Forms;
@@ -29,15 +30,33 @@ class FlashSaleResource extends Resource
                 Forms\Components\Select::make('product_id')
                     ->label('Sản phẩm')
                     ->relationship('product', 'name')
-                    ->disabled(),
+                    ->searchable()
+                    ->preload()
+                    ->live()
+                    ->disabled(fn (string $operation): bool => $operation === 'edit')
+                    ->required(fn (string $operation): bool => $operation === 'create'),
+                Forms\Components\Select::make('id') // We map this to the variant ID
+                    ->label('Biến thể sản phẩm')
+                    ->options(function (Forms\Get $get) {
+                        $productId = $get('product_id');
+                        if (!$productId) return [];
+                        return \App\Models\ProductVariant::where('product_id', $productId)->pluck('name', 'id');
+                    })
+                    ->searchable()
+                    ->preload()
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->disabled(fn (string $operation): bool => $operation === 'edit')
+                    ->visible(fn (string $operation): bool => $operation === 'create'),
                 Forms\Components\TextInput::make('name')
                     ->label('Tên biến thể')
-                    ->disabled(),
+                    ->disabled()
+                    ->visible(fn (string $operation): bool => $operation === 'edit'),
                 Forms\Components\TextInput::make('price')
                     ->label('Giá bán gốc')
                     ->numeric()
                     ->disabled()
-                    ->prefix('đ'),
+                    ->prefix('đ')
+                    ->visible(fn (string $operation): bool => $operation === 'edit'),
                 Forms\Components\TextInput::make('flash_sale_price')
                     ->label('Giá Flash Sale')
                     ->numeric()
@@ -49,6 +68,17 @@ class FlashSaleResource extends Resource
                 Forms\Components\DateTimePicker::make('flash_sale_ends_at')
                     ->label('Kết thúc Flash Sale')
                     ->required(),
+                Forms\Components\TextInput::make('flash_sale_stock')
+                    ->label('Giới hạn số lượng bán')
+                    ->numeric()
+                    ->nullable()
+                    ->helperText('Để trống nếu không giới hạn'),
+                Forms\Components\TextInput::make('flash_sale_sold')
+                    ->label('Số lượng đã bán')
+                    ->numeric()
+                    ->default(0)
+                    ->disabled(fn (string $operation): bool => $operation === 'create')
+                    ->visible(fn (string $operation): bool => $operation === 'edit'),
             ]);
     }
 
@@ -81,26 +111,66 @@ class FlashSaleResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('active_flash_sales')
-                    ->label('Đang diễn ra')
-                    ->query(fn (Builder $query): Builder => $query->whereNotNull('flash_sale_price')
-                        ->where('flash_sale_starts_at', '<=', now())
-                        ->where('flash_sale_ends_at', '>=', now())
-                    )
-                    ->default(),
-                Tables\Filters\Filter::make('has_flash_sales')
-                    ->label('Có Flash Sale')
-                    ->query(fn (Builder $query): Builder => $query->whereNotNull('flash_sale_price')),
+                Tables\Filters\SelectFilter::make('flash_sale_status')
+                    ->label('Trạng thái Flash Sale')
+                    ->options([
+                        'active' => 'Đang diễn ra',
+                        'upcoming' => 'Sắp diễn ra',
+                        'ended' => 'Đã kết thúc',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['value'])) {
+                            return $query->whereNotNull('flash_sale_price');
+                        }
+
+                        $now = now();
+                        if ($data['value'] === 'active') {
+                            return $query->whereNotNull('flash_sale_price')
+                                ->where('flash_sale_starts_at', '<=', $now)
+                                ->where('flash_sale_ends_at', '>=', $now);
+                        }
+                        if ($data['value'] === 'upcoming') {
+                            return $query->whereNotNull('flash_sale_price')
+                                ->where('flash_sale_starts_at', '>', $now);
+                        }
+                        if ($data['value'] === 'ended') {
+                            return $query->whereNotNull('flash_sale_price')
+                                ->where('flash_sale_ends_at', '<', $now);
+                        }
+
+                        return $query;
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ]);
     }
 
+    public static function canViewAny(): bool
+    {
+        return Authz::canManageCatalog();
+    }
+
+    public static function canCreate(): bool
+    {
+        return Authz::canManageCatalog();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Authz::canManageCatalog();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Authz::isAdmin();
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListFlashSales::route('/'),
+            'create' => Pages\CreateFlashSale::route('/create'),
             'edit' => Pages\EditFlashSale::route('/{record}/edit'),
         ];
     }

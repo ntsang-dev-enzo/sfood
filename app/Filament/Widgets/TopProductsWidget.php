@@ -38,14 +38,17 @@ class TopProductsWidget extends BaseWidget
             ->select('product_variants.product_id', DB::raw('SUM(order_items.quantity) as total_sold'))
             ->groupBy('product_variants.product_id')
             ->orderByDesc('total_sold')
-            ->limit(5)
+            ->limit(12)
             ->get()
             ->pluck('total_sold', 'product_id');
 
+        $query = Product::query()->whereIn('id', $topProductsIds->keys());
+        if ($topProductsIds->isNotEmpty()) {
+            $query->orderByRaw('FIELD(id, ' . $topProductsIds->keys()->implode(',') . ')');
+        }
+
         return $table
-            ->query(
-                Product::query()->whereIn('id', $topProductsIds->keys())
-            )
+            ->query($query)
             ->columns([
                 Tables\Columns\ImageColumn::make('thumbnail')
                     ->label('Hình ảnh')
@@ -63,7 +66,6 @@ class TopProductsWidget extends BaseWidget
                     ->badge()
                     ->color('success'),
             ])
-            ->defaultSort('total_sold', 'desc')
             ->paginated(false);
     }
 }

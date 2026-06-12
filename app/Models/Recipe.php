@@ -19,7 +19,22 @@ class Recipe extends Model
         'cook_time',
         'view_count',
         'is_published',
+        'recipe_category_id',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(RecipeCategory::class, 'recipe_category_id');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function (Recipe $recipe) {
+            if ($recipe->wasChanged('thumbnail') || ($recipe->wasRecentlyCreated && $recipe->thumbnail)) {
+                \App\Jobs\EmbedRecipeImage::dispatch($recipe);
+            }
+        });
+    }
 
     public function getTitleAttribute($value)
     {

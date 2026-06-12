@@ -3,7 +3,10 @@
 @section('content')
 <div class="min-h-[70vh] flex items-center justify-center px-4 py-12">
     <div class="card w-full max-w-md p-8">
-        <h1 class="text-2xl font-bold text-earth-800 text-center mb-2">Quên mật khẩu</h1>
+        <div class="text-center mb-8">
+            <img src="{{ asset('/logo.png') }}" alt="SFood Logo" class="h-16 mx-auto object-contain mb-4">
+            <h1 class="text-2xl font-bold text-earth-800">Quên mật khẩu</h1>
+        </div>
         <p class="text-earth-500 text-sm text-center mb-6">Nhập email để nhận link đặt lại mật khẩu</p>
 
         <form method="POST" action="{{ route('password.email') }}" class="space-y-4">

@@ -50,11 +50,21 @@ class HomeController extends Controller
                 ->select('products.*', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as total_sold'))
                 ->groupBy('products.id')
                 ->orderByDesc('total_sold')
-                ->limit(8)
+                ->limit(12)
                 ->get(),
             'flashSales' => Product::whereHas('variants', function ($q) {
-                $q->whereNotNull('sale_price')->whereColumn('sale_price', '<', 'price');
-            })->with(['variants' => function ($q) { $q->whereNotNull('sale_price')->whereColumn('sale_price', '<', 'price'); }])->limit(6)->get(),
+                $q->whereNotNull('flash_sale_price')
+                  ->where('flash_sale_starts_at', '<=', now())
+                  ->where('flash_sale_ends_at', '>=', now());
+            })->with(['variants' => function ($q) {
+                $q->whereNotNull('flash_sale_price')
+                  ->where('flash_sale_starts_at', '<=', now())
+                  ->where('flash_sale_ends_at', '>=', now());
+            }])->get()->sortByDesc(function($product) {
+                $variant = $product->variants->first();
+                if (!$variant || !$variant->flash_sale_stock) return 0;
+                return $variant->flash_sale_sold / $variant->flash_sale_stock;
+            })->take(6),
             'recipes' => Recipe::where('is_published', true)->orderByDesc('view_count')->limit(4)->get(),
             'suggestedRecipes' => Recipe::where('is_published', true)->inRandomOrder()->limit(6)->get(),
         ]);

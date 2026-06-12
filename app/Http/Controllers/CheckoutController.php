@@ -24,10 +24,12 @@ class CheckoutController extends Controller
 
         // compute available coupons for this cart
         $items = $cart->items();
-        $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
+        $eligibleSubtotal = $items->filter(fn($item) => !$item->productVariant->isFlashActive())->sum(fn($item) => $item->subtotal());
+        $categoryIds = $items->filter(fn($item) => !$item->productVariant->isFlashActive())->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
 
-        $availableCoupons = Coupon::where('is_active', true)->get()->filter(function (Coupon $c) use ($subtotal, $categoryIds) {
-            return $c->isValid($subtotal) && $c->appliesToCategories($categoryIds);
+        $availableCoupons = Coupon::where('is_active', true)->get()->filter(function (Coupon $c) use ($subtotal, $eligibleSubtotal, $categoryIds) {
+            if ($eligibleSubtotal <= 0 && $subtotal > 0) return false;
+            return $c->isValid($eligibleSubtotal) && $c->appliesToCategories($categoryIds);
         })->values()->map(function (Coupon $c) {
             $names = [];
             if (!empty($c->applicable_category_ids)) {
@@ -102,6 +104,8 @@ class CheckoutController extends Controller
     */
 
         $subtotal = $cart->subtotal();
+        $items = $cart->items();
+        $eligibleSubtotal = 0;
 
         $shipping = 30000;
 
@@ -134,12 +138,12 @@ class CheckoutController extends Controller
         // If coupon grants free shipping, override shipping to 0
         if (!empty($data['coupon_code'])) {
             $coupon = Coupon::where('code', $data['coupon_code'])->first();
-            if ($coupon && $coupon->isValid($subtotal)) {
-                // determine categories in cart to validate applicability
-                $items = $cart->items();
-                $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
-                if ($coupon->appliesToCategories($categoryIds) && $coupon->type === 'free_shipping') {
-                    $shipping = 0;
+            if ($coupon) {
+                $eligibleSubtotal = $coupon->getEligibleSubtotal($items);
+                if ($eligibleSubtotal > 0 && $coupon->isValid($eligibleSubtotal)) {
+                    if ($coupon->type === 'free_shipping') {
+                        $shipping = 0;
+                    }
                 }
             }
         }
@@ -148,11 +152,10 @@ class CheckoutController extends Controller
         $discount = 0;
         if (!empty($data['coupon_code'])) {
             $coupon = $coupon ?? Coupon::where('code', $data['coupon_code'])->first();
-            if ($coupon && $coupon->isValid($subtotal)) {
-                $items = $cart->items();
-                $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
-                if ($coupon->appliesToCategories($categoryIds)) {
-                    $discount = $coupon->calculateDiscount($subtotal, $shipping);
+            if ($coupon) {
+                $eligibleSubtotal = $coupon->getEligibleSubtotal($items);
+                if ($eligibleSubtotal > 0 && $coupon->isValid($eligibleSubtotal)) {
+                    $discount = $coupon->calculateDiscount($eligibleSubtotal, $shipping);
                 }
             }
         }

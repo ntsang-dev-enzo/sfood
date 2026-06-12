@@ -4,6 +4,7 @@
 <div class="min-h-[70vh] flex items-center justify-center px-4 py-12">
     <div class="card w-full max-w-md p-8">
         <div class="text-center mb-8">
+            <img src="{{ asset('/logo.png') }}" alt="SFood Logo" class="h-16 mx-auto object-contain mb-4">
             <h1 class="text-2xl font-bold text-earth-800">Tạo tài khoản</h1>
             <p class="text-earth-500 text-sm mt-1">Tham gia cộng đồng SFood</p>
         </div>

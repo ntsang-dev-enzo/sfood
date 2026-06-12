@@ -55,12 +55,11 @@
     <header class="bg-cream-50 dark:bg-[#1e1e1e] border-b border-cream-300 dark:border-gray-800 sticky top-0 z-40 shadow-sm">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center gap-4 py-4">
-                <a href="{{ route('home') }}" class="flex items-center gap-2 flex-shrink-0">
-                    <span
-                        class="w-10 h-10 rounded-xl bg-leaf-600 flex items-center justify-center text-white text-xl font-bold">S</span>
+                <a href="{{ route('home') }}" class="flex items-center gap-3 flex-shrink-0">
+                    <img src="{{ asset('/logo.png') }}" alt="SFood Logo" class="w-auto h-12 rounded-xl object-contain shadow-sm border border-cream-200 dark:border-gray-700 bg-white">
                     <div class="hidden sm:block">
-                        <p class="font-bold text-lg text-earth-800 dark:text-white leading-tight">SFood</p>
-                        <p class="text-[10px] text-earth-500 dark:text-gray-400 uppercase tracking-widest">Fresh & Organic</p>
+                        <p class="font-bold text-xl text-earth-800 dark:text-white leading-tight">SFood</p>
+                        <p class="text-[10px] text-leaf-600 dark:text-leaf-400 uppercase tracking-widest font-semibold">Fresh & Organic</p>
                     </div>
                 </a>
 
@@ -229,6 +228,18 @@
         </div>
     </footer>
 
+    {{-- Lucky Wheel Floating Button --}}
+    @auth
+        <a href="{{ route('lucky-wheel.index') }}" class="fixed bottom-[5.5rem] right-6 z-40 w-14 h-14 bg-gradient-to-tr from-yellow-400 to-orange-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-orange-500/50 transition-all duration-300 group">
+            <span class="text-2xl" style="animation: spin 10s linear infinite;">🎡</span>
+            <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Vòng Quay May Mắn</span>
+            @if(auth()->user()->last_free_spin_at === null || auth()->user()->last_free_spin_at->diffInHours(now()) >= 24)
+                <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-ping"></span>
+                <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+            @endif
+        </a>
+    @endauth
+
     {{-- AI Chatbox --}}
     <div id="ai-chatbox-container" class="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
         <!-- Chat Window -->
@@ -255,7 +266,11 @@
                 </div>
             </div>
             <!-- Input -->
-            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex gap-2">
+            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2">
+                <label class="cursor-pointer p-2 text-earth-400 hover:text-leaf-600 transition" title="Gửi hình ảnh">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <input type="file" id="ai-chat-image-input" accept="image/*" class="hidden">
+                </label>
                 <input type="text" id="ai-chat-input" class="flex-1 bg-cream-50 dark:bg-gray-900 border border-cream-200 dark:border-gray-700 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-leaf-500 text-earth-800 dark:text-gray-300" placeholder="Nhập tin nhắn..." autocomplete="off">
                 <button type="button" id="send-chat-btn" class="bg-leaf-600 hover:bg-leaf-700 text-white rounded-xl px-4 py-2 transition shadow-sm">
                     <svg class="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
@@ -350,16 +365,28 @@
     // Chat History Array
     let chatHistory = [];
 
-    function appendMessage(msg, isUser = false) {
-        const div = document.createElement('div');
-        div.className = `flex gap-2 max-w-[85%] ${isUser ? 'self-end justify-end' : 'self-start'}`;
-        const innerClass = isUser 
+    function appendMessage(content, isUser = false) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `flex gap-2 max-w-[85%] ${isUser ? 'self-end justify-end' : 'self-start'}`;
+        
+        const bubble = document.createElement('div');
+        bubble.className = isUser 
             ? 'bg-leaf-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm border border-leaf-700 text-sm'
             : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm markdown-body';
         
-        div.innerHTML = `<div class="${innerClass}">${msg}</div>`;
-        chatMessages.appendChild(div);
+        bubble.innerHTML = content;
+        
+        msgDiv.appendChild(bubble);
+        chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Ensure scrolling to bottom after any images finish loading
+        const images = bubble.querySelectorAll('img');
+        images.forEach(img => {
+            img.addEventListener('load', () => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        });
     }
 
     async function sendChatMessage() {
@@ -426,12 +453,92 @@
 
     sendChatBtn.addEventListener('click', sendChatMessage);
     chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendChatMessage();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatMessage();
+        }
     });
 
+    const chatImageInput = document.getElementById('ai-chat-image-input');
+    if(chatImageInput) {
+        chatImageInput.addEventListener('change', async function() {
+            if (!this.files || !this.files[0]) return;
+            
+            const file = this.files[0];
+            const objectUrl = URL.createObjectURL(file);
+            appendMessage(`<img src="${objectUrl}" class="max-w-[200px] rounded-lg border border-leaf-400 object-cover">`, true);
+
+            const typingId = 'typing-' + Date.now();
+            const typingDiv = document.createElement('div');
+            typingDiv.id = typingId;
+            typingDiv.className = 'flex gap-2 self-start w-5/6';
+            typingDiv.innerHTML = `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-400 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+            </div>`;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const formData = new FormData();
+                formData.append('ai_image', file);
+
+                const res = await fetch('{{ route('ai.chat.image') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                });
+                const data = await res.json();
+                document.getElementById(typingId).remove();
+                appendMessage(data.reply, false);
+                
+                chatImageInput.value = '';
+            } catch (e) {
+                document.getElementById(typingId).remove();
+                appendMessage('<span class="text-red-500">Lỗi gửi hình ảnh.</span>', false);
+                chatImageInput.value = '';
+            }
+        });
+    }
+
+    // Global Countdown Script
+    function updateCountdowns() {
+        document.querySelectorAll('[data-countdown]').forEach(el => {
+            const endsAt = new Date(el.dataset.countdown).getTime();
+            const now = new Date().getTime();
+            const distance = endsAt - now;
+            const timerEl = el.querySelector('.countdown-timer');
+
+            if (!timerEl) return;
+
+            if (distance < 0) {
+                timerEl.textContent = '00:00:00';
+                const badge = el.closest('.badge');
+                if (badge) badge.style.display = 'none';
+                
+                const section = el.closest('section');
+                if (section && section.classList.contains('flash-sale-section')) {
+                    section.style.display = 'none';
+                }
+                return;
+            }
+
+            const hours = Math.floor(distance / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            timerEl.textContent = String(hours).padStart(2, '0') + ':' + 
+                                  String(minutes).padStart(2, '0') + ':' + 
+                                  String(seconds).padStart(2, '0');
+        });
+    }
+    
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
 </script>
 @stack('scripts')
 </body>
 </html>
-
-

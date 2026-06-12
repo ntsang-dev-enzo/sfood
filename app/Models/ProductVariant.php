@@ -18,6 +18,8 @@ class ProductVariant extends Model
         'flash_sale_price',
         'flash_sale_starts_at',
         'flash_sale_ends_at',
+        'flash_sale_stock',
+        'flash_sale_sold',
         'stock',
         'image',
         'is_active',
@@ -53,6 +55,9 @@ class ProductVariant extends Model
 
     public function effectivePrice(): float
     {
+        if ($this->isFlashActive()) {
+            return (float) $this->flash_sale_price;
+        }
         return (float) ($this->sale_price ?? $this->price);
     }
 

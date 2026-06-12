@@ -25,7 +25,9 @@ class ItemsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('product_name'),
+            Tables\Columns\TextColumn::make('product_name')
+                ->url(fn ($record) => $record->productVariant && $record->productVariant->product ? \App\Filament\Resources\ProductResource::getUrl('edit', ['record' => $record->productVariant->product_id]) : null)
+                ->openUrlInNewTab(),
             Tables\Columns\TextColumn::make('variant_name'),
             Tables\Columns\TextColumn::make('unit_price')->money('VND'),
             Tables\Columns\TextColumn::make('quantity'),

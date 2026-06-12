@@ -21,6 +21,11 @@ class AdminAuthorization
         return self::user()?->isAdmin() ?? false;
     }
 
+    public static function isStaff(): bool
+    {
+        return self::user()?->role === 'staff';
+    }
+
     public static function canManageCatalog(): bool
     {
         return self::user()?->canManageCatalog() ?? false;

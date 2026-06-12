@@ -20,6 +20,7 @@ class OrdersChartWidget extends ChartWidget
         return [
             'daily' => 'Theo ngày',
             'monthly' => 'Theo tháng',
+            'yearly' => 'Theo năm',
         ];
     }
 
@@ -42,7 +43,27 @@ class OrdersChartWidget extends ChartWidget
         $data = [];
         $labels = [];
 
-        if ($activeFilter === 'monthly') {
+        if ($activeFilter === 'yearly') {
+            $groupedOrders = $orders->groupBy(function ($order) {
+                return Carbon::parse($order->created_at)->format('Y');
+            });
+
+            // Lấy tất cả các năm trong khoảng thời gian
+            $startYear = $startDate->copy()->startOfYear();
+            $endYear = $endDate->copy()->startOfYear();
+            $period = \Carbon\CarbonPeriod::create($startYear, '1 year', $endYear);
+            foreach ($period as $date) {
+                $year = $date->format('Y');
+                $labels[] = $year;
+                $data[] = isset($groupedOrders[$year]) ? $groupedOrders[$year]->sum('total_amount') : 0;
+            }
+            // Ensure the end year is included if period misses it
+            if (!in_array($endDate->format('Y'), $labels)) {
+                 $year = $endDate->format('Y');
+                 $labels[] = $year;
+                 $data[] = isset($groupedOrders[$year]) ? $groupedOrders[$year]->sum('total_amount') : 0;
+            }
+        } elseif ($activeFilter === 'monthly') {
             $groupedOrders = $orders->groupBy(function ($order) {
                 return Carbon::parse($order->created_at)->format('m/Y');
             });

@@ -123,6 +123,10 @@
                                     <button type="button" class="voice-search-btn p-1.5 rounded-lg text-leaf-600 hover:bg-leaf-50 dark:hover:bg-gray-600 transition" title="Tìm bằng giọng nói">
                                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
                                     </button>
+                                    <label class="cursor-pointer p-1.5 rounded-lg text-leaf-600 hover:bg-leaf-50 dark:hover:bg-gray-600 transition" title="Tìm bằng hình ảnh">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        <input type="file" accept="image/*" class="hidden" onchange="submitGlobalImageSearch(this, '{{ route('products.ai-search') }}')">
+                                    </label>
                                     <button type="submit" class="bg-leaf-600 hover:bg-leaf-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition">
                                         {{ __('app.search') }}
                                     </button>
@@ -132,65 +136,39 @@
                         <div class="suggest-dropdown" data-suggest-dropdown></div>
                     </div>
                 </div>
-
-                <!-- AI Search (Bottom) -->
-                <div class="p-5 bg-gradient-to-br from-leaf-50/50 to-cream-100/50 dark:from-gray-800 dark:to-gray-750 rounded-b-xl">
-                    <form method="POST" action="{{ route('products.ai-search') }}" enctype="multipart/form-data" class="flex flex-col justify-center">
-                        @csrf
-                        <input type="hidden" name="search" value="{{ $search }}">
-                        <input type="hidden" name="category" value="{{ $categorySlug }}">
-                        <input type="hidden" name="min_price" value="{{ $minPrice }}">
-                        <input type="hidden" name="max_price" value="{{ $maxPrice }}">
-                        <input type="hidden" name="sort" value="{{ $sort }}">
-                        
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-                            <label class="block text-sm font-bold text-leaf-800 dark:text-leaf-400 flex items-center gap-2"><span class="text-lg">🤖</span> {{ __('app.ai_search_title') }}</label>
-                        </div>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="file" name="ai_image" accept="image/*" required onchange="this.form.submit()" class="block w-full text-sm text-earth-600 dark:text-gray-300 file:mr-2 file:py-2.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-leaf-100 file:text-leaf-700 hover:file:bg-leaf-200 dark:file:bg-gray-600 dark:file:text-gray-200 cursor-pointer bg-white dark:bg-gray-700 border border-cream-200 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-leaf-500 transition shadow-sm">
-                            <button type="submit" class="btn-primary !px-4 whitespace-nowrap shadow-sm hidden">{{ __('app.upload_image') }}</button>
-                        </div>
-                        @error('ai_image')
-                            <p class="text-red-500 text-xs mt-2 font-medium">{{ $message }}</p>
-                        @enderror
-                    </form>
-                </div>
             </div>
 
-            <!-- AI Results Alert -->
-            @if ($aiResults)
-                <div class="mb-6 p-5 bg-leaf-50 dark:bg-leaf-900/30 border border-leaf-300 dark:border-leaf-700 rounded-xl shadow-sm relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-4xl">🤖</div>
-                    <p class="font-medium text-earth-800 dark:text-gray-300 text-lg mb-2">{{ __('app.ai_results') }} <span class="text-leaf-700 dark:text-leaf-400 font-bold">{{ $aiResults['label'] ?? '' }}</span>
-                        @if (!empty($aiResults['confidence']))
-                            <span class="text-sm text-earth-500 dark:text-gray-400 font-normal ml-2">({{ round(($aiResults['confidence'] ?? 0) * 100) }}% {{ __('app.ai_accuracy') }})</span>
-                        @endif
-                    </p>
-                    @if (!empty($aiResults['products']))
-                        <p class="text-sm text-earth-600 dark:text-gray-300 mb-4">{{ __('app.ai_suggestions') }}</p>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            @foreach ($aiResults['products'] as $p)
-                                <a href="{{ route('products.show', $p['slug']) }}"
-                                    class="group relative overflow-hidden rounded-2xl border border-cream-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                    <div class="absolute top-2 right-2 bg-leaf-100 dark:bg-leaf-900 text-leaf-700 dark:text-leaf-400 text-[10px] font-bold px-2 py-1 rounded-full z-10">{{ __('app.ai_chosen') }}</div>
-                                    <div class="bg-cream-50 dark:bg-gray-700 p-3 flex items-center justify-center h-32 overflow-hidden">
-                                        <img src="{{ asset('storage/' . $p['thumbnail']) }}" alt="{{ $p['name'] }}"
-                                            class="max-h-24 object-contain group-hover:scale-110 transition duration-300">
-                                    </div>
-                                    <div class="p-3 border-t border-cream-100 dark:border-gray-700">
-                                        <h3 class="text-sm font-semibold text-earth-800 dark:text-gray-300 line-clamp-2 min-h-[40px] group-hover:text-leaf-700 dark:group-hover:text-leaf-400 transition">
-                                            {{ $p['name'] }}
-                                        </h3>
-                                        <p class="text-leaf-700 dark:text-leaf-400 font-bold text-sm mt-2">
-                                            {{ number_format($p['min_price'] ?? 0) }}đ
-                                        </p>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    @else
-                        <p class="text-earth-600 dark:text-gray-400 text-sm mt-2">{{ __('app.no_ai_match') }}</p>
-                    @endif
+            @if(isset($aiResults) && count($aiResults) > 0)
+                <div class="bg-gradient-to-br from-leaf-50 to-cream-50 dark:from-gray-800 dark:to-gray-900 border border-leaf-200 dark:border-gray-700 shadow-sm rounded-xl p-5 mb-2">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-2xl">✨</span>
+                        <h2 class="text-lg font-bold text-leaf-800 dark:text-leaf-400">Kết quả tìm kiếm bằng hình ảnh</h2>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        @foreach(collect($aiResults)->take(8) as $res)
+                            @php
+                                $p = null;
+                                if ($res instanceof \App\Models\Product) {
+                                    $p = $res;
+                                } elseif (is_array($res)) {
+                                    $pId = $res['id'] ?? $res['product_id'] ?? null;
+                                    if ($pId) $p = \App\Models\Product::find($pId);
+                                } elseif (is_numeric($res) || is_string($res)) {
+                                    $p = \App\Models\Product::find($res);
+                                }
+                            @endphp
+                            @if($p)
+                                @include('partials.product-card', ['product' => $p])
+                            @else
+                                <div class="p-4 bg-red-100 text-red-800">
+                                    <p>Debug: Không thể hiển thị sản phẩm.</p>
+                                    <p>Type of res: {{ gettype($res) }}</p>
+                                    <p>Class of res: {{ is_object($res) ? get_class($res) : 'N/A' }}</p>
+                                    <p>Dump: {{ json_encode($res) }}</p>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
             @endif
 

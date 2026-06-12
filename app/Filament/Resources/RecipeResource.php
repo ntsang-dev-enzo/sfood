@@ -30,6 +30,11 @@ class RecipeResource extends Resource
                 ->afterStateUpdated(fn ($state, Forms\Set $set) => $set('slug', \Illuminate\Support\Str::slug($state))),
             Forms\Components\TextInput::make('title_en')->label('Tiêu đề tiếng Anh'),
             Forms\Components\TextInput::make('slug')->label('Đường dẫn')->required()->unique(ignoreRecord: true),
+            Forms\Components\Select::make('recipe_category_id')
+                ->label('Danh mục')
+                ->relationship('category', 'name')
+                ->searchable()
+                ->preload(),
             Forms\Components\Textarea::make('description')->label('Mô tả')->columnSpanFull(),
             Forms\Components\Textarea::make('description_en')->label('Mô tả tiếng Anh')->columnSpanFull(),
             Forms\Components\FileUpload::make('thumbnail')->label('Ảnh đại diện')->image()->directory('recipes'),

@@ -18,18 +18,21 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/lang/{locale}', function ($locale) {
-    if (in_array($locale, ['en', 'vi'])) {
-        session(['locale' => $locale]);
+Route::get('/language/{lang}', function ($lang) {
+    if (in_array($lang, ['vi', 'en'])) {
+        session()->put('locale', $lang);
     }
     return back();
 })->name('lang.switch');
 
-Route::get('/promo/collect', [App\Http\Controllers\PromoController::class, 'collect'])->name('promo.collect');
-Route::post('/promo/collect', [App\Http\Controllers\PromoController::class, 'store'])->name('promo.store');
+Route::view('/faq', 'pages.faq')->name('faq');
+Route::view('/lien-he', 'pages.contact')->name('contact');
+Route::get('/ma-giam-gia', [\App\Http\Controllers\PromoController::class, 'index'])->name('promo.index');
+Route::post('/ma-giam-gia/luu/{coupon}', [\App\Http\Controllers\PromoController::class, 'save'])->name('promo.save');
 Route::post('/coupon/validate', [App\Http\Controllers\CouponController::class, 'validateForCart'])->name('coupon.validate');
 Route::post('/coupon/remove', [App\Http\Controllers\CouponController::class, 'remove'])->name('coupon.remove');
 
+Route::post('/search/ai-global', [SearchController::class, 'aiSearchGlobal'])->name('search.ai-global');
 Route::get('/goi-y', [SearchController::class, 'suggest'])->name('search.suggest');
 
 Route::get('/gioi-thieu', [PageController::class, 'about'])->name('about');
@@ -39,6 +42,7 @@ Route::get('/hoi-dap', [PageController::class, 'faq'])->name('faq');
 Route::get('/chinh-sach', [PageController::class, 'policy'])->name('policy');
 
 Route::post('/ai-chat', [\App\Http\Controllers\ChatController::class, 'send'])->name('ai.chat');
+Route::post('/ai-chat/image', [\App\Http\Controllers\ChatController::class, 'chatImage'])->name('ai.chat.image');
 Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
 Route::post('/san-pham/ai-search', [ProductController::class, 'aiSearch'])->name('products.ai-search');
 Route::get('/san-pham/{product:slug}', [ProductController::class, 'show'])->name('products.show');
@@ -47,6 +51,7 @@ Route::post('/san-pham/{product:slug}/cart', [ProductController::class, 'addToCa
 Route::post('/san-pham/{product:slug}/favorite', [ProductController::class, 'toggleFavorite'])->middleware('auth')->name('products.favorite');
 
 Route::get('/cong-thuc', [RecipeController::class, 'index'])->name('recipes.index');
+Route::post('/cong-thuc/ai-search', [RecipeController::class, 'aiSearch'])->name('recipes.ai-search');
 Route::get('/cong-thuc/{recipe:slug}', [RecipeController::class, 'show'])->name('recipes.show');
 Route::post('/cong-thuc/{recipe:slug}/mua-nhanh', [RecipeController::class, 'quickBuy'])->name('recipes.quick-buy');
 Route::post('/cong-thuc/{recipe:slug}/favorite', [RecipeController::class, 'toggleFavorite'])->middleware('auth')->name('recipes.favorite');
@@ -60,6 +65,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/yeu-thich', [FavoriteController::class, 'index'])->name('favorites.index');
     Route::get('/yeu-thich-video', [FavoriteController::class, 'videos'])->name('favorites.videos');
 
+    Route::get('/vong-quay-may-man', [\App\Http\Controllers\LuckyWheelController::class, 'index'])->name('lucky-wheel.index');
+    Route::post('/vong-quay-may-man/spin', [\App\Http\Controllers\LuckyWheelController::class, 'spin'])->name('lucky-wheel.spin');
+
     Route::get('/thanh-toan', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/thanh-toan', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/don-hang', [OrderController::class, 'index'])->name('orders.index');
@@ -72,6 +80,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/tai-khoan', [ProfileController::class, 'edit'])->name('profile');
     Route::put('/tai-khoan', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/tai-khoan/mat-khau', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::get('/tai-khoan/dia-chi', [ProfileController::class, 'address'])->name('profile.address');
+    Route::get('/tai-khoan/vi-coupon', [ProfileController::class, 'coupons'])->name('profile.coupons');
     // Shipping addresses management
     Route::post('/tai-khoan/dia-chi', [ProfileController::class, 'storeAddress'])->name('profile.address.store');
     Route::put('/tai-khoan/dia-chi/{address}', [ProfileController::class, 'updateAddress'])->name('profile.address.update');

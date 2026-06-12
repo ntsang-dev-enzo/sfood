@@ -24,6 +24,8 @@ class User extends Authenticatable implements FilamentUser
         'avatar',
         'role',
         'google_id',
+        'lucky_spins',
+        'last_free_spin_at',
     ];
 
     protected $hidden = [
@@ -35,6 +37,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_free_spin_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

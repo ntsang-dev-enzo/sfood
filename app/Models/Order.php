@@ -58,4 +58,22 @@ class Order extends Model
     {
         return $this->hasOne(Payment::class);
     }
+
+    protected static function booted(): void
+    {
+        static::updated(function (Order $order) {
+            // Reward lucky spin when order is delivered
+            if ($order->isDirty('order_status') && $order->order_status === 'delivered') {
+                if ($order->total_amount >= 500000) {
+                    $spins = floor($order->total_amount / 500000);
+                    if ($spins > 0 && $order->user) {
+                        $order->user->increment('lucky_spins', $spins);
+                        
+                        // Notify user (optional)
+                        // ...
+                    }
+                }
+            }
+        });
+    }
 }

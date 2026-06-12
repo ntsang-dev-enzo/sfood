@@ -39,19 +39,20 @@ class OrderService
             $discount = 0;
             $coupon = null;
 
+            $eligibleSubtotal = 0;
 
             // Backend hard guarantee: if frontend/controller passed shipping_fee=0, keep it.
-            // (Đặt sớm để tránh bị override bởi các rule khác)
             if (array_key_exists('shipping_fee', $data) && (float) ($data['shipping_fee'] ?? 0) === 0.0) {
                 $shippingFee = 0;
             }
+
             if (! empty($data['coupon_code'])) {
                 $coupon = Coupon::where('code', $data['coupon_code'])->first();
-                if ($coupon && $coupon->isValid($subtotal)) {
-                    $categoryIds = $items->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
-                    if ($coupon->appliesToCategories($categoryIds)) {
+                if ($coupon) {
+                    $eligibleSubtotal = $coupon->getEligibleSubtotal($items);
+                    if ($eligibleSubtotal > 0 && $coupon->isValid($eligibleSubtotal)) {
                         // calculate discount based on current shippingFee
-                        $discount = $coupon->calculateDiscount($subtotal, $shippingFee);
+                        $discount = $coupon->calculateDiscount($eligibleSubtotal, $shippingFee);
                         if ($coupon->type === 'free_shipping') {
                             // coupon removes shipping
                             $shippingFee = 0;
@@ -102,7 +103,9 @@ class OrderService
                     'subtotal' => $price * $item->quantity,
                 ]);
 
-                $variant->decrement('stock', $item->quantity);
+                if ($variant->stock > 0) {
+                    $variant->decrement('stock', $item->quantity);
+                }
             }
 
             Payment::create([

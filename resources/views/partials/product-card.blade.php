@@ -19,7 +19,13 @@
                 <span class="badge bg-blue-500 text-white shadow-sm text-xs font-bold px-2 py-1 uppercase rounded-md">✨ New</span>
             @endif
             @if($hasFlashSale)
-                <span class="badge bg-orange-500 text-white shadow-sm text-xs font-bold px-2 py-1 uppercase rounded-md">⚡ Flash</span>
+                @php
+                    $flashVariant = $product->variants->first(function ($v) { return $v->isFlashActive(); });
+                @endphp
+                <span class="badge bg-orange-500 text-white shadow-sm text-xs font-bold px-2 py-1 uppercase rounded-md flex items-center gap-1" data-countdown="{{ $flashVariant->flash_sale_ends_at->toIso8601String() }}">
+                    <span>⚡ Flash</span>
+                    <span class="countdown-timer font-mono bg-white/20 px-1 rounded text-[10px]"></span>
+                </span>
             @endif
         </div>
     </div>

@@ -17,6 +17,23 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function address()
+    {
+        return view('profile.address', [
+            'user' => Auth::user(),
+        ]);
+    }
+
+    public function coupons()
+    {
+        $user = Auth::user();
+        $coupons = \App\Models\Coupon::where('user_id', $user->id)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('profile.coupons', compact('user', 'coupons'));
+    }
+
     public function storeAddress(Request $request)
     {
         $user = Auth::user();
