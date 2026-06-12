@@ -56,6 +56,7 @@ class UserResource extends Resource
                     ->options([
                         'admin' => 'Admin',
                         'staff' => 'Nhân viên',
+                        'customer_service' => 'Chăm sóc khách hàng',
                         'user' => 'Khách hàng',
                     ])
                     ->required()
@@ -104,12 +105,14 @@ class UserResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'admin' => 'Admin',
                         'staff' => 'Nhân viên',
+                        'customer_service' => 'CSKH',
                         'user' => 'Khách hàng',
                         default => ucfirst($state),
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'admin' => 'danger',
                         'staff' => 'warning',
+                        'customer_service' => 'info',
                         'user' => 'success',
                         default => 'gray',
                     })
@@ -125,6 +128,7 @@ class UserResource extends Resource
                     ->options([
                         'admin' => 'Admin',
                         'staff' => 'Nhân viên',
+                        'customer_service' => 'Chăm sóc khách hàng',
                         'user' => 'Khách hàng',
                     ]),
             ])

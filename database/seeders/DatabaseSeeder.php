@@ -41,6 +41,14 @@ class DatabaseSeeder extends Seeder
             'role' => 'staff',
         ]);
 
+        User::create([
+            'name' => 'Chăm sóc khách hàng SFood',
+            'email' => 'cskh@sfood.vn',
+            'password' => Hash::make('password'),
+            'phone' => '0934567890',
+            'role' => 'customer_service',
+        ]);
+
         $categories = [
             ['name' => 'Rau củ', 'slug' => 'rau-cu', 'sort_order' => 1],
             ['name' => 'Thịt cá', 'slug' => 'thit-ca', 'sort_order' => 2],
