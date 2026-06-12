@@ -34,6 +34,48 @@ class OrderController extends Controller
             ->with('success', 'Đặt hàng #'.$order->order_code.' thành công!');
     }
 
+    public function refund(Order $order)
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        // Chỉ cho phép hoàn tiền khi đã thanh toán
+        if ($order->payment_status !== 'paid') {
+            return back()->with('error', 'Đơn hàng chưa được thanh toán, không thể yêu cầu hoàn tiền.');
+        }
+
+        // Không cho hoàn tiền khi đang giao hàng
+        if ($order->order_status === 'shipping') {
+            return back()->with('error', 'Đơn hàng đang giao, không thể yêu cầu hoàn tiền. Vui lòng liên hệ CSKH.');
+        }
+
+        // Không cho hoàn tiền khi đã giao hoặc đã hủy
+        if (in_array($order->order_status, ['delivered', 'cancelled'])) {
+            return back()->with('error', 'Đơn hàng không thể yêu cầu hoàn tiền ở trạng thái hiện tại.');
+        }
+
+        // Đã yêu cầu hoàn tiền rồi
+        if ($order->payment_status === 'refund_pending') {
+            return back()->with('error', 'Đơn hàng đã được yêu cầu hoàn tiền, vui lòng chờ xử lý.');
+        }
+
+        $order->update([
+            'payment_status' => 'refund_pending',
+            'order_status' => 'cancelled',
+        ]);
+
+        // Notify user
+        if ($order->user) {
+            $order->user->notify(new \App\Notifications\OrderUpdated([
+                'title' => 'Yêu cầu hoàn tiền đã được ghi nhận',
+                'message' => 'Đơn hàng #' . $order->order_code . ' đã được ghi nhận yêu cầu hoàn tiền. Chúng tôi sẽ xử lý trong 1-3 ngày làm việc.',
+                'url' => route('orders.index', ['status' => 'cancelled']),
+                'type' => 'order',
+            ]));
+        }
+
+        return back()->with('success', 'Yêu cầu hoàn tiền đã được ghi nhận. Chúng tôi sẽ xử lý trong 1-3 ngày làm việc.');
+    }
+
     public function cancel(Order $order)
     {
         abort_unless($order->user_id === Auth::id(), 403);

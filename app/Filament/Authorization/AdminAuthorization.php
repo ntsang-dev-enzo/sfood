@@ -38,7 +38,7 @@ class AdminAuthorization
 
     public static function canManageOrders(): bool
     {
-        return self::user()?->canManageOrders() ?? false;
+        return in_array(self::user()?->role, ['admin', 'staff', 'customer_service']);
     }
 
     public static function canManageCoupons(): bool

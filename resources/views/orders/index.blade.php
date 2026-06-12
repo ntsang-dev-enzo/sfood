@@ -40,6 +40,11 @@
                         @endphp
                         {{ $statusLabels[$order->order_status] ?? ucfirst($order->order_status) }}
                     </span>
+                    @if($order->payment_status === 'refund_pending')
+                        <span class="badge bg-amber-100 text-amber-700 ml-1">⏳ Chờ hoàn tiền</span>
+                    @elseif($order->payment_status === 'refunded')
+                        <span class="badge bg-blue-100 text-blue-700 ml-1">✅ Đã hoàn tiền</span>
+                    @endif
                     <p class="font-bold text-leaf-700 text-lg mt-1">{{ number_format($order->total_amount) }}đ</p>
                 </div>
             </div>
@@ -73,12 +78,16 @@
             <p class="text-sm text-earth-500 mt-3">📍 {{ $order->shipping_address['address'] ?? '' }}</p>
             @if(in_array($order->order_status, ['pending', 'confirmed']))
                 <div class="mt-4 flex justify-end">
-                    <form action="{{ route('orders.cancel', $order) }}" method="POST">
+                    <form action="{{ $order->payment_status === 'paid' ? route('orders.refund', $order) : route('orders.cancel', $order) }}" method="POST">
                         @csrf
                         <button type="button" class="btn-cancel-order btn-secondary text-red-600 border-red-200 hover:bg-red-50 py-1 px-3 text-sm" data-is-paid="{{ $order->payment_status === 'paid' ? 'true' : 'false' }}">
                             {{ $order->payment_status === 'paid' ? 'Hủy đơn & Hoàn tiền' : 'Hủy đơn hàng' }}
                         </button>
                     </form>
+                </div>
+            @elseif($order->order_status === 'shipping' && $order->payment_status === 'paid')
+                <div class="mt-4 flex justify-end">
+                    <span class="text-sm text-earth-500 italic">⚠️ Đơn đang giao, không thể hoàn tiền</span>
                 </div>
             @endif
         </div>
@@ -98,6 +107,21 @@
         <div class="flex justify-end gap-3">
             <button type="button" id="btn-close-modal" class="px-4 py-2 text-earth-600 hover:bg-cream-200 rounded-lg font-medium transition">Đóng lại</button>
             <button type="button" id="btn-confirm-cancel" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition">Xác nhận Hủy</button>
+        </div>
+    </div>
+</div>
+
+{{-- Refund Modal --}}
+<div id="refund-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-earth-900/50 backdrop-blur-sm">
+    <div class="bg-cream-50 p-6 rounded-2xl shadow-xl max-w-sm w-full mx-4">
+        <h3 class="text-xl font-bold text-earth-800 mb-2">💰 Yêu cầu hoàn tiền</h3>
+        <p class="text-earth-600 mb-4">Bạn có chắc chắn muốn yêu cầu hoàn tiền cho đơn hàng này?</p>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+            <p class="text-amber-700 text-sm">⏳ Sau khi xác nhận, đơn hàng sẽ bị hủy và hệ thống sẽ xử lý hoàn tiền qua PayOS trong 1-3 ngày làm việc.</p>
+        </div>
+        <div class="flex justify-end gap-3">
+            <button type="button" id="btn-close-refund" class="px-4 py-2 text-earth-600 hover:bg-cream-200 rounded-lg font-medium transition">Đóng lại</button>
+            <button type="button" id="btn-confirm-refund" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition">Xác nhận hoàn tiền</button>
         </div>
     </div>
 </div>
@@ -148,6 +172,41 @@
 
 @push('scripts')
 <script>
+    // Refund Modal Logic
+    (() => {
+        const refundModal = document.getElementById('refund-modal');
+        if (!refundModal) return;
+        const btnCloseRefund = document.getElementById('btn-close-refund');
+        const btnConfirmRefund = document.getElementById('btn-confirm-refund');
+        let currentRefundForm = null;
+
+        document.querySelectorAll('.btn-refund-order').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentRefundForm = btn.closest('form');
+                refundModal.classList.remove('hidden');
+            });
+        });
+
+        const closeRefundModal = () => {
+            refundModal.classList.add('hidden');
+            currentRefundForm = null;
+        };
+
+        btnCloseRefund.addEventListener('click', closeRefundModal);
+        refundModal.addEventListener('click', (e) => {
+            if (e.target === refundModal) closeRefundModal();
+        });
+
+        btnConfirmRefund.addEventListener('click', () => {
+            if (currentRefundForm) {
+                btnConfirmRefund.disabled = true;
+                btnConfirmRefund.textContent = 'Đang xử lý...';
+                currentRefundForm.submit();
+            }
+        });
+    })();
+
     document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('cancel-modal');
         const modalMsg = document.getElementById('cancel-modal-msg');

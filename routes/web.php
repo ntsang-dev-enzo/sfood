@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/don-hang', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/don-hang/{order}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/don-hang/{order}/hoan-tien', [OrderController::class, 'refund'])->name('orders.refund');
 
     Route::get('/thong-bao', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/thong-bao/read-all', [App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.read-all');

@@ -61,16 +61,17 @@ class UserResource extends Resource
                     ])
                     ->required()
                     ->default('user')
-                    ->disabled(fn () => !Authz::isAdmin()),
+                    ->disabled(fn () => !Authz::isAdmin())
+                    ->dehydrated(fn () => Authz::isAdmin()),
                 Forms\Components\TextInput::make('reward_points')
                     ->label('Điểm thưởng')
                     ->numeric()
                     ->default(0)
-                    ->disabled(fn () => !Authz::isAdmin()),
+                    ->disabled(fn () => !Authz::isAdmin())
+                    ->dehydrated(fn () => Authz::isAdmin()),
                 Forms\Components\TextInput::make('password')
                     ->label('Mật khẩu (để trống nếu không đổi)')
                     ->password()
-                    ->disabled(fn () => !Authz::isAdmin())
                     ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
                     ->dehydrated(fn ($state) => filled($state))
                     ->maxLength(255),
@@ -181,7 +182,7 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Authz::isAdmin() || Authz::isStaff();
+        return Authz::isAdmin() || Authz::isStaff() || Authz::isCustomerService();
     }
 
     public static function canCreate(): bool
@@ -197,6 +198,11 @@ class UserResource extends Resource
 
         // Staff chỉ có thể sửa khách hàng
         if (Authz::isStaff()) {
+            return $record->role === 'user';
+        }
+
+        // CSKH chỉ được sửa thông tin khách hàng (không sửa role/xóa)
+        if (Authz::isCustomerService()) {
             return $record->role === 'user';
         }
 

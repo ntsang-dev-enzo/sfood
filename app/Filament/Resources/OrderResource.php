@@ -69,7 +69,9 @@ class OrderResource extends Resource
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('order_code')->label('Mã đơn')->searchable(),
-            Tables\Columns\TextColumn::make('user.name')->label('Khách hàng'),
+            Tables\Columns\TextColumn::make('user.name')->label('Khách hàng')->searchable()
+                ->url(fn (Order $record) => $record->user_id ? UserResource::getUrl('index', ['tableSearch' => $record->user?->name]) : null)
+                ->color('primary'),
             Tables\Columns\TextColumn::make('subtotal')->label('Tạm tính')->money('VND')->sortable(),
             Tables\Columns\TextColumn::make('shipping_fee')->label('Phí ship')->money('VND')->sortable(),
             Tables\Columns\TextColumn::make('discount_amount')->label('Giảm giá')->money('VND')->sortable(),
@@ -141,57 +143,33 @@ class OrderResource extends Resource
                         );
                 }),
         ])->actions([
-            Tables\Actions\Action::make('confirm_refund')
-                ->label('Xác nhận hoàn tiền')
-                ->icon('heroicon-o-banknotes')
-                ->color('success')
+            Tables\Actions\Action::make('manual_refund')
+                ->label('Xác nhận đã hoàn tiền')
+                ->icon('heroicon-o-check-circle')
+                ->color('warning')
                 ->requiresConfirmation()
-                ->modalHeading('Xác nhận hoàn tiền tự động qua PayOS')
-                ->modalDescription('Hệ thống sẽ gọi API hoàn tiền trực tiếp qua cổng thanh toán PayOS. Bạn có chắc chắn muốn tiếp tục?')
-                ->visible(fn (Order $record): bool => $record->payment_status === 'refund_pending' && $record->payment && $record->payment->gateway === 'payos')
+                ->modalHeading('Xác nhận đã hoàn tiền thủ công')
+                ->modalDescription('Chỉ bấm nút này khi bạn đã hoàn tiền cho khách qua chuyển khoản hoặc PayOS Dashboard. Trạng thái đơn sẽ chuyển sang "Đã hoàn tiền".')
+                ->visible(fn (Order $record): bool => $record->payment_status === 'refund_pending')
                 ->action(function (Order $record) {
-                    $payment = $record->payment;
-                    $clientId = config('services.payos.client_id');
-                    $apiKey = config('services.payos.api_key');
-                    $orderCode = $payment->gateway_response['orderCode'] ?? null;
-                    
-                    if ($orderCode) {
-                        try {
-                            $response = \Illuminate\Support\Facades\Http::withHeaders([
-                                'x-client-id' => $clientId,
-                                'x-api-key' => $apiKey,
-                            ])->post("https://api-merchant.payos.vn/v2/payment-requests/{$orderCode}/refund", [
-                                'amount' => $record->total_amount,
-                                'reason' => 'Admin xác nhận hoàn tiền',
-                            ]);
-
-                            if ($response->successful() && $response->json('code') == '00') {
-                                $record->update(['payment_status' => 'refunded']);
-                                \Filament\Notifications\Notification::make()
-                                    ->title('Hoàn tiền tự động qua PayOS thành công')
-                                    ->success()
-                                    ->send();
-                            } else {
-                                \Filament\Notifications\Notification::make()
-                                    ->title('Lỗi API PayOS')
-                                    ->body($response->json('desc') ?? 'Không thể hoàn tiền tự động')
-                                    ->danger()
-                                    ->send();
-                            }
-                        } catch (\Throwable $e) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('Lỗi kết nối PayOS')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    } else {
-                        \Filament\Notifications\Notification::make()
-                            ->title('Lỗi dữ liệu')
-                            ->body('Không tìm thấy Mã giao dịch (OrderCode) của PayOS.')
-                            ->danger()
-                            ->send();
+                    $record->update(['payment_status' => 'refunded']);
+                    if ($record->payment) {
+                        $record->payment->update(['status' => 'refunded']);
                     }
+
+                    if ($record->user) {
+                        $record->user->notify(new \App\Notifications\OrderUpdated([
+                            'title' => 'Hoàn tiền thành công',
+                            'message' => 'Đơn hàng #' . $record->order_code . ' đã được hoàn tiền thành công.',
+                            'url' => route('orders.index', ['status' => 'cancelled']),
+                            'type' => 'order',
+                        ]));
+                    }
+
+                    \Filament\Notifications\Notification::make()
+                        ->title('Đã đánh dấu hoàn tiền thành công')
+                        ->success()
+                        ->send();
                 }),
             Tables\Actions\ViewAction::make(),
             Tables\Actions\EditAction::make(),
@@ -215,7 +193,7 @@ class OrderResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return Authz::canManageOrders();
+        return Authz::isAdmin() || Authz::isStaff();
     }
 
     public static function canDelete($record): bool
