@@ -127,103 +127,6 @@
         </div>
     </section>
 
-    {{-- Flash Sale Block --}}
-    @if(isset($flashSales) && $flashSales->count() > 0)
-    <section class="bg-red-50 dark:bg-gray-900 py-12 border-b border-red-100 dark:border-gray-800 relative overflow-hidden" x-data="flashSaleTimer()">
-        <div class="max-w-7xl mx-auto px-4 relative z-10">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <div class="flex items-center gap-4">
-                    <h2 class="text-3xl font-extrabold text-red-600 dark:text-red-500 italic uppercase">⚡ Flash Sale</h2>
-                    <!-- Countdown Timer -->
-                    <div class="flex gap-2 text-white font-bold text-lg">
-                        <div class="bg-red-600 rounded-lg w-10 h-10 flex items-center justify-center shadow-inner" x-text="hours">00</div><span class="text-red-600 self-center">:</span>
-                        <div class="bg-red-600 rounded-lg w-10 h-10 flex items-center justify-center shadow-inner" x-text="minutes">00</div><span class="text-red-600 self-center">:</span>
-                        <div class="bg-red-600 rounded-lg w-10 h-10 flex items-center justify-center shadow-inner" x-text="seconds">00</div>
-                    </div>
-                </div>
-                <a href="{{ route('products.index') }}" class="text-red-600 font-bold hover:underline">Xem tất cả ></a>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                @foreach($flashSales as $product)
-                    @php
-                        $fsVariant = $product->variants->first();
-                        if (!$fsVariant) continue;
-                        $sold = $fsVariant->flash_sale_sold ?? 0;
-                        $stock = $fsVariant->flash_sale_stock ?? 0;
-                        $percent = $stock > 0 ? min(100, round(($sold / $stock) * 100)) : 0;
-                        $isSoldOut = $stock > 0 && $sold >= $stock;
-                    @endphp
-                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all p-3 relative group border border-red-100">
-                        @if($isSoldOut)
-                            <div class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-20 rounded-2xl flex items-center justify-center">
-                                <span class="bg-gray-800 text-white font-bold px-4 py-2 rounded-full -rotate-12 text-sm uppercase">Hết hàng</span>
-                            </div>
-                        @else
-                            <div class="absolute top-2 left-2 z-10 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                -{{ $fsVariant->price > 0 ? round((($fsVariant->price - $fsVariant->flash_sale_price) / $fsVariant->price) * 100) : 0 }}%
-                            </div>
-                        @endif
-                        <a href="{{ route('products.show', $product->slug) }}" class="block relative">
-                            <img src="{{ App\Support\MediaHelper::productImage($product->thumbnail, $product->id) }}" class="w-full aspect-square object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform" alt="{{ $product->name }}">
-                        </a>
-                        <a href="{{ route('products.show', $product->slug) }}" class="block text-sm font-bold text-earth-800 line-clamp-2 mb-1 hover:text-leaf-600">
-                            {{ $product->name }}
-                        </a>
-                        <div class="flex items-end gap-2 mb-2">
-                            <span class="text-red-600 font-bold text-lg">{{ number_format($fsVariant->flash_sale_price, 0, ',', '.') }}đ</span>
-                            <span class="text-gray-400 line-through text-xs mb-1">{{ number_format($fsVariant->price, 0, ',', '.') }}đ</span>
-                        </div>
-                        
-                        <div class="relative w-full h-4 bg-red-100 rounded-full overflow-hidden mt-auto">
-                            <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full" style="width: {{ $percent }}%"></div>
-                            <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md z-10 w-full text-center">
-                                @if($stock > 0)
-                                    Đã bán {{ $sold }}/{{ $stock }}
-                                @else
-                                    Đang bán chạy
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    
-    @push('scripts')
-    <script>
-        function flashSaleTimer() {
-            return {
-                endTime: new Date('{{ optional(optional($flashSales->first())->variants?->first())->flash_sale_ends_at ?? now()->addHours(1) }}').getTime(),
-                hours: '00',
-                minutes: '00',
-                seconds: '00',
-                init() {
-                    this.updateTimer();
-                    setInterval(() => this.updateTimer(), 1000);
-                },
-                updateTimer() {
-                    const now = new Date().getTime();
-                    const distance = this.endTime - now;
-                    
-                    if (distance < 0) {
-                        this.hours = '00';
-                        this.minutes = '00';
-                        this.seconds = '00';
-                        return;
-                    }
-                    
-                    this.hours = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
-                    this.minutes = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-                    this.seconds = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
-                }
-            }
-        }
-    </script>
-    @endpush
-    @endif
-
     {{-- Banners Bento Grid --}}
     @if(isset($banners) && $banners->count() > 0)
     <section class="bg-cream-50 dark:bg-gray-900 py-8 border-b border-cream-200 dark:border-gray-800">
@@ -277,6 +180,7 @@
     </section>
     @endif
 
+
     {{-- Flash sale --}}
     @if(!empty($flashSales) && $flashSales->count())
     @php
@@ -307,7 +211,7 @@
                     </div>
                     <p class="text-red-100 font-medium mt-1">Giá sốc trong thời gian có hạn — mua ngay kẻo lỡ!</p>
                 </div>
-                <a href="{{ route('promo.collect') }}" class="bg-white text-red-600 px-6 py-2.5 rounded-xl font-bold hover:bg-red-50 hover:scale-105 transition-all shadow-sm text-center inline-block">Nhận mã & phí ship →</a>
+                <a href="{{ route('vouchers.index') }}" class="bg-white text-red-600 px-6 py-2.5 rounded-xl font-bold hover:bg-red-50 hover:scale-105 transition-all shadow-sm text-center inline-block">Nhận mã & phí ship →</a>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
                 @foreach($flashSales as $p)
@@ -469,7 +373,7 @@
 
     {{-- Mini Features Module --}}
     <section class="max-w-7xl mx-auto px-4 -mt-8 relative z-20 mb-12">
-        <div class="bg-white rounded-3xl p-6 shadow-xl border border-cream-200 grid grid-cols-4 md:grid-cols-8 gap-4 justify-center text-center">
+        <div class="bg-white rounded-3xl p-6 shadow-xl border border-cream-200 grid grid-cols-4 md:grid-cols-7 gap-4 justify-center text-center">
             <a href="{{ route('products.index') }}" class="group block space-y-2">
                 <div class="w-14 h-14 mx-auto bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-green-500 group-hover:text-white transition duration-300 shadow-sm">🛒</div>
                 <p class="text-xs font-bold text-earth-700">Chợ tươi</p>
@@ -478,22 +382,11 @@
                 <div class="w-14 h-14 mx-auto bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-orange-500 group-hover:text-white transition duration-300 shadow-sm">👩‍🍳</div>
                 <p class="text-xs font-bold text-earth-700">Vào bếp</p>
             </a>
-            <a href="{{ route('promo.index') }}" class="group block space-y-2">
+            <a href="{{ route('vouchers.index') }}" class="group block space-y-2">
                 <div class="w-14 h-14 mx-auto bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-red-500 group-hover:text-white transition duration-300 shadow-sm">🎫</div>
                 <p class="text-xs font-bold text-earth-700">Mã giảm giá</p>
             </a>
-            <a href="{{ route('lucky-wheel.index') }}" class="group block space-y-2 relative">
-                <div class="w-14 h-14 mx-auto bg-yellow-100 text-yellow-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-yellow-500 group-hover:text-white transition duration-300 shadow-sm relative">
-                    🎡
-                    @auth
-                        @if(auth()->user()->last_free_spin_at === null || auth()->user()->last_free_spin_at->diffInHours(now()) >= 24)
-                            <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-ping"></span>
-                            <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
-                        @endif
-                    @endauth
-                </div>
-                <p class="text-xs font-bold text-earth-700">Vòng quay</p>
-            </a>
+
             <a href="{{ route('favorites.index') }}" class="group block space-y-2">
                 <div class="w-14 h-14 mx-auto bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-pink-500 group-hover:text-white transition duration-300 shadow-sm">❤️</div>
                 <p class="text-xs font-bold text-earth-700">Yêu thích</p>

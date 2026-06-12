@@ -80,7 +80,11 @@ class ChatController extends Controller
                             $html .= '<p class="text-xs font-bold text-earth-500 uppercase mb-2">Sản phẩm gợi ý</p>';
                             $html .= '<div class="grid grid-cols-2 gap-2">';
                             foreach ($products as $product) {
+                                $html .= '<div class="flex flex-col bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-cream-200 dark:border-gray-700">';
                                 $html .= view('partials.product-card', ['product' => $product])->render();
+                                $url = route('products.show', $product->slug);
+                                $html .= "<a href='{$url}' class='block text-center bg-leaf-500 text-white text-xs font-bold py-2 mx-2 mb-2 rounded-lg hover:bg-leaf-600 shadow-md hover:-translate-y-0.5 transition'>👉 Mua ngay</a>";
+                                $html .= '</div>';
                             }
                             $html .= '</div></div>';
                         }

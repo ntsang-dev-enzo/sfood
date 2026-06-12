@@ -25,9 +25,10 @@
         <div class="max-w-7xl mx-auto px-4 py-1.5 flex justify-between items-center">
             <span class="truncate">{{ __('app.free_shipping') }}<span class="sm:hidden">{{ __('app.freeship_short') }}</span></span>
             <div class="flex items-center gap-3 sm:gap-4">
-                <a href="{{ route('about') }}" class="hover:text-white transition hidden sm:inline">{{ __('app.about') }}</a>
-                <a href="{{ route('contact') }}" class="hover:text-white transition hidden sm:inline">{{ __('app.contact') }}</a>
-                <a href="{{ route('faq') }}" class="hover:text-white transition hidden sm:inline">{{ __('app.faq') }}</a>
+                @auth
+                    <a href="{{ route('favorites.index') }}" class="hover:text-white transition hidden sm:inline">Yêu thích</a>
+                    <a href="{{ route('orders.index') }}" class="hover:text-white transition hidden sm:inline">{{ __('nav.orders') }}</a>
+                @endauth
                 
                 <div class="flex items-center gap-2 sm:border-l sm:border-earth-600 sm:pl-3 pl-1">
                     {{-- Language Switcher (Small) --}}
@@ -73,34 +74,96 @@
 
                     @auth
                         <livewire:notification-bell />
-                        <a href="{{ route('favorites.index') }}"
-                            class="p-2.5 rounded-xl hover:bg-cream-200 transition text-earth-700 {{ request()->routeIs('favorites.*') ? 'bg-cream-200' : '' }}"
-                            title="Yêu thích">
-                            <span class="text-xl leading-none">❤️</span>
-                        </a>
                     @endauth
-                    <a href="{{ route('cart') }}"
-                        class="relative px-4 py-2.5 rounded-2xl bg-leaf-600 text-white hover:bg-leaf-700 hover:shadow-lg hover:-translate-y-0.5 transition duration-300 flex items-center gap-2" title="Giỏ hàng">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span class="font-bold text-sm hidden sm:inline">{{ __('app.cart') }}</span>
-                        <span data-cart-count
-                            class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-cream-50 {{ ($cartCount ?? 0) > 0 ? '' : 'hidden' }}">{{ $cartCount ?? 0 }}</span>
-                    </a>
+                    <div class="relative" id="cart-dropdown-wrapper">
+                        <button type="button" id="cart-dropdown-toggle"
+                            class="relative px-4 py-2.5 rounded-2xl bg-leaf-600 text-white hover:bg-leaf-700 hover:shadow-lg transition duration-300 flex items-center gap-2" title="Giỏ hàng">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span class="font-bold text-sm hidden sm:inline">{{ __('app.cart') }}</span>
+                            <span data-cart-count
+                                class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-cream-50 {{ ($cartCount ?? 0) > 0 ? '' : 'hidden' }}">{{ $cartCount ?? 0 }}</span>
+                        </button>
+
+                        {{-- Mini Cart Popup --}}
+                        <div id="mini-cart-dropdown" class="absolute top-full right-0 mt-2 w-[360px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 opacity-0 invisible transition-all duration-300 z-50 transform origin-top-right scale-95">
+                            <div class="p-4 border-b border-cream-100 dark:border-gray-700 flex flex-col gap-2">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-bold text-earth-800 dark:text-gray-100">Giỏ hàng của bạn</h4>
+                                    <button type="button" id="mini-cart-clear-all" class="text-xs text-red-500 hover:text-red-700 transition font-medium px-2 py-1 bg-red-50 hover:bg-red-100 rounded-md">Xóa tất cả</button>
+                                </div>
+                                <label class="flex items-center gap-2 cursor-pointer text-sm text-earth-600 dark:text-gray-400 hover:text-earth-800 transition w-max">
+                                    <input type="checkbox" id="mini-cart-select-all" class="w-4 h-4 rounded text-leaf-600 focus:ring-leaf-500 border-gray-300">
+                                    <span>Chọn tất cả</span>
+                                </label>
+                            </div>
+                            @php
+                                $miniCartItems = app(\App\Services\CartService::class)->items();
+                                $miniCartSelectedSubtotal = app(\App\Services\CartService::class)->selectedSubtotal();
+                            @endphp
+                            <div class="max-h-80 overflow-y-auto p-2" id="mini-cart-items-container">
+                                @if($miniCartItems->isEmpty())
+                                    <div class="p-4 text-center text-sm text-gray-500" id="mini-cart-empty-msg">Giỏ hàng trống</div>
+                                @else
+                                    <div class="space-y-4 p-2">
+                                        @foreach($miniCartItems as $item)
+                                            <div class="flex items-start gap-3 mini-cart-item {{ !$item->is_selected ? 'opacity-60' : '' }}" data-id="{{ $item->id }}">
+                                                <div class="flex items-center h-14">
+                                                    <input type="checkbox" class="mini-cart-item-checkbox w-4 h-4 rounded text-leaf-600 focus:ring-leaf-500 border-gray-300 cursor-pointer" data-id="{{ $item->id }}" {{ $item->is_selected ? 'checked' : '' }}>
+                                                </div>
+                                                <img src="{{ \App\Support\MediaHelper::productImage($item->productVariant->product->thumbnail) }}" class="w-14 h-14 rounded-lg object-cover border border-cream-200" alt="">
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-bold text-earth-800 dark:text-gray-200 truncate">{{ $item->productVariant->product->name }}</p>
+                                                    <p class="text-xs text-gray-500 mb-1">{{ $item->productVariant->name }}</p>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="flex items-center border border-cream-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+                                                            <button type="button" class="px-2 py-1 text-earth-500 hover:text-leaf-600 transition mini-cart-btn-minus" data-id="{{ $item->id }}">-</button>
+                                                            <input type="number" class="w-8 text-center text-xs font-medium border-x border-cream-200 dark:border-gray-700 bg-transparent mini-cart-input-qty focus:outline-none" data-id="{{ $item->id }}" value="{{ $item->quantity }}" min="1">
+                                                            <button type="button" class="px-2 py-1 text-earth-500 hover:text-leaf-600 transition mini-cart-btn-plus" data-id="{{ $item->id }}">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-col items-end justify-between h-14">
+                                                    <button type="button" class="text-gray-400 hover:text-red-500 transition mini-cart-btn-remove" data-id="{{ $item->id }}" title="Xóa">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    </button>
+                                                    <div class="font-bold text-sm text-leaf-600 mini-cart-item-subtotal" data-id="{{ $item->id }}">
+                                                        {{ number_format($item->subtotal()) }}đ
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="p-4 border-t border-cream-100 dark:border-gray-700 bg-cream-50 dark:bg-gray-900 rounded-b-2xl {{ $miniCartItems->isEmpty() ? 'hidden' : '' }}" id="mini-cart-footer">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm font-medium text-earth-700 dark:text-gray-300">Tạm tính:</span>
+                                    <span class="font-bold text-lg text-earth-800 dark:text-white" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}đ</span>
+                                </div>
+                                <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" class="block w-full text-center bg-leaf-600 hover:bg-leaf-700 text-white font-bold py-2.5 rounded-xl transition shadow-md shadow-leaf-500/30 {{ $miniCartSelectedSubtotal > 0 ? '' : 'opacity-50 pointer-events-none' }}">Tiến hành thanh toán</a>
+                            </div>
+                        </div>
+                    </div>
 
                     @auth
-                        <a href="{{ route('profile') }}"
-                            class="hidden sm:flex items-center gap-2 p-1.5 rounded-xl hover:bg-cream-200 transition"
-                            title="Tài khoản">
-                            <img src="{{ \App\Support\MediaHelper::avatar(auth()->user()->avatar, auth()->user()->name) }}"
-                                class="w-8 h-8 rounded-lg object-cover" alt="">
-                        </a>
-                        <form method="POST" action="{{ route('logout') }}" class="hidden sm:block">
-                            @csrf
-                            <button class="text-sm text-earth-500 hover:text-earth-800 px-2 py-1">Thoát</button>
-                        </form>
+                        <div class="hidden sm:flex items-center gap-3">
+                            <a href="{{ route('profile') }}"
+                                class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-cream-200 transition"
+                                title="Tài khoản">
+                                <img src="{{ \App\Support\MediaHelper::avatar(auth()->user()->avatar, auth()->user()->name) }}"
+                                    class="w-8 h-8 rounded-full object-cover border border-cream-200" alt="">
+                                <span class="text-xs font-bold text-leaf-700 bg-leaf-100 px-2 py-0.5 rounded-full border border-leaf-200">
+                                    {{ number_format(auth()->user()->reward_points) }} điểm
+                                </span>
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="flex items-center">
+                                @csrf
+                                <button class="text-sm font-medium text-earth-500 hover:text-earth-800 px-2 py-1">Thoát</button>
+                            </form>
+                        </div>
                     @else
                         <a href="{{ route('login') }}" class="btn-primary !px-4 !py-2.5 !text-sm hidden sm:inline-flex">Đăng
                             nhập</a>
@@ -127,23 +190,34 @@
                 <a href="{{ route('recipes.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('recipes.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.recipes') }}</a>
                 <a href="{{ route('about') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('about') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.about') }}</a>
                 <a href="{{ route('contact') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('contact') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.contact') }}</a>
-                @auth
-                    <a href="{{ route('favorites.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('favorites.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">Yêu thích</a>
-                    <a href="{{ route('orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('orders.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.orders') }}</a>
-                @endauth
             </nav>
         </div>
 
         {{-- Mobile menu --}}
         <div id="mobile-menu" class="hidden md:hidden border-t border-cream-300 bg-cream-50 px-4 py-3 space-y-1">
+            @auth
+                <div class="flex items-center gap-3 mb-3 p-2 bg-white rounded-xl border border-cream-200">
+                    <img src="{{ \App\Support\MediaHelper::avatar(auth()->user()->avatar, auth()->user()->name) }}"
+                        class="w-10 h-10 rounded-full object-cover border border-cream-200" alt="">
+                    <div>
+                        <p class="font-bold text-earth-800">{{ auth()->user()->name }}</p>
+                        <span class="text-[10px] font-bold text-leaf-700 bg-leaf-100 px-2 py-0.5 rounded-full border border-leaf-200">
+                            {{ number_format(auth()->user()->reward_points) }} điểm
+                        </span>
+                    </div>
+                </div>
+            @endauth
             <a href="{{ route('home') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.home') }}</a>
             <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.products') }}</a>
             <a href="{{ route('recipes.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.recipes') }}</a>
-            <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.about') }}</a>
-            <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.contact') }}</a>
             @auth
-                <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.account') }}</a>
+                <a href="{{ route('favorites.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Yêu thích</a>
                 <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.orders') }}</a>
+                <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.account') }}</a>
+                <form method="POST" action="{{ route('logout') }}" class="mt-1">
+                    @csrf
+                    <button class="w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium">Thoát</button>
+                </form>
             @else
                 <a href="{{ route('login') }}" class="block px-3 py-2 rounded-lg bg-leaf-600 text-white text-center mt-2">{{ __('nav.login') }}</a>
             @endauth
@@ -219,7 +293,6 @@
                         </li>
                     </ul>
                 </div>
-            </div>
             <div
                 class="border-t border-earth-700 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-cream-400">
                 <p>© {{ date('Y') }} SFood. Tất cả quyền được bảo lưu.</p>
@@ -228,16 +301,53 @@
         </div>
     </footer>
 
-    {{-- Lucky Wheel Floating Button --}}
+    {{-- Messenger/Facebook Button --}}
+    <a href="https://m.me/yourpage" target="_blank" rel="noopener noreferrer" class="fixed bottom-[5.5rem] right-6 z-40 w-14 h-14 bg-gradient-to-tr from-blue-500 to-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-blue-500/50 transition-all duration-300 group">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.26c0 2.91 1.503 5.506 3.824 7.24v3.5l3.29-1.808c.91.252 1.87.388 2.886.388 5.523 0 10-4.145 10-9.26C22 6.145 17.523 2 12 2zm1.09 12.3l-2.82-3.02-5.49 3.02 6.03-6.4 2.91 3.02 5.38-3.02-6.01 6.4z"/></svg>
+        <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Chat Messenger</span>
+    </a>
+
+    {{-- Live Chatbox --}}
     @auth
-        <a href="{{ route('lucky-wheel.index') }}" class="fixed bottom-[5.5rem] right-6 z-40 w-14 h-14 bg-gradient-to-tr from-yellow-400 to-orange-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-orange-500/50 transition-all duration-300 group">
-            <span class="text-2xl" style="animation: spin 10s linear infinite;">🎡</span>
-            <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Vòng Quay May Mắn</span>
-            @if(auth()->user()->last_free_spin_at === null || auth()->user()->last_free_spin_at->diffInHours(now()) >= 24)
-                <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-ping"></span>
-                <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+    @php
+        $unreadChatCount = \App\Models\ChatMessage::where('user_id', auth()->id())->where('sender', 'admin')->where('is_read', false)->count();
+    @endphp
+    <div id="live-chatbox-container" class="fixed bottom-[9.5rem] right-6 z-50 flex flex-col items-end pointer-events-none">
+        <!-- Chat Window -->
+        <div id="live-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
+            <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">👨‍💻</span>
+                    <div>
+                        <h4 class="font-bold">Chăm sóc khách hàng</h4>
+                        <p class="text-[10px] text-green-100">Chúng tôi luôn sẵn sàng hỗ trợ</p>
+                    </div>
+                </div>
+                <button type="button" id="close-live-chat-btn" class="text-white hover:text-green-100 focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="live-chat-messages-container" class="flex-1 p-4 h-80 overflow-y-auto bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
+                <div class="text-center text-sm text-gray-500 mt-4" id="live-chat-empty-msg">Bắt đầu trò chuyện với nhân viên hỗ trợ.</div>
+            </div>
+            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2">
+                <input type="text" id="live-chat-input-field" class="flex-1 bg-cream-50 dark:bg-gray-900 border border-cream-200 dark:border-gray-700 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-green-500 text-earth-800 dark:text-gray-300" placeholder="Nhập tin nhắn..." autocomplete="off">
+                <button type="button" id="send-live-chat-btn" class="bg-green-600 hover:bg-green-700 text-white rounded-xl px-4 py-2 transition shadow-sm">
+                    <svg class="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Toggle Button -->
+        <button type="button" id="toggle-live-chat-btn" class="pointer-events-auto w-14 h-14 bg-gradient-to-tr from-green-500 to-green-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-green-500/50 transition-all duration-300 focus:outline-none z-50 group relative">
+            <svg id="live-chat-icon-msg" class="w-6 h-6 absolute transition-transform duration-300 scale-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+            <svg id="live-chat-icon-close" class="w-6 h-6 absolute transition-transform duration-300 scale-0 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Chat Nhân Viên</span>
+            @if($unreadChatCount > 0)
+                <span id="live-chat-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">{{ $unreadChatCount }}</span>
             @endif
-        </a>
+        </button>
+    </div>
     @endauth
 
     {{-- AI Chatbox --}}
@@ -279,9 +389,10 @@
         </div>
         
         <!-- Toggle Button -->
-        <button type="button" id="toggle-chat-btn" class="pointer-events-auto w-14 h-14 bg-gradient-to-tr from-leaf-600 to-green-400 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-leaf-500/50 transition-all duration-300 focus:outline-none z-50">
+        <button type="button" id="toggle-chat-btn" class="pointer-events-auto w-14 h-14 bg-gradient-to-tr from-leaf-600 to-green-400 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-leaf-500/50 transition-all duration-300 focus:outline-none z-50 group relative">
             <svg id="chat-icon-msg" class="w-6 h-6 absolute transition-transform duration-300 scale-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
             <svg id="chat-icon-close" class="w-6 h-6 absolute transition-transform duration-300 scale-0 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Chat AI</span>
         </button>
     </div>
 
@@ -504,6 +615,100 @@
         });
     }
 
+    // Live Chat Logic
+    const toggleLiveChatBtn = document.getElementById('toggle-live-chat-btn');
+    const closeLiveChatBtn = document.getElementById('close-live-chat-btn');
+    const liveChatWindow = document.getElementById('live-chat-window');
+    const liveChatIconMsg = document.getElementById('live-chat-icon-msg');
+    const liveChatIconClose = document.getElementById('live-chat-icon-close');
+    const liveChatBadge = document.getElementById('live-chat-badge');
+    const liveChatMessagesContainer = document.getElementById('live-chat-messages-container');
+    const liveChatInputField = document.getElementById('live-chat-input-field');
+    const sendLiveChatBtn = document.getElementById('send-live-chat-btn');
+    let liveChatInterval = null;
+
+    if (toggleLiveChatBtn && liveChatWindow) {
+        const toggleLiveChat = () => {
+            const isHidden = liveChatWindow.classList.contains('hidden');
+            if (isHidden) {
+                liveChatWindow.classList.remove('hidden');
+                setTimeout(() => {
+                    liveChatWindow.classList.remove('scale-95', 'opacity-0');
+                    liveChatWindow.classList.add('scale-100', 'opacity-100');
+                }, 10);
+                liveChatIconMsg.classList.replace('scale-100', 'scale-0');
+                liveChatIconClose.classList.replace('scale-0', 'scale-100');
+                liveChatIconClose.classList.replace('rotate-90', 'rotate-0');
+                
+                if (liveChatBadge) liveChatBadge.style.display = 'none';
+
+                fetchLiveMessages();
+                liveChatInterval = setInterval(fetchLiveMessages, 5000);
+            } else {
+                liveChatWindow.classList.remove('scale-100', 'opacity-100');
+                liveChatWindow.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    liveChatWindow.classList.add('hidden');
+                }, 300);
+                liveChatIconClose.classList.replace('scale-100', 'scale-0');
+                liveChatIconClose.classList.replace('rotate-0', 'rotate-90');
+                liveChatIconMsg.classList.replace('scale-0', 'scale-100');
+                
+                if (liveChatInterval) clearInterval(liveChatInterval);
+            }
+        };
+
+        toggleLiveChatBtn.addEventListener('click', toggleLiveChat);
+        closeLiveChatBtn.addEventListener('click', toggleLiveChat);
+
+        const appendLiveMessage = (msg) => {
+            const emptyMsg = document.getElementById('live-chat-empty-msg');
+            if (emptyMsg) emptyMsg.style.display = 'none';
+
+            const div = document.createElement('div');
+            const isUser = msg.sender === 'user';
+            div.className = `max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${isUser ? 'bg-green-600 text-white self-end rounded-tr-sm' : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-300 border border-cream-200 dark:border-gray-700 self-start rounded-tl-sm'}`;
+            div.textContent = msg.message;
+            liveChatMessagesContainer.appendChild(div);
+            liveChatMessagesContainer.scrollTop = liveChatMessagesContainer.scrollHeight;
+        };
+
+        const fetchLiveMessages = async () => {
+            try {
+                const res = await fetch('{{ route('live-chat.fetch') }}');
+                const data = await res.json();
+                if (data.length > 0) {
+                    liveChatMessagesContainer.innerHTML = '';
+                    data.forEach(msg => appendLiveMessage(msg));
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        const sendLiveMessage = async () => {
+            const text = liveChatInputField.value.trim();
+            if (!text) return;
+            
+            liveChatInputField.value = '';
+            appendLiveMessage({ sender: 'user', message: text });
+
+            try {
+                await fetch('{{ route('live-chat.send') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ message: text })
+                });
+            } catch (e) { console.error(e); }
+        };
+
+        sendLiveChatBtn.addEventListener('click', sendLiveMessage);
+        liveChatInputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendLiveMessage();
+        });
+    }
+
     // Global Countdown Script
     function updateCountdowns() {
         document.querySelectorAll('[data-countdown]').forEach(el => {
@@ -538,6 +743,192 @@
     
     updateCountdowns();
     setInterval(updateCountdowns, 1000);
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const miniCartContainer = document.getElementById('mini-cart-items-container');
+    const cartToggleBtn = document.getElementById('cart-dropdown-toggle');
+    const cartDropdown = document.getElementById('mini-cart-dropdown');
+    const cartWrapper = document.getElementById('cart-dropdown-wrapper');
+    const clearAllBtn = document.getElementById('mini-cart-clear-all');
+
+    if (cartToggleBtn && cartDropdown) {
+        cartToggleBtn.addEventListener('click', () => {
+            const isHidden = cartDropdown.classList.contains('invisible');
+            if (isHidden) {
+                cartDropdown.classList.remove('invisible', 'opacity-0', 'scale-95');
+                cartDropdown.classList.add('visible', 'opacity-100', 'scale-100');
+            } else {
+                cartDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                cartDropdown.classList.remove('visible', 'opacity-100', 'scale-100');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (cartWrapper && !cartWrapper.contains(e.target)) {
+                cartDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
+                cartDropdown.classList.remove('visible', 'opacity-100', 'scale-100');
+            }
+        });
+    }
+
+    if (miniCartContainer) {
+        const fetchApi = async (url, bodyData) => {
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(bodyData)
+                });
+                if (res.ok) {
+                    return await res.json();
+                }
+            } catch (e) { console.error('Cart API error', e); }
+            return null;
+        };
+
+        const updateCartItem = async (itemId, quantity) => {
+            if (quantity < 1) return;
+            const data = await fetchApi('{{ route('cart.update') }}', { item_id: itemId, quantity: quantity });
+            if (data) updateMiniCartUI(data, itemId);
+        };
+
+        const removeCartItem = async (itemId) => {
+            const data = await fetchApi('{{ route('cart.remove') }}', { item_id: itemId });
+            if (data) {
+                const itemEl = document.querySelector(`.mini-cart-item[data-id="${itemId}"]`);
+                if (itemEl) itemEl.remove();
+                updateMiniCartUI(data);
+            }
+        };
+
+        const clearCart = async () => {
+            const data = await fetchApi('{{ route('cart.clear') }}', {});
+            if (data) {
+                document.querySelectorAll('.mini-cart-item').forEach(el => el.remove());
+                updateMiniCartUI(data);
+            }
+        };
+
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', () => {
+                if (confirm('Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?')) {
+                    clearCart();
+                }
+            });
+        }
+
+        const toggleSelect = async (itemId, selected) => {
+            const data = await fetchApi('{{ route('cart.toggle_select') }}', { item_id: itemId, selected: selected });
+            if (data) updateMiniCartUI(data, itemId);
+        };
+
+        const toggleSelectAll = async (selected) => {
+            const data = await fetchApi('{{ route('cart.toggle_select_all') }}', { selected: selected });
+            if (data) {
+                document.querySelectorAll('.mini-cart-item-checkbox').forEach(cb => {
+                    cb.checked = selected;
+                    const itemEl = cb.closest('.mini-cart-item');
+                    if (selected) itemEl.classList.remove('opacity-60');
+                    else itemEl.classList.add('opacity-60');
+                });
+                updateMiniCartUI(data);
+            }
+        };
+
+        const updateMiniCartUI = (data, updatedItemId = null) => {
+            // Update counts
+            document.querySelectorAll('[data-cart-count]').forEach(el => {
+                el.textContent = data.count;
+                if (data.count > 0) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            
+            // Update subtotal
+            const subtotalEl = document.getElementById('mini-cart-subtotal');
+            if (subtotalEl) subtotalEl.textContent = data.selected_subtotal_formatted;
+
+            // Checkout button state
+            const checkoutBtn = document.getElementById('mini-cart-checkout-btn');
+            if (checkoutBtn) {
+                if (data.selected_subtotal > 0) checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
+                else checkoutBtn.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            if (data.empty) {
+                const emptyMsg = document.getElementById('mini-cart-empty-msg');
+                const footer = document.getElementById('mini-cart-footer');
+                if (emptyMsg) emptyMsg.classList.remove('hidden');
+                else miniCartContainer.innerHTML = '<div class="p-4 text-center text-sm text-gray-500" id="mini-cart-empty-msg">Giỏ hàng trống</div>';
+                if (footer) footer.classList.add('hidden');
+            } else {
+                if (updatedItemId && data.item) {
+                    const itemSubtotalEl = document.querySelector(`.mini-cart-item-subtotal[data-id="${updatedItemId}"]`);
+                    const itemInput = document.querySelector(`.mini-cart-input-qty[data-id="${updatedItemId}"]`);
+                    const itemEl = document.querySelector(`.mini-cart-item[data-id="${updatedItemId}"]`);
+                    if (itemSubtotalEl) itemSubtotalEl.textContent = data.item.subtotal_formatted;
+                    if (itemInput) itemInput.value = data.item.quantity;
+                    if (itemEl) {
+                        if (data.item.is_selected) itemEl.classList.remove('opacity-60');
+                        else itemEl.classList.add('opacity-60');
+                    }
+                }
+                
+                // Update select all checkbox state
+                const selectAllCb = document.getElementById('mini-cart-select-all');
+                if (selectAllCb) {
+                    const allChecked = Array.from(document.querySelectorAll('.mini-cart-item-checkbox')).every(cb => cb.checked);
+                    selectAllCb.checked = allChecked && document.querySelectorAll('.mini-cart-item-checkbox').length > 0;
+                }
+            }
+        };
+
+        // Initialize select all state
+        const selectAllCb = document.getElementById('mini-cart-select-all');
+        if (selectAllCb) {
+            const allChecked = Array.from(document.querySelectorAll('.mini-cart-item-checkbox')).every(cb => cb.checked);
+            selectAllCb.checked = allChecked && document.querySelectorAll('.mini-cart-item-checkbox').length > 0;
+            
+            selectAllCb.addEventListener('change', (e) => {
+                toggleSelectAll(e.target.checked);
+            });
+        }
+
+        miniCartContainer.addEventListener('click', (e) => {
+            const btnMinus = e.target.closest('.mini-cart-btn-minus');
+            const btnPlus = e.target.closest('.mini-cart-btn-plus');
+            const btnRemove = e.target.closest('.mini-cart-btn-remove');
+
+            if (btnMinus) {
+                const id = btnMinus.dataset.id;
+                const input = document.querySelector(`.mini-cart-input-qty[data-id="${id}"]`);
+                if (input) updateCartItem(id, parseInt(input.value) - 1);
+            } else if (btnPlus) {
+                const id = btnPlus.dataset.id;
+                const input = document.querySelector(`.mini-cart-input-qty[data-id="${id}"]`);
+                if (input) updateCartItem(id, parseInt(input.value) + 1);
+            } else if (btnRemove) {
+                const id = btnRemove.dataset.id;
+                removeCartItem(id);
+            }
+        });
+
+        miniCartContainer.addEventListener('change', (e) => {
+            if (e.target.classList.contains('mini-cart-input-qty')) {
+                const id = e.target.dataset.id;
+                updateCartItem(id, parseInt(e.target.value));
+            } else if (e.target.classList.contains('mini-cart-item-checkbox')) {
+                const id = e.target.dataset.id;
+                toggleSelect(id, e.target.checked);
+            }
+        });
+    }
+});
 </script>
 @stack('scripts')
 </body>

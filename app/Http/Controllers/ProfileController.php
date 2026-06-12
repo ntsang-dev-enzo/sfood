@@ -27,8 +27,8 @@ class ProfileController extends Controller
     public function coupons()
     {
         $user = Auth::user();
-        $coupons = \App\Models\Coupon::where('user_id', $user->id)
-            ->orderBy('id', 'desc')
+        $coupons = $user->collectedCoupons()
+            ->orderBy('user_coupons.created_at', 'desc')
             ->get();
 
         return view('profile.coupons', compact('user', 'coupons'));

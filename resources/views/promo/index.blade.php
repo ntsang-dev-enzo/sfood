@@ -29,7 +29,7 @@
                 $isExpired = $coupon->expires_at && $coupon->expires_at->isPast();
                 $isDisabled = $isSaved || $isExpired;
             @endphp
-            <div class="bg-white rounded-2xl p-6 border shadow-sm flex flex-col relative overflow-hidden {{ $isDisabled ? 'border-gray-200 opacity-80' : 'border-orange-200 hover:shadow-md transition' }}">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 shadow-sm flex flex-col relative overflow-hidden {{ $isDisabled ? 'border-gray-200 opacity-80' : 'border-orange-200 hover:shadow-md transition' }}">
                 <div class="absolute -right-12 -top-12 w-32 h-32 bg-orange-100 rounded-full opacity-50 pointer-events-none"></div>
                 <div class="flex justify-between items-start mb-4 relative z-10">
                     <span class="badge {{ $isDisabled ? 'bg-gray-100 text-gray-600' : 'bg-orange-100 text-orange-800' }} font-bold text-sm">

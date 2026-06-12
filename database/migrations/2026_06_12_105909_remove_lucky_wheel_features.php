@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('wheel_prizes', function (Blueprint $table) {
-            $table->json('applicable_category_ids')->nullable();
-            $table->json('applicable_product_ids')->nullable();
+        Schema::dropIfExists('wheel_prizes');
+        
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['lucky_spins', 'last_free_spin_at']);
         });
     }
 
@@ -22,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('wheel_prizes', function (Blueprint $table) {
-            $table->dropColumn(['applicable_category_ids', 'applicable_product_ids']);
-        });
+        // No reverse logic needed, data is lost anyway
     }
 };

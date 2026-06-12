@@ -1,7 +1,7 @@
 <?php
 return [
     // Header
-    'free_shipping' => '🚚 Miễn phí giao hàng đơn từ 300.000đ',
+    'free_shipping' => '🚚 Miễn phí giao hàng đơn từ 1.000.000đ',
     'freeship_short' => 'Freeship > 300k',
     'about' => 'Giới thiệu',
     'contact' => 'Liên hệ',

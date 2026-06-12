@@ -23,6 +23,16 @@ class OrderResource extends Resource
     protected static ?string $modelLabel = 'Đơn hàng';
     protected static ?string $pluralModelLabel = 'Đơn hàng';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('order_status', 'pending')->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('order_status', 'pending')->count() > 0 ? 'warning' : 'primary';
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

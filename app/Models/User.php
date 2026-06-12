@@ -24,8 +24,7 @@ class User extends Authenticatable implements FilamentUser
         'avatar',
         'role',
         'google_id',
-        'lucky_spins',
-        'last_free_spin_at',
+        'reward_points',
     ];
 
     protected $hidden = [
@@ -37,7 +36,6 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
-            'last_free_spin_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -52,9 +50,14 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === 'staff';
     }
 
+    public function isCustomerService(): bool
+    {
+        return $this->role === 'customer_service';
+    }
+
     public function canAccessAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'staff']);
+        return in_array($this->role, ['admin', 'staff', 'customer_service']);
     }
 
     public function canManageCatalog(): bool
@@ -117,5 +120,17 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsToMany(Recipe::class, 'recipe_favorites')
             ->withTimestamps();
+    }
+
+    public function collectedCoupons(): BelongsToMany
+    {
+        return $this->belongsToMany(Coupon::class, 'user_coupons')
+            ->withPivot('is_used')
+            ->withTimestamps();
+    }
+
+    public function chatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class);
     }
 }

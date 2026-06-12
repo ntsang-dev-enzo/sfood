@@ -62,16 +62,46 @@ class Order extends Model
     protected static function booted(): void
     {
         static::updated(function (Order $order) {
-            // Reward lucky spin when order is delivered
+            // Reward points when order is delivered (1% of total_amount)
             if ($order->isDirty('order_status') && $order->order_status === 'delivered') {
-                if ($order->total_amount >= 500000) {
-                    $spins = floor($order->total_amount / 500000);
-                    if ($spins > 0 && $order->user) {
-                        $order->user->increment('lucky_spins', $spins);
-                        
-                        // Notify user (optional)
-                        // ...
+                if ($order->user) {
+                    $pointsText = '';
+                    if ($order->total_amount > 0) {
+                        $points = floor($order->total_amount * 0.01);
+                        if ($points > 0) {
+                            $order->user->increment('reward_points', $points);
+                            $pointsText = ' Bạn nhận được ' . number_format($points) . ' điểm thưởng!';
+                        }
                     }
+                    $order->user->notify(new \App\Notifications\OrderUpdated([
+                        'title' => 'Đơn hàng đã giao thành công',
+                        'message' => 'Đơn hàng #' . $order->order_code . ' đã được giao thành công.' . $pointsText,
+                        'action' => 'review_order',
+                        'url' => route('orders.index', ['status' => 'delivered']),
+                        'type' => 'order'
+                    ]));
+                }
+            }
+
+            // Restore coupon if order is cancelled
+            if ($order->isDirty('order_status') && $order->order_status === 'cancelled') {
+                if ($order->coupon_id) {
+                    $coupon = $order->coupon;
+                    if ($coupon) {
+                        if ($coupon->used_count > 0) {
+                            $coupon->decrement('used_count');
+                        }
+                        if ($order->user_id) {
+                            $order->user->collectedCoupons()->updateExistingPivot($coupon->id, [
+                                'is_used' => false
+                            ]);
+                        }
+                    }
+                }
+                
+                // Also restore reward points if they were used in this order
+                if ($order->points_used > 0 && $order->user_id) {
+                    $order->user->increment('reward_points', $order->points_used);
                 }
             }
         });

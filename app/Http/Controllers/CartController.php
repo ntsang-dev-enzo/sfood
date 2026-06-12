@@ -7,14 +7,6 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
-    public function index(CartService $cart)
-    {
-        return view('cart.index', [
-            'items' => $cart->items(),
-            'subtotal' => $cart->subtotal(),
-        ]);
-    }
-
     public function update(Request $request, CartService $cart)
     {
         $data = $request->validate([
@@ -62,11 +54,44 @@ class CartController extends Controller
         return back()->with('success', 'Đã xóa toàn bộ giỏ hàng.');
     }
 
+    public function toggleSelect(Request $request, CartService $cart)
+    {
+        $data = $request->validate([
+            'item_id' => 'required|integer',
+            'selected' => 'required|boolean',
+        ]);
+
+        $cart->toggleSelect((int) $data['item_id'], (bool) $data['selected']);
+
+        if ($request->expectsJson()) {
+            return response()->json($this->cartPayload($cart, (int) $data['item_id']));
+        }
+
+        return back();
+    }
+
+    public function toggleSelectAll(Request $request, CartService $cart)
+    {
+        $data = $request->validate([
+            'selected' => 'required|boolean',
+        ]);
+
+        $cart->toggleSelectAll((bool) $data['selected']);
+
+        if ($request->expectsJson()) {
+            return response()->json($this->cartPayload($cart));
+        }
+
+        return back();
+    }
+
     protected function cartPayload(CartService $cart, ?int $itemId = null): array
     {
         $payload = [
             'subtotal' => $cart->subtotal(),
             'subtotal_formatted' => number_format($cart->subtotal()).'đ',
+            'selected_subtotal' => $cart->selectedSubtotal(),
+            'selected_subtotal_formatted' => number_format($cart->selectedSubtotal()).'đ',
             'count' => $cart->count(),
             'empty' => $cart->items()->isEmpty(),
         ];
@@ -77,6 +102,7 @@ class CartController extends Controller
                 $payload['item'] = [
                     'id' => $item->id,
                     'quantity' => $item->quantity,
+                    'is_selected' => $item->is_selected,
                     'subtotal' => $item->subtotal(),
                     'subtotal_formatted' => number_format($item->subtotal()).'đ',
                     'unit_price_formatted' => number_format($item->productVariant->effectivePrice()).'đ',

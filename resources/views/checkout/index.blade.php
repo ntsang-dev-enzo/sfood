@@ -80,9 +80,12 @@
                                 id="shipping-display">{{ $shipping == 0 ? 'Miễn phí' : number_format($shipping) . 'đ' }}</span>
                         </div>
                         <div id="discount-row" class="flex justify-between text-earth-700" style="display:none">
-                            <span>Giảm</span><span id="discount-display">0đ</span>
+                            <span>Giảm giá mã</span><span id="discount-display">0đ</span>
                         </div>
-                        @if ($subtotal < 300000)
+                        <div id="points-discount-row" class="flex justify-between text-earth-700" style="display:none">
+                            <span>Dùng điểm</span><span id="points-discount-total">0đ</span>
+                        </div>
+                        @if ($subtotal < 1000000)
                             <p class="text-xs text-earth-500">Miễn phí ship đơn ở nội thành Cần Thơ hoặc đơn trên 1.000.000đ</p>
                         @endif
                         <div class="flex justify-between font-bold text-lg text-earth-800 pt-2 border-t border-cream-300">
@@ -132,16 +135,33 @@
                         <div class="flex gap-2 mt-3">
                             <input id="coupon-code-input" name="coupon_code" value="{{ old('coupon_code') }}"
                                 placeholder="Nhập mã khác (tuỳ chọn)" class="input-field">
-                            <button type="button" id="apply-coupon-btn" class="btn-secondary" style="display:none">Áp
-                                dụng</button>
+                            <button type="button" id="apply-coupon-btn" class="btn-secondary">Áp dụng</button>
                             <button type="button" id="remove-coupon-btn" class="btn-ghost" style="display:none">Bỏ</button>
                         </div>
                         <p id="coupon-message" class="text-sm text-red-600 mt-2" style="display:none"></p>
                     </div>
 
+                    <div class="mb-6">
+                        <label class="text-sm font-medium text-earth-700">Sử dụng điểm thưởng</label>
+                        @if(Auth::user()->reward_points > 0)
+                            <div class="mt-2 flex items-center gap-3 p-3 bg-cream-50 border border-cream-200 rounded-xl">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="use-points-toggle" name="use_points" value="1" class="sr-only peer" @checked(old('use_points'))>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-leaf-600"></div>
+                                </label>
+                                <div>
+                                    <span class="text-sm font-medium text-earth-800">Dùng <span class="font-bold text-leaf-600" id="available-points" data-points="{{ Auth::user()->reward_points }}">{{ number_format(Auth::user()->reward_points) }}</span> điểm</span>
+                                    <p class="text-xs text-earth-500">Quy đổi: -<span id="points-discount-preview">0</span>đ</p>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-sm text-earth-500 mt-1">Bạn chưa có điểm thưởng.</p>
+                        @endif
+                    </div>
+
                     <div class="space-y-2 mb-6">
                         <label class="text-sm font-medium text-earth-700">Phương thức</label>
-                        @foreach (['cod' => 'COD — Thanh toán khi nhận', 'payos' => 'PayOS (QR / Ngân hàng)', 'vnpay' => 'VNPay', 'momo' => 'MoMo'] as $val => $label)
+                        @foreach (['cod' => 'COD — Thanh toán khi nhận', 'payos' => 'PayOS (QR / Ngân hàng)'] as $val => $label)
                             <label
                                 class="flex items-center gap-2 p-3 border border-cream-300 rounded-xl cursor-pointer hover:border-leaf-500 has-[:checked]:border-leaf-600 has-[:checked]:bg-leaf-50">
                                 <input type="radio" name="payment_gateway" value="{{ $val }}"
@@ -234,10 +254,26 @@
                     discountText.replace(/[^\d]/g, '')
                 ) || 0;
 
+                let pointsDiscount = 0;
+                const usePointsToggle = document.getElementById('use-points-toggle');
+                if (usePointsToggle && usePointsToggle.checked) {
+                    const maxPoints = parseInt(document.getElementById('available-points').dataset.points);
+                    const totalBeforePoints = subtotal + currentShipping - discount;
+                    pointsDiscount = Math.min(maxPoints, totalBeforePoints);
+                    
+                    document.getElementById('points-discount-preview').textContent = new Intl.NumberFormat('vi-VN').format(pointsDiscount);
+                    document.getElementById('points-discount-row').style.display = 'flex';
+                    document.getElementById('points-discount-total').textContent = '-' + formatVnd(pointsDiscount);
+                } else {
+                    if (document.getElementById('points-discount-preview')) document.getElementById('points-discount-preview').textContent = '0';
+                    if (document.getElementById('points-discount-row')) document.getElementById('points-discount-row').style.display = 'none';
+                }
+
                 const total =
                     subtotal +
                     currentShipping -
-                    discount;
+                    discount -
+                    pointsDiscount;
 
                 totalDisplay.textContent = formatVnd(total);
             }
@@ -387,6 +423,11 @@
                 updateShippingFee();
             });
 
+            const usePointsToggleEl = document.getElementById('use-points-toggle');
+            if (usePointsToggleEl) {
+                usePointsToggleEl.addEventListener('change', updateShippingFee);
+            }
+
             // Load provinces and then handle pre-selected saved address
             (async function() {
                 await loadProvinces();
@@ -396,9 +437,10 @@
                 function selectOptionByMatch(selectEl, match) {
                     if (!match) return false;
                     const opts = Array.from(selectEl.options);
+                    const m = match.toLowerCase();
                     let found = opts.find(o => o.dataset.code && o.dataset.code == match);
-                    if (!found) found = opts.find(o => o.value == match);
-                    if (!found) found = opts.find(o => o.textContent.trim() == match.trim());
+                    if (!found) found = opts.find(o => o.value.toLowerCase().includes(m));
+                    if (!found) found = opts.find(o => o.textContent.toLowerCase().includes(m));
                     if (found) {
                         selectEl.value = found.value;
                         return true;
@@ -419,9 +461,10 @@
                         function findOption(selectEl, match) {
                             if (!match) return null;
                             const opts = Array.from(selectEl.options);
+                            const m = match.toLowerCase();
                             let found = opts.find(o => o.dataset.code && o.dataset.code == match);
-                            if (!found) found = opts.find(o => o.value == match);
-                            if (!found) found = opts.find(o => o.textContent.trim() == match.trim());
+                            if (!found) found = opts.find(o => o.value.toLowerCase().includes(m));
+                            if (!found) found = opts.find(o => o.textContent.toLowerCase().includes(m));
                             return found;
                         }
 
@@ -524,14 +567,6 @@
                 }
             })();
 
-            // auto-apply coupon from session if present
-            const appliedCoupon = {!! json_encode($appliedCoupon ?? '') !!};
-            if (appliedCoupon) {
-                couponInput.value = appliedCoupon;
-                // small delay to ensure handlers attached
-                setTimeout(() => applyBtn?.click(), 200);
-            }
-
             // Coupon apply/remove logic
             const applyBtn = document.getElementById('apply-coupon-btn');
             const removeBtn = document.getElementById('remove-coupon-btn');
@@ -540,6 +575,14 @@
 
             function formatVnd(amount) {
                 return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+            }
+
+            // auto-apply coupon from session if present
+            const appliedCoupon = {!! json_encode($appliedCoupon ?? '') !!};
+            if (appliedCoupon && couponInput) {
+                couponInput.value = appliedCoupon;
+                // small delay to ensure handlers attached
+                setTimeout(() => applyBtn?.click(), 200);
             }
 
             applyBtn?.addEventListener('click', async function() {
@@ -564,7 +607,8 @@
                             'Accept': 'application/json',
                         },
                         body: JSON.stringify({
-                            code
+                            code,
+                            shipping_fee: currentShipping
                         }),
                     });
 
@@ -577,9 +621,21 @@
 
                     // update UI
                     document.getElementById('discount-display').textContent = formatVnd(json.discount);
-                    document.getElementById('total-display').textContent = formatVnd(json.total);
-                    document.getElementById('subtotal-display').textContent = formatVnd(
-                        {{ $subtotal }});
+                    
+                    let finalTotal = json.total;
+                    let pointsDiscount = 0;
+                    const usePointsToggle = document.getElementById('use-points-toggle');
+                    if (usePointsToggle && usePointsToggle.checked) {
+                        const maxPoints = parseInt(document.getElementById('available-points').dataset.points);
+                        pointsDiscount = Math.min(maxPoints, json.total);
+                        document.getElementById('points-discount-preview').textContent = new Intl.NumberFormat('vi-VN').format(pointsDiscount);
+                        document.getElementById('points-discount-row').style.display = 'flex';
+                        document.getElementById('points-discount-total').textContent = '-' + formatVnd(pointsDiscount);
+                        finalTotal -= pointsDiscount;
+                    }
+                    
+                    document.getElementById('total-display').textContent = formatVnd(finalTotal);
+                    document.getElementById('subtotal-display').textContent = formatVnd({{ $subtotal }});
                     if (json.shipping === 0) {
                         document.getElementById('shipping-display').textContent = 'Miễn phí';
                     } else {
@@ -610,14 +666,12 @@
 
                 couponInput.value = '';
                 document.getElementById('discount-display').textContent = '0đ';
-                document.getElementById('total-display').textContent = formatVnd({{ $total }});
-                document.getElementById('shipping-display').textContent =
-                    '{{ $shipping == 0 ? 'Miễn phí' : number_format($shipping) . 'đ' }}';
-                document.getElementById('shipping-fee-input').value = {{ $shipping }};
                 document.getElementById('discount-row').style.display = 'none';
                 removeBtn.style.display = 'none';
                 applyBtn.style.display = 'inline-block';
                 couponMessage.style.display = 'none';
+
+                updateShippingFee();
             });
 
             // auto-apply when selecting from the coupon select
@@ -664,7 +718,8 @@
                                 'Accept': 'application/json',
                             },
                             body: JSON.stringify({
-                                code
+                                code,
+                                shipping_fee: currentShipping
                             }),
                         });
                         const json = await res.json();
@@ -674,7 +729,20 @@
                             return;
                         }
                         document.getElementById('discount-display').textContent = formatVnd(json.discount);
-                        document.getElementById('total-display').textContent = formatVnd(json.total);
+                        
+                        let finalTotal = json.total;
+                        let pointsDiscount = 0;
+                        const usePointsToggle = document.getElementById('use-points-toggle');
+                        if (usePointsToggle && usePointsToggle.checked) {
+                            const maxPoints = parseInt(document.getElementById('available-points').dataset.points);
+                            pointsDiscount = Math.min(maxPoints, json.total);
+                            document.getElementById('points-discount-preview').textContent = new Intl.NumberFormat('vi-VN').format(pointsDiscount);
+                            document.getElementById('points-discount-row').style.display = 'flex';
+                            document.getElementById('points-discount-total').textContent = '-' + formatVnd(pointsDiscount);
+                            finalTotal -= pointsDiscount;
+                        }
+                        
+                        document.getElementById('total-display').textContent = formatVnd(finalTotal);
                         if (json.shipping === 0) {
                             document.getElementById('shipping-display').textContent = 'Miễn phí';
                         } else {

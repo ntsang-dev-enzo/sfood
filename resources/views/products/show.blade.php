@@ -219,16 +219,9 @@
 
                     <div id="suggestions-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         @foreach ($suggestions ?? collect() as $s)
-                            <a href="{{ route('products.show', $s->slug) }}"
-                                class="block bg-white dark:bg-gray-800 rounded-xl p-3 border border-cream-200 dark:border-gray-700 hover:shadow-sm transition">
-                                <img src="{{ MediaHelper::productImage($s->thumbnail, $s->id) }}"
-                                    class="w-full h-32 object-cover rounded-lg">
-                                <div class="mt-2 text-xs font-medium text-earth-900 dark:text-gray-300 line-clamp-2 min-h-[2rem]">{{ $s->name }}</div>
-                                <div class="mt-2 flex items-center justify-between">
-                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">{{ number_format($s->minPrice()) }}đ</span>
-                                    <span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-cream-100 dark:bg-gray-700 text-earth-700 dark:text-gray-300 hover:bg-earth-200 dark:hover:bg-gray-600 transition">Chi tiết</span>
-                                </div>
-                            </a>
+                            <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-cream-200 dark:border-gray-700 hover:shadow-md transition">
+                                @include('partials.product-card', ['product' => $s])
+                            </div>
                         @endforeach
                     </div>
 
@@ -561,19 +554,13 @@
                     try {
                         const resp = await fetch(url + '?offset=' + offset + '&limit=8');
                         const data = await resp.json();
-                        (data.data || []).forEach(s => {
-                            const a = document.createElement('a');
-                            a.href = '/san-pham/' + s.slug;
-                            a.className = 'block bg-white dark:bg-gray-800 rounded-xl p-3 border border-cream-200 dark:border-gray-700 hover:shadow-sm transition';
-                            a.innerHTML = `<img src="/storage/${s.thumbnail}" class="w-full h-32 object-cover rounded-lg"><div class="mt-2 text-xs font-medium text-earth-900 dark:text-gray-300 line-clamp-2 min-h-[2rem]">${s.name}</div>
-                                <div class="mt-2 flex items-center justify-between">
-                                    <span class="text-sm font-bold text-green-600 dark:text-green-400">${s.price}</span>
-                                    <span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-cream-100 dark:bg-gray-700 text-earth-700 dark:text-gray-300 hover:bg-earth-200 dark:hover:bg-gray-600 transition">Chi tiết</span>
-                                </div>`;
-                            grid.appendChild(a);
-                        });
-                        offset += (data.data || []).length;
-                        if ((data.data || []).length < 8) {
+                        if (data.html) {
+                            grid.insertAdjacentHTML('beforeend', data.html);
+                            // Cập nhật countdown sau khi thêm các phần tử html nếu có flash sale
+                            if (typeof updateCountdowns === 'function') updateCountdowns();
+                        }
+                        offset += data.count;
+                        if (data.count < 8) {
                             btn.style.display = 'none';
                         }
                     } catch (e) {

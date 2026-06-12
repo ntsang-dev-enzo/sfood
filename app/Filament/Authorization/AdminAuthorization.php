@@ -16,6 +16,11 @@ class AdminAuthorization
         return self::user()?->canAccessAdmin() ?? false;
     }
 
+    public static function isCustomerService(): bool
+    {
+        return self::user()?->isCustomerService() ?? false;
+    }
+
     public static function isAdmin(): bool
     {
         return self::user()?->isAdmin() ?? false;

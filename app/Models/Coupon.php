@@ -113,4 +113,11 @@ class Coupon extends Model
             return true;
         })->sum(fn($item) => $item->subtotal());
     }
+
+    public function collectedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_coupons')
+            ->withPivot('is_used')
+            ->withTimestamps();
+    }
 }

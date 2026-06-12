@@ -12,8 +12,8 @@ class CreateFlashSale extends CreateRecord
 
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
-        // When creating, the user selects 'product_id' and 'id' (which is the variant ID)
-        $variant = \App\Models\ProductVariant::findOrFail($data['id']);
+        // When creating, the user selects 'product_id' and 'variant_id' (which is the variant ID)
+        $variant = \App\Models\ProductVariant::findOrFail($data['variant_id']);
         
         $variant->update([
             'flash_sale_price' => $data['flash_sale_price'],

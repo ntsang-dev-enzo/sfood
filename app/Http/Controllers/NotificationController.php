@@ -7,12 +7,21 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $notifications = Auth::user()->notifications()->latest()->paginate(10);
+        $type = $request->get('type');
+        
+        $query = Auth::user()->notifications();
+        
+        if ($type) {
+            $query->where('data->type', $type);
+        }
+
+        $notifications = $query->latest()->paginate(10)->withQueryString();
 
         return view('notifications.index', [
             'notifications' => $notifications,
+            'currentType' => $type,
         ]);
     }
 

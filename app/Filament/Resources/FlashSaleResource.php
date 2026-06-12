@@ -35,7 +35,7 @@ class FlashSaleResource extends Resource
                     ->live()
                     ->disabled(fn (string $operation): bool => $operation === 'edit')
                     ->required(fn (string $operation): bool => $operation === 'create'),
-                Forms\Components\Select::make('id') // We map this to the variant ID
+                Forms\Components\Select::make('variant_id') // We map this to the variant ID
                     ->label('Biến thể sản phẩm')
                     ->options(function (Forms\Get $get) {
                         $productId = $get('product_id');

@@ -3,16 +3,6 @@
 @php use App\Support\MediaHelper; @endphp
 
 <div class="space-y-6">
-    @if(session('success'))
-        <div class="bg-leaf-100 text-leaf-800 p-4 rounded-xl">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="bg-red-100 text-red-800 p-4 rounded-xl">
-            {{ session('error') }}
-        </div>
-    @endif
 
     <div class="card p-6">
         <h2 class="font-bold text-lg text-earth-800 mb-4">Thông tin cá nhân</h2>
@@ -20,7 +10,10 @@
             @csrf
             @method('PUT')
             <div class="flex items-center gap-4">
-                <img src="{{ MediaHelper::avatar($user->avatar, $user->name) }}" class="w-20 h-20 rounded-2xl object-cover border-2 border-cream-300" alt="">
+                <div class="flex flex-col items-center gap-2">
+                    <img src="{{ MediaHelper::avatar($user->avatar, $user->name) }}" class="w-20 h-20 rounded-2xl object-cover border-2 border-cream-300" alt="">
+                    <span class="text-xs font-bold text-leaf-600 bg-leaf-50 px-2 py-1 rounded-lg border border-leaf-200" title="Điểm tích lũy">Điểm: {{ number_format($user->reward_points) }}</span>
+                </div>
                 <div>
                     <label class="text-sm font-medium text-earth-700">Ảnh đại diện</label>
                     <input type="file" name="avatar" accept="image/*" class="text-sm mt-1 text-earth-600">

@@ -85,7 +85,8 @@ class ProductController extends Controller
         $product->load(['category', 'variants', 'images']);
         $product->increment('view_count');
 
-        $suggestions = Product::where('category_id', $product->category_id)
+        $suggestions = Product::with('reviews')
+            ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->orderByDesc('view_count')
             ->limit(8)
@@ -106,24 +107,25 @@ class ProductController extends Controller
         $offset = (int) $request->get('offset', 0);
         $limit = (int) $request->get('limit', 8);
 
-        $rows = Product::with('variants')
+        $rows = Product::with(['category', 'variants', 'reviews'])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->orderByDesc('view_count')
             ->skip($offset)
             ->take($limit)
-            ->get(['id', 'name', 'slug', 'thumbnail']);
+            ->get();
 
-        $data = $rows->map(function ($row) {
-            return [
-                'name' => $row->name,
-                'slug' => $row->slug,
-                'thumbnail' => $row->thumbnail,
-                'price' => number_format($row->minPrice()) . 'đ',
-            ];
-        });
+        $html = '';
+        foreach ($rows as $s) {
+            $html .= '<div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-cream-200 dark:border-gray-700 hover:shadow-md transition">';
+            $html .= view('partials.product-card', ['product' => $s])->render();
+            $html .= '</div>';
+        }
 
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'html' => $html,
+            'count' => $rows->count()
+        ]);
     }
 
     public function aiSearch(\Illuminate\Http\Request $request, \App\Services\AiSearchService $aiSearch)
@@ -154,7 +156,7 @@ class ProductController extends Controller
         }
 
         if ($request->input('action') === 'buy_now') {
-            return redirect()->route('checkout');
+            return redirect()->route('checkout.index');
         }
 
         return back()->with('success', 'Đã thêm vào giỏ hàng!');

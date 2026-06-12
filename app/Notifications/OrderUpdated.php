@@ -40,6 +40,7 @@ class OrderUpdated extends Notification
             'message' => $this->data['message'] ?? 'Đơn hàng của bạn đã được cập nhật.',
             'url' => $this->data['url'] ?? route('home'),
             'type' => $this->data['type'] ?? 'order',
+            'action' => $this->data['action'] ?? null,
         ];
     }
 }

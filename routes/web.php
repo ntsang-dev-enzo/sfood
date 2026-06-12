@@ -41,6 +41,11 @@ Route::post('/lien-he', [PageController::class, 'sendContact'])->name('contact.s
 Route::get('/hoi-dap', [PageController::class, 'faq'])->name('faq');
 Route::get('/chinh-sach', [PageController::class, 'policy'])->name('policy');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/chat-truc-tuyen/messages', [\App\Http\Controllers\ClientChatController::class, 'fetchMessages'])->name('live-chat.fetch');
+    Route::post('/chat-truc-tuyen/send', [\App\Http\Controllers\ClientChatController::class, 'sendMessage'])->name('live-chat.send');
+});
+
 Route::post('/ai-chat', [\App\Http\Controllers\ChatController::class, 'send'])->name('ai.chat');
 Route::post('/ai-chat/image', [\App\Http\Controllers\ChatController::class, 'chatImage'])->name('ai.chat.image');
 Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
@@ -56,19 +61,20 @@ Route::get('/cong-thuc/{recipe:slug}', [RecipeController::class, 'show'])->name(
 Route::post('/cong-thuc/{recipe:slug}/mua-nhanh', [RecipeController::class, 'quickBuy'])->name('recipes.quick-buy');
 Route::post('/cong-thuc/{recipe:slug}/favorite', [RecipeController::class, 'toggleFavorite'])->middleware('auth')->name('recipes.favorite');
 
-Route::get('/gio-hang', [CartController::class, 'index'])->name('cart');
 Route::post('/gio-hang/cap-nhat', [CartController::class, 'update'])->name('cart.update');
 Route::post('/gio-hang/xoa', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/gio-hang/xoa-tat-ca', [CartController::class, 'clear'])->name('cart.clear');
+Route::post('/gio-hang/toggle-select', [CartController::class, 'toggleSelect'])->name('cart.toggle_select');
+Route::post('/gio-hang/toggle-select-all', [CartController::class, 'toggleSelectAll'])->name('cart.toggle_select_all');
 
 Route::middleware('auth')->group(function () {
     Route::get('/yeu-thich', [FavoriteController::class, 'index'])->name('favorites.index');
     Route::get('/yeu-thich-video', [FavoriteController::class, 'videos'])->name('favorites.videos');
 
-    Route::get('/vong-quay-may-man', [\App\Http\Controllers\LuckyWheelController::class, 'index'])->name('lucky-wheel.index');
-    Route::post('/vong-quay-may-man/spin', [\App\Http\Controllers\LuckyWheelController::class, 'spin'])->name('lucky-wheel.spin');
+    Route::get('/tram-khuyen-mai', [\App\Http\Controllers\VoucherController::class, 'index'])->name('vouchers.index');
+    Route::post('/vouchers/{coupon}/collect', [\App\Http\Controllers\VoucherController::class, 'collect'])->name('vouchers.collect');
 
-    Route::get('/thanh-toan', [CheckoutController::class, 'index'])->name('checkout');
+    Route::get('/thanh-toan', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/thanh-toan', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/don-hang', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('orders.show');

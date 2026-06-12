@@ -13,44 +13,33 @@ class CouponController extends Controller
     {
         $data = $request->validate([
             'code' => 'required|string|max:100',
+            'shipping_fee' => 'nullable|numeric|min:0',
         ]);
 
         $code = $data['code'];
-        $subtotal = $cart->subtotal();
-        $shipping = $subtotal >= 300000 ? 0 : 30000;
+        $subtotal = $cart->selectedSubtotal();
+        // Use frontend's shipping fee or default if not provided
+        $shipping = $request->input('shipping_fee', $subtotal >= 1000000 ? 0 : 30000);
 
         $coupon = Coupon::where('code', $code)->first();
         if (! $coupon) {
             return response()->json(['valid' => false, 'message' => 'Mã không tồn tại.'], 404);
         }
 
-        // Tính tổng phụ chỉ dành cho các sản phẩm KHÔNG phải là flash sale
-        $eligibleSubtotal = $cart->items()
-            ->filter(fn($item) => ! $item->productVariant->isFlashActive())
-            ->sum(fn($item) => $item->subtotal());
+        // Tính tổng phụ chỉ dành cho các sản phẩm KHÔNG phải là flash sale và áp dụng được mã này
+        $eligibleSubtotal = $coupon->getEligibleSubtotal($cart->selectedItems());
 
         if ($eligibleSubtotal <= 0 && $subtotal > 0) {
-            return response()->json(['valid' => false, 'message' => 'Sản phẩm đang Flash Sale không được áp dụng mã giảm giá.'], 422);
+            return response()->json(['valid' => false, 'message' => 'Sản phẩm trong giỏ hàng không đủ điều kiện áp dụng mã này (hoặc đang Flash Sale).'], 422);
         }
 
         if (! $coupon->isValid($eligibleSubtotal)) {
             return response()->json(['valid' => false, 'message' => 'Mã không hợp lệ cho giá trị đơn hàng đủ điều kiện hiện tại.'], 422);
         }
 
-        // check categories applicability (only on eligible items)
-        $categoryIds = $cart->items()
-            ->filter(fn($item) => ! $item->productVariant->isFlashActive())
-            ->pluck('productVariant.product.category_id')
-            ->filter()->unique()->values()->all();
-            
-        if (! $coupon->appliesToCategories($categoryIds)) {
-            return response()->json(['valid' => false, 'message' => 'Mã không áp dụng cho sản phẩm đủ điều kiện trong giỏ hàng.'], 422);
-        }
+
 
         $discount = $coupon->calculateDiscount($eligibleSubtotal, $shipping);
-        if ($coupon->type === 'free_shipping') {
-            $shipping = 0;
-        }
 
         $total = max(0, $subtotal + $shipping - $discount);
 

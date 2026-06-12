@@ -23,6 +23,16 @@ class ProductReviewResource extends Resource
     protected static ?string $pluralModelLabel = 'Đánh giá SP';
     protected static ?string $navigationGroup = 'Sản phẩm';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::whereDate('created_at', today())->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'info';
+    }
+
     public static function form(Form $form): Form
     {
         return $form

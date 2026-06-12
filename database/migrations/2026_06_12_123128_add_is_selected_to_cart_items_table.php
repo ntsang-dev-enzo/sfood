@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('last_free_spin_at')->nullable()->after('lucky_spins');
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->boolean('is_selected')->default(true)->after('quantity');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('last_free_spin_at');
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->dropColumn('is_selected');
         });
     }
 };

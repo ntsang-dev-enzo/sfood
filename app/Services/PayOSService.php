@@ -25,7 +25,7 @@ class PayOSService
         $amount = (int) $order->total_amount;
         $description = 'Thanh toan '.$order->order_code;
         $returnUrl = route('payment.callback', 'payos');
-        $cancelUrl = route('cart');
+        $cancelUrl = route('checkout.index');
 
         $data = [
             'orderCode' => $orderCode,

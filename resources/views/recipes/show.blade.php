@@ -92,7 +92,7 @@
                         ⚡ Mua nhanh tất cả nguyên liệu
                     </button>
                 </form>
-                <a href="{{ route('cart') }}" class="block text-center mt-3 text-leaf-700 text-sm font-medium hover:underline">Xem giỏ hàng →</a>
+
             </div>
         </div>
     </div>

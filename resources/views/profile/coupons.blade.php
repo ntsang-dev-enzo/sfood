@@ -8,7 +8,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @foreach ($coupons as $coupon)
                     @php
-                        $isUsed = $coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit;
+                        $isUsed = $coupon->pivot->is_used || ($coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit);
                         $isExpired = $coupon->expires_at && $coupon->expires_at->isPast();
                         $isDisabled = $isUsed || $isExpired || !$coupon->is_active;
                     @endphp
@@ -47,7 +47,7 @@
             <div class="text-center py-8">
                 <div class="text-4xl mb-4">🎟️</div>
                 <p class="text-earth-600 mb-4">Bạn chưa có mã giảm giá nào trong ví.</p>
-                <a href="{{ route('lucky-wheel.index') }}" class="btn-primary inline-flex">Quay thưởng ngay</a>
+                <a href="{{ route('vouchers.index') }}" class="btn-primary inline-flex">Thu thập ngay</a>
             </div>
         @endif
     </div>

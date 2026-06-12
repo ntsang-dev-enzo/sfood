@@ -39,7 +39,18 @@ class RecipeController extends Controller
         
         $categories = \App\Models\RecipeCategory::all();
 
-        return view('recipes.index', compact('recipes', 'search', 'aiResults', 'categories', 'categorySlug', 'minTime', 'maxTime', 'sort'));
+        $coupons = \App\Models\Coupon::where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+            
+        $user = $request->user();
+        $collectedIds = $user ? $user->collectedCoupons()->pluck('coupons.id')->toArray() : [];
+
+        return view('recipes.index', compact('recipes', 'search', 'aiResults', 'categories', 'categorySlug', 'minTime', 'maxTime', 'sort', 'coupons', 'collectedIds'));
     }
 
     public function aiSearch(\Illuminate\Http\Request $request, \App\Services\AiSearchService $aiSearch)
@@ -96,6 +107,6 @@ class RecipeController extends Controller
 
         $cart->addMany($items);
 
-        return redirect()->route('cart')->with('success', 'Đã thêm tất cả nguyên liệu vào giỏ hàng!');
+        return back()->with('success', 'Đã thêm tất cả nguyên liệu vào giỏ hàng!');
     }
 }

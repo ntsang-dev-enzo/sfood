@@ -21,19 +21,19 @@ class OrderService
 
     public function create(array $data): Order
     {
-        $items = $this->cartService->items();
+        $items = $this->cartService->selectedItems();
 
         if ($items->isEmpty()) {
-            throw new \RuntimeException('Giỏ hàng trống.');
+            throw new \RuntimeException('Bạn chưa chọn sản phẩm nào để thanh toán.');
         }
 
         return DB::transaction(function () use ($data, $items) {
-            $subtotal = $this->cartService->subtotal();
+            $subtotal = $this->cartService->selectedSubtotal();
             // Prefer shipping fee computed by frontend/controller when provided
             // Important: ensure 0 stays 0 (avoid empty-string/boolean edge cases)
             $shippingFee = array_key_exists('shipping_fee', $data)
                 ? (float) ($data['shipping_fee'] ?? 0)
-                : ($subtotal >= 300000 ? 0 : 30000);
+                : ($subtotal >= 1000000 ? 0 : 30000);
 
 
             $discount = 0;
@@ -53,11 +53,11 @@ class OrderService
                     if ($eligibleSubtotal > 0 && $coupon->isValid($eligibleSubtotal)) {
                         // calculate discount based on current shippingFee
                         $discount = $coupon->calculateDiscount($eligibleSubtotal, $shippingFee);
-                        if ($coupon->type === 'free_shipping') {
-                            // coupon removes shipping
-                            $shippingFee = 0;
-                        }
+                        
                         $coupon->increment('used_count');
+
+                        // Mark as used in pivot if the user had collected it
+                        Auth::user()->collectedCoupons()->updateExistingPivot($coupon->id, ['is_used' => true]);
                     }
                 }
             }
@@ -115,7 +115,7 @@ class OrderService
                 'status' => 'pending',
             ]);
 
-            $this->cartService->clear();
+            $this->cartService->clearSelected();
 
             // Gửi thông báo cho người dùng
             $order->user->notify(new OrderUpdated([

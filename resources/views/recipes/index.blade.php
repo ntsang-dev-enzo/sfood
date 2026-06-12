@@ -20,7 +20,7 @@
     </div>
 
     <!-- Filter Module -->
-    <form method="GET" action="{{ route('recipes.index') }}" class="bg-white p-4 rounded-xl shadow-sm border border-cream-200 mb-8 flex flex-wrap gap-4 items-end">
+    <form method="GET" action="{{ route('recipes.index') }}" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-cream-200 dark:border-gray-700 mb-8 flex flex-wrap gap-4 items-end">
         @if($search)
             <input type="hidden" name="search" value="{{ $search }}">
         @endif
@@ -96,14 +96,113 @@
         </div>
     @endif
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @forelse ($recipes as $recipe)
-            @include('partials.recipe-card', ['recipe' => $recipe])
-        @empty
-            <p class="col-span-full text-center text-earth-500 py-12">Chưa có công thức nào.</p>
-        @endforelse
+    <div class="grid lg:grid-cols-4 gap-8">
+        <!-- Recipes List -->
+        <div class="lg:col-span-3">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @forelse ($recipes as $recipe)
+                    @include('partials.recipe-card', ['recipe' => $recipe])
+                @empty
+                    <p class="col-span-full text-center text-earth-500 py-12">Chưa có công thức nào.</p>
+                @endforelse
+            </div>
+            
+            <div class="mt-10">{{ $recipes->links() }}</div>
+        </div>
+
+        <!-- Voucher Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-24">
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-5 border border-orange-200 dark:border-gray-700 shadow-sm mb-6">
+                    <h3 class="font-bold text-lg text-orange-800 dark:text-orange-400 mb-4 flex items-center gap-2">
+                        <span>🎁</span> Trạm Khuyến Mãi
+                    </h3>
+                    <p class="text-sm text-orange-700 dark:text-orange-300 mb-4">Sưu tầm mã giảm giá để mua nguyên liệu rẻ hơn nhé!</p>
+                    
+                    <div class="space-y-4">
+                        @forelse ($coupons as $coupon)
+                            @php
+                                $isCollected = in_array($coupon->id, $collectedIds);
+                                $isUsedUp = $coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit;
+                            @endphp
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-orange-200 dark:border-gray-700 overflow-hidden {{ $isUsedUp ? 'opacity-70 grayscale' : '' }}">
+                                <div class="p-4 border-b border-dashed border-orange-200 dark:border-gray-700 relative">
+                                    <div class="absolute -bottom-2 -left-2 w-4 h-4 bg-orange-50 dark:bg-gray-900 rounded-full border border-orange-200 dark:border-gray-700"></div>
+                                    <div class="absolute -bottom-2 -right-2 w-4 h-4 bg-orange-50 dark:bg-gray-900 rounded-full border border-orange-200 dark:border-gray-700"></div>
+                                    
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-bold text-earth-800 dark:text-gray-200">
+                                            @if ($coupon->type === 'percent') Giảm {{ $coupon->value }}%
+                                            @elseif ($coupon->type === 'fixed') Giảm {{ number_format($coupon->value) }}đ
+                                            @else Free Ship
+                                            @endif
+                                        </h4>
+                                    </div>
+                                    @if ($coupon->min_order_amount > 0)
+                                        <p class="text-xs text-earth-600 dark:text-gray-400">Đơn từ {{ number_format($coupon->min_order_amount) }}đ</p>
+                                    @endif
+                                    <p class="font-mono font-bold text-sm text-leaf-600 mt-2 bg-cream-50 dark:bg-gray-700 px-2 py-1 rounded inline-block">{{ $coupon->code }}</p>
+                                </div>
+                                <div class="p-3 bg-cream-50 dark:bg-gray-900 flex flex-col gap-2">
+                                    @if($isUsedUp)
+                                        <button class="w-full text-xs py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-500 cursor-not-allowed" disabled>Hết lượt</button>
+                                    @elseif($isCollected)
+                                        <button class="w-full text-xs py-2 rounded-lg font-medium bg-cream-200 dark:bg-gray-800 text-earth-600 dark:text-gray-400 border border-cream-300 dark:border-gray-600 pointer-events-none" disabled>✓ Đã thu thập</button>
+                                    @else
+                                        <button onclick="collectVoucher({{ $coupon->id }}, this)" class="w-full text-xs py-2 rounded-lg font-medium bg-leaf-600 text-white hover:bg-leaf-700 transition shadow-sm">Thu thập ngay</button>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-sm text-earth-500">Chưa có mã giảm giá nào.</p>
+                        @endforelse
+                    </div>
+                    
+                    <a href="{{ route('vouchers.index') }}" class="block text-center text-sm font-medium text-orange-700 dark:text-orange-400 hover:text-orange-800 mt-4 transition">Xem tất cả ></a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="mt-10">{{ $recipes->links() }}</div>
+@push('scripts')
+<script>
+    async function collectVoucher(id, btn) {
+        @if(!Auth::check())
+            window.location.href = '{{ route('login') }}';
+            return;
+        @endif
+
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="animate-pulse">Đang lưu...</span>';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`/vouchers/${id}/collect`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                btn.className = "w-full text-xs py-2 rounded-lg font-medium bg-cream-200 dark:bg-gray-800 text-earth-600 dark:text-gray-400 border border-cream-300 dark:border-gray-600 pointer-events-none";
+                btn.innerHTML = "✓ Đã thu thập";
+                alert(data.message);
+            } else {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert(data.message || 'Có lỗi xảy ra');
+            }
+        } catch(e) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('Lỗi kết nối');
+        }
+    }
+</script>
+@endpush
 </div>
 @endsection

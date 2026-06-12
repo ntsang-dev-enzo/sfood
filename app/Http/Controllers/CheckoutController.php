@@ -15,21 +15,29 @@ class CheckoutController extends Controller
 {
     public function index(CartService $cart)
     {
-        if ($cart->items()->isEmpty()) {
-            return redirect()->route('cart');
+        $items = $cart->selectedItems();
+
+        if ($items->isEmpty()) {
+            return redirect('/')->with('error', 'Bạn chưa chọn sản phẩm nào để thanh toán.');
         }
 
-        $subtotal = $cart->subtotal();
-        $shipping = $subtotal >= 300000 ? 0 : 30000;
+        $subtotal = $cart->selectedSubtotal();
+        $shipping = $subtotal >= 1000000 ? 0 : 30000;
 
         // compute available coupons for this cart
-        $items = $cart->items();
+        $items = $cart->selectedItems();
         $eligibleSubtotal = $items->filter(fn($item) => !$item->productVariant->isFlashActive())->sum(fn($item) => $item->subtotal());
         $categoryIds = $items->filter(fn($item) => !$item->productVariant->isFlashActive())->pluck('productVariant.product.category_id')->filter()->unique()->values()->all();
 
-        $availableCoupons = Coupon::where('is_active', true)->get()->filter(function (Coupon $c) use ($subtotal, $eligibleSubtotal, $categoryIds) {
-            if ($eligibleSubtotal <= 0 && $subtotal > 0) return false;
-            return $c->isValid($eligibleSubtotal) && $c->appliesToCategories($categoryIds);
+        $collectedIds = Auth::user()->collectedCoupons()->wherePivot('is_used', false)->pluck('coupons.id')->toArray();
+
+        $availableCoupons = Coupon::where('is_active', true)
+            ->whereIn('id', $collectedIds)
+            ->get()
+            ->filter(function (Coupon $c) use ($subtotal, $items) {
+                $couponEligibleSubtotal = $c->getEligibleSubtotal($items);
+                if ($couponEligibleSubtotal <= 0 && $subtotal > 0) return false;
+                return $c->isValid($couponEligibleSubtotal);
         })->values()->map(function (Coupon $c) {
             $names = [];
             if (!empty($c->applicable_category_ids)) {
@@ -56,18 +64,19 @@ class CheckoutController extends Controller
         PaymentService $paymentService
     ) {
 
-        if ($cart->items()->isEmpty()) {
-            return redirect()->route('cart');
+        if ($cart->selectedItems()->isEmpty()) {
+            return redirect('/')->with('error', 'Giỏ hàng của bạn đã thay đổi. Vui lòng kiểm tra lại.');
         }
 
         $rules = [
             'shipping_address_id' => 'nullable|exists:shipping_addresses,id',
             'coupon_code' => 'nullable|string',
-            'payment_gateway' => 'required|in:cod,vnpay,momo,payos',
+            'payment_gateway' => 'required|in:cod,payos',
             'notes' => 'nullable|string',
 
             // shipping fee từ frontend
             'shipping_fee' => 'nullable|numeric|min:0',
+            'use_points' => 'nullable|boolean',
         ];
 
         if (! $request->shipping_address_id) {
@@ -103,8 +112,8 @@ class CheckoutController extends Controller
     |--------------------------------------------------------------------------
     */
 
-        $subtotal = $cart->subtotal();
-        $items = $cart->items();
+        $subtotal = $cart->selectedSubtotal();
+        $items = $cart->selectedItems();
         $eligibleSubtotal = 0;
 
         $shipping = 30000;
@@ -135,20 +144,7 @@ class CheckoutController extends Controller
             $shipping = 0;
         }
 
-        // If coupon grants free shipping, override shipping to 0
-        if (!empty($data['coupon_code'])) {
-            $coupon = Coupon::where('code', $data['coupon_code'])->first();
-            if ($coupon) {
-                $eligibleSubtotal = $coupon->getEligibleSubtotal($items);
-                if ($eligibleSubtotal > 0 && $coupon->isValid($eligibleSubtotal)) {
-                    if ($coupon->type === 'free_shipping') {
-                        $shipping = 0;
-                    }
-                }
-            }
-        }
-
-        // Recompute discount and apply free shipping if net total after discount >= 1_000_000
+        // Recompute discount and apply free shipping if net total after discount >= 300,000
         $discount = 0;
         if (!empty($data['coupon_code'])) {
             $coupon = $coupon ?? Coupon::where('code', $data['coupon_code'])->first();
@@ -207,10 +203,31 @@ class CheckoutController extends Controller
             'notes' =>
             $data['notes'] ?? null,
 
-            // dùng shipping mới
             'shipping_fee' =>
             $data['shipping_fee'],
         ]);
+
+        $pointsUsed = 0;
+        $pointsDiscount = 0;
+        if (!empty($data['use_points']) && Auth::user()->reward_points > 0) {
+            $availablePoints = Auth::user()->reward_points;
+            $pointsUsed = min($availablePoints, $order->total_amount);
+            $pointsDiscount = $pointsUsed;
+
+            if ($pointsUsed > 0) {
+                $order->points_used = $pointsUsed;
+                $order->points_discount = $pointsDiscount;
+                $order->total_amount = max(0, $order->total_amount - $pointsDiscount);
+                $order->save();
+
+                if ($order->payment) {
+                    $order->payment->amount = $order->total_amount;
+                    $order->payment->save();
+                }
+
+                Auth::user()->decrement('reward_points', $pointsUsed);
+            }
+        }
 
         /*
     |--------------------------------------------------------------------------
@@ -221,7 +238,7 @@ class CheckoutController extends Controller
         if (
             in_array(
                 $data['payment_gateway'],
-                ['vnpay', 'momo', 'payos']
+                ['payos']
             )
         ) {
 

@@ -86,6 +86,33 @@ class CartService
         $this->query()->delete();
     }
 
+    public function selectedItems(): Collection
+    {
+        return $this->query()->where('is_selected', true)->get();
+    }
+
+    public function selectedSubtotal(): float
+    {
+        return $this->selectedItems()->sum(fn (CartItem $item) => $item->subtotal());
+    }
+
+    public function toggleSelect(int $itemId, bool $selected): void
+    {
+        $item = $this->query()->findOrFail($itemId);
+        $item->is_selected = $selected;
+        $item->save();
+    }
+
+    public function toggleSelectAll(bool $selected): void
+    {
+        $this->query()->update(['is_selected' => $selected]);
+    }
+
+    public function clearSelected(): void
+    {
+        $this->query()->where('is_selected', true)->delete();
+    }
+
     public function mergeGuestCartToUser(int $userId): void
     {
         if (! Session::has('guest_cart_id')) {
@@ -102,6 +129,7 @@ class CartService
             ]);
 
             $userItem->quantity = ($userItem->quantity ?? 0) + $guestItem->quantity;
+            $userItem->is_selected = $guestItem->is_selected;
             $userItem->session_id = null;
             $userItem->save();
             $guestItem->delete();
