@@ -16,7 +16,7 @@ class ContactResource extends Resource
     protected static ?string $model = Contact::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
-    
+
     protected static ?string $navigationLabel = 'Liên hệ khách hàng';
     protected static ?string $pluralModelLabel = 'Liên hệ';
     protected static ?string $navigationGroup = 'Quản lý khách hàng';
@@ -54,7 +54,10 @@ class ContactResource extends Resource
                     ->maxLength(20),
                 Forms\Components\Textarea::make('message')
                     ->label('Nội dung')
-                    ->required()
+                    ->readOnly()
+                    ->columnSpanFull(),
+                Forms\Components\Textarea::make('reply_message')
+                    ->label('Nội dung phản hồi')
                     ->columnSpanFull(),
                 Forms\Components\Select::make('status')
                     ->label('Trạng thái')
@@ -64,6 +67,7 @@ class ContactResource extends Resource
                     ])
                     ->default('pending')
                     ->required(),
+                Forms\Components\Hidden::make('user_id'),
             ]);
     }
 
@@ -74,10 +78,16 @@ class ContactResource extends Resource
                 TextColumn::make('name')->label('Họ tên')->searchable(),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('phone')->label('Số điện thoại')->searchable(),
+                Tables\Columns\IconColumn::make('user_id')
+                    ->label('Thành viên')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-badge')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->color(fn($state) => $state ? 'success' : 'gray'),
                 TextColumn::make('status')
                     ->label('Trạng thái')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'pending' => 'warning',
                         'resolved' => 'success',
                         default => 'gray',
@@ -93,7 +103,7 @@ class ContactResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('reply')
-                    ->label('Phản hồi')
+                    ->label('Phản hồi nhanh')
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('success')
                     ->form([
@@ -102,11 +112,7 @@ class ContactResource extends Resource
                             ->required(),
                     ])
                     ->action(function (Contact $record, array $data) {
-                        $user = \App\Models\User::where('email', $record->email)->first();
-                        if ($user) {
-                            $user->notify(new \App\Notifications\AdminRepliedContact($data['reply_message']));
-                        }
-                        
+                        $record->reply_message = $data['reply_message'];
                         $record->status = 'resolved';
                         $record->save();
 
@@ -115,7 +121,7 @@ class ContactResource extends Resource
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (Contact $record) => $record->status === 'pending'),
+                    ->visible(fn(Contact $record) => $record->status === 'pending'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

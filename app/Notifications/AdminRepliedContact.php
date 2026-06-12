@@ -28,6 +28,12 @@ class AdminRepliedContact extends Notification
             'title' => 'Phản hồi liên hệ từ SFood',
             'message' => 'Nhân viên vừa trả lời yêu cầu liên hệ của bạn: ' . $this->replyMessage,
             'url' => '#',
+            'action' => 'contact_reply',
         ];
+    }
+
+    public function toDatabase(object $notifiable): array
+    {
+        return $this->toArray($notifiable);
     }
 }

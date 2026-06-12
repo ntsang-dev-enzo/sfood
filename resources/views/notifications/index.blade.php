@@ -14,10 +14,18 @@
         </div>
 
         <div class="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
-            <a href="{{ route('notifications.index') }}" class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ !($currentType ?? false) ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Tất cả</a>
-            <a href="{{ route('notifications.index', ['type' => 'account']) }}" class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ ($currentType ?? '') === 'account' ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Tài khoản</a>
-            <a href="{{ route('notifications.index', ['type' => 'order']) }}" class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ ($currentType ?? '') === 'order' ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Đơn hàng</a>
-            <a href="{{ route('notifications.index', ['type' => 'promotion']) }}" class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ ($currentType ?? '') === 'promotion' ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Khuyến mãi</a>
+            <a href="{{ route('notifications.index') }}"
+                class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ !($currentType ?? false) ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Tất
+                cả</a>
+            <a href="{{ route('notifications.index', ['type' => 'account']) }}"
+                class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ ($currentType ?? '') === 'account' ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Tài
+                khoản</a>
+            <a href="{{ route('notifications.index', ['type' => 'order']) }}"
+                class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ ($currentType ?? '') === 'order' ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Đơn
+                hàng</a>
+            <a href="{{ route('notifications.index', ['type' => 'promotion']) }}"
+                class="px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition {{ ($currentType ?? '') === 'promotion' ? 'bg-earth-800 text-white' : 'bg-cream-100 text-earth-600 hover:bg-cream-200' }}">Khuyến
+                mãi</a>
         </div>
 
         <div class="space-y-4">
@@ -39,9 +47,9 @@
                         </div>
                         <p class="text-earth-600 mb-4">{{ $notification->data['message'] ?? '' }}</p>
                         @if(($notification->data['action'] ?? '') === 'review_order')
-                            <a href="{{ $notification->data['url'] ?? route('orders.index', ['status' => 'delivered']) }}" class="btn-primary !py-2 !px-4 !text-sm !bg-yellow-500 hover:!bg-yellow-600 !border-yellow-500 !text-white">Đánh giá ngay</a>
-                        @elseif(!empty($notification->data['url']))
-                            <a href="{{ $notification->data['url'] }}" class="btn-primary !py-2 !px-4 !text-sm">Xem chi tiết</a>
+                            <a href="{{ $notification->data['url'] ?? route('orders.index', ['status' => 'delivered']) }}"
+                                class="btn-primary !py-2 !px-4 !text-sm !bg-yellow-500 hover:!bg-yellow-600 !border-yellow-500 !text-white">Đánh
+                                giá ngay</a>
                         @endif
                     </div>
                 </div>

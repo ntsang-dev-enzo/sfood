@@ -25,6 +25,7 @@ class Product extends Model
         'is_hot',
         'is_new',
         'view_count',
+        'min_price',
     ];
 
     public function getNameAttribute($value)
@@ -57,6 +58,7 @@ class Product extends Model
             'is_active' => 'boolean',
             'is_hot' => 'boolean',
             'is_new' => 'boolean',
+            'min_price' => 'float',
         ];
     }
 
@@ -93,7 +95,7 @@ class Product extends Model
     public function minPrice($filterMin = null, $filterMax = null): float
     {
         $query = $this->variants()->where('is_active', true);
-        
+
         if ($filterMin) {
             $query->whereRaw('COALESCE(sale_price, price) >= ?', [$filterMin]);
         }
@@ -121,7 +123,7 @@ class Product extends Model
         }
 
         $query = $this->variants()->where('is_active', true);
-        
+
         if ($filterMin) {
             $query->whereRaw('COALESCE(sale_price, price) >= ?', [$filterMin]);
         }
@@ -130,7 +132,7 @@ class Product extends Model
         }
 
         $variant = $query->whereNotNull('image')->where('image', '!=', '')->orderBy('price')->first();
-        
+
         if ($variant) {
             return $variant->image;
         }
@@ -146,7 +148,7 @@ class Product extends Model
 
     public function isFavoritedBy(?User $user): bool
     {
-        if (! $user) {
+        if (!$user) {
             return false;
         }
 
@@ -185,7 +187,8 @@ class Product extends Model
                 if (!empty($p->thumbnail)) {
                     EmbedImage::dispatch($p->id, 0, $p->thumbnail);
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
         });
     }
 }

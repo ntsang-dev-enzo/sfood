@@ -9,7 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\Recipe;
 use App\Models\RecipeCategory;
 use App\Models\RecipeIngredient;
-use App\Models\WheelPrize;
+
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -210,7 +210,8 @@ class SFoodDataSeeder extends Seeder
 
         foreach ($productsByCategory as $catName => $products) {
             $catId = $categoryMap[$catName] ?? null;
-            if (!$catId) continue;
+            if (!$catId)
+                continue;
 
             $sizes = $variantSizes[$catName] ?? [['Mặc định', 1.0]];
 
@@ -330,7 +331,8 @@ class SFoodDataSeeder extends Seeder
 
         foreach ($recipesData as $rData) {
             $slug = Str::slug($rData['title']);
-            if (Recipe::where('slug', $slug)->exists()) continue;
+            if (Recipe::where('slug', $slug)->exists())
+                continue;
 
             $catId = $recipeCategories[$rData['cat']]->id ?? null;
 
@@ -383,30 +385,8 @@ class SFoodDataSeeder extends Seeder
         $this->command->info("✅ Created " . count($vouchersData) . " vouchers.");
 
         // =============================================
-        // 6. WHEEL PRIZES (8 giải thưởng)
+        // 6. FINISHED
         // =============================================
-        $this->command->info('🎡 Seeding wheel prizes...');
-
-        if (WheelPrize::count() < 8) {
-            $wheelData = [
-                ['name' => 'Giảm 10K', 'type' => 'fixed', 'value' => 10000, 'min_order_amount' => 100000, 'weight' => 25, 'is_miss' => false],
-                ['name' => 'Giảm 20K', 'type' => 'fixed', 'value' => 20000, 'min_order_amount' => 200000, 'weight' => 15, 'is_miss' => false],
-                ['name' => 'Giảm 50K', 'type' => 'fixed', 'value' => 50000, 'min_order_amount' => 500000, 'weight' => 5, 'is_miss' => false],
-                ['name' => 'Giảm 5%', 'type' => 'percent', 'value' => 5, 'min_order_amount' => 100000, 'weight' => 20, 'is_miss' => false],
-                ['name' => 'Giảm 15%', 'type' => 'percent', 'value' => 15, 'min_order_amount' => 300000, 'weight' => 8, 'is_miss' => false],
-                ['name' => 'Freeship', 'type' => 'free_shipping', 'value' => 0, 'min_order_amount' => 0, 'weight' => 18, 'is_miss' => false],
-                ['name' => 'Chúc may mắn lần sau', 'type' => 'fixed', 'value' => 0, 'min_order_amount' => 0, 'weight' => 60, 'is_miss' => true],
-                ['name' => 'Giảm 100K', 'type' => 'fixed', 'value' => 100000, 'min_order_amount' => 1000000, 'weight' => 2, 'is_miss' => false],
-            ];
-
-            WheelPrize::query()->delete();
-            foreach ($wheelData as $w) {
-                WheelPrize::create(array_merge($w, ['is_active' => true]));
-            }
-        }
-
-        $this->command->info("✅ Created 8 wheel prizes.");
-
         $this->command->info('🎉 SFood seeding completed!');
     }
 }

@@ -27,6 +27,7 @@ class PageController extends Controller
         ]);
 
         $contact = \App\Models\Contact::create([
+            'user_id' => auth()->id(),
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
