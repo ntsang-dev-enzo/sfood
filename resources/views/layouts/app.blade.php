@@ -314,7 +314,7 @@
     @endphp
     <div id="live-chatbox-container" class="fixed bottom-[9.5rem] right-6 z-50 flex flex-col items-end pointer-events-none">
         <!-- Chat Window -->
-        <div id="live-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
+        <div id="live-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 max-h-[calc(100vh-11rem)] rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
             <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">👨‍💻</span>
@@ -327,7 +327,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div id="live-chat-messages-container" class="flex-1 p-4 h-80 overflow-y-auto bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
+            <div id="live-chat-messages-container" class="flex-1 min-h-0 p-4 h-80 overflow-y-auto overscroll-contain bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
                 <div class="text-center text-sm text-gray-500 mt-4" id="live-chat-empty-msg">Bắt đầu trò chuyện với nhân viên hỗ trợ.</div>
             </div>
             <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2">
@@ -353,7 +353,7 @@
     {{-- AI Chatbox --}}
     <div id="ai-chatbox-container" class="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
         <!-- Chat Window -->
-        <div id="ai-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
+        <div id="ai-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 max-h-[calc(100vh-3rem)] rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
             <!-- Header -->
             <div class="bg-gradient-to-r from-leaf-600 to-leaf-500 p-4 text-white flex justify-between items-center">
                 <div class="flex items-center gap-2">
@@ -368,7 +368,7 @@
                 </button>
             </div>
             <!-- Messages -->
-            <div id="ai-chat-messages" class="flex-1 p-4 h-80 overflow-y-auto bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
+            <div id="ai-chat-messages" class="flex-1 min-h-0 p-4 h-80 overflow-y-auto overscroll-contain bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
                 <div class="flex gap-2 w-5/6">
                     <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-200">
                         Chào bạn! Mình có thể giúp bạn tìm kiếm món gì hôm nay? (Ví dụ: "tôi muốn mua thịt bò")
@@ -476,7 +476,16 @@
     // Chat History Array
     let chatHistory = [];
 
-    function appendMessage(content, isUser = false) {
+    function isNearBottom(container, threshold = 80) {
+        return container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+    }
+
+    function scrollToBottom(container) {
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function appendMessage(content, isUser = false, forceScroll = false) {
+        const shouldScroll = forceScroll || isNearBottom(chatMessages);
         const msgDiv = document.createElement('div');
         msgDiv.className = `flex gap-2 max-w-[85%] ${isUser ? 'self-end justify-end' : 'self-start'}`;
         
@@ -489,13 +498,17 @@
         
         msgDiv.appendChild(bubble);
         chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (shouldScroll) {
+            scrollToBottom(chatMessages);
+        }
 
         // Ensure scrolling to bottom after any images finish loading
         const images = bubble.querySelectorAll('img');
         images.forEach(img => {
             img.addEventListener('load', () => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                if (shouldScroll) {
+                    scrollToBottom(chatMessages);
+                }
             });
         });
     }
@@ -504,7 +517,7 @@
         const text = chatInput.value.trim();
         if (!text) return;
         
-        appendMessage(text, true);
+        appendMessage(text, true, true);
         chatInput.value = '';
         chatInput.disabled = true;
         sendChatBtn.disabled = true;
@@ -520,7 +533,7 @@
             <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
         </div>`;
         chatMessages.appendChild(typingDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        scrollToBottom(chatMessages);
 
         try {
             const res = await fetch('{{ route('ai.chat') }}', {
@@ -536,10 +549,10 @@
             });
             const data = await res.json();
             document.getElementById(typingId).remove();
-            appendMessage(data.reply, false);
+            appendMessage(data.reply, false, isNearBottom(chatMessages));
 
             if (data.redirect) {
-                appendMessage('<span class="text-sm italic text-gray-500">Đang chuyển hướng bạn đến trang sản phẩm...</span>', false);
+                appendMessage('<span class="text-sm italic text-gray-500">Đang chuyển hướng bạn đến trang sản phẩm...</span>', false, true);
                 setTimeout(() => {
                     window.location.href = data.redirect;
                 }, 1500);
@@ -577,7 +590,7 @@
             
             const file = this.files[0];
             const objectUrl = URL.createObjectURL(file);
-            appendMessage(`<img src="${objectUrl}" class="max-w-[200px] rounded-lg border border-leaf-400 object-cover">`, true);
+            appendMessage(`<img src="${objectUrl}" class="max-w-[200px] rounded-lg border border-leaf-400 object-cover">`, true, true);
 
             const typingId = 'typing-' + Date.now();
             const typingDiv = document.createElement('div');
@@ -589,7 +602,7 @@
                 <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
             </div>`;
             chatMessages.appendChild(typingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            scrollToBottom(chatMessages);
 
             try {
                 const formData = new FormData();
@@ -604,7 +617,7 @@
                 });
                 const data = await res.json();
                 document.getElementById(typingId).remove();
-                appendMessage(data.reply, false);
+                appendMessage(data.reply, false, isNearBottom(chatMessages));
                 
                 chatImageInput.value = '';
             } catch (e) {
@@ -626,6 +639,7 @@
     const liveChatInputField = document.getElementById('live-chat-input-field');
     const sendLiveChatBtn = document.getElementById('send-live-chat-btn');
     let liveChatInterval = null;
+    let liveChatLastSignature = '';
 
     if (toggleLiveChatBtn && liveChatWindow) {
         const toggleLiveChat = () => {
@@ -642,7 +656,7 @@
                 
                 if (liveChatBadge) liveChatBadge.style.display = 'none';
 
-                fetchLiveMessages();
+                fetchLiveMessages(true);
                 liveChatInterval = setInterval(fetchLiveMessages, 5000);
             } else {
                 liveChatWindow.classList.remove('scale-100', 'opacity-100');
@@ -661,25 +675,42 @@
         toggleLiveChatBtn.addEventListener('click', toggleLiveChat);
         closeLiveChatBtn.addEventListener('click', toggleLiveChat);
 
-        const appendLiveMessage = (msg) => {
+        const appendLiveMessage = (msg, forceScroll = false) => {
             const emptyMsg = document.getElementById('live-chat-empty-msg');
             if (emptyMsg) emptyMsg.style.display = 'none';
 
+            const shouldScroll = forceScroll || isNearBottom(liveChatMessagesContainer);
             const div = document.createElement('div');
             const isUser = msg.sender === 'user';
             div.className = `max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${isUser ? 'bg-green-600 text-white self-end rounded-tr-sm' : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-300 border border-cream-200 dark:border-gray-700 self-start rounded-tl-sm'}`;
             div.textContent = msg.message;
             liveChatMessagesContainer.appendChild(div);
-            liveChatMessagesContainer.scrollTop = liveChatMessagesContainer.scrollHeight;
+            if (shouldScroll) {
+                scrollToBottom(liveChatMessagesContainer);
+            }
         };
 
-        const fetchLiveMessages = async () => {
+        const fetchLiveMessages = async (forceScroll = false) => {
             try {
                 const res = await fetch('{{ route('live-chat.fetch') }}');
                 const data = await res.json();
+                const signature = JSON.stringify(data.map(msg => [
+                    msg.id,
+                    msg.sender,
+                    msg.message,
+                    msg.created_at,
+                ]));
+
+                if (signature === liveChatLastSignature) {
+                    return;
+                }
+
+                const shouldScroll = forceScroll || isNearBottom(liveChatMessagesContainer);
+                liveChatLastSignature = signature;
+
                 if (data.length > 0) {
                     liveChatMessagesContainer.innerHTML = '';
-                    data.forEach(msg => appendLiveMessage(msg));
+                    data.forEach(msg => appendLiveMessage(msg, shouldScroll));
                 }
             } catch (e) { console.error(e); }
         };
@@ -689,7 +720,7 @@
             if (!text) return;
             
             liveChatInputField.value = '';
-            appendLiveMessage({ sender: 'user', message: text });
+            appendLiveMessage({ sender: 'user', message: text }, true);
 
             try {
                 await fetch('{{ route('live-chat.send') }}', {
@@ -700,6 +731,7 @@
                     },
                     body: JSON.stringify({ message: text })
                 });
+                fetchLiveMessages(true);
             } catch (e) { console.error(e); }
         };
 
