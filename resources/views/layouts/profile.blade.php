@@ -31,6 +31,7 @@
             </a>
             <a href="{{ route('favorites.index') }}" class="block px-4 py-3 rounded-lg font-medium transition {{ request()->routeIs('favorites.*') ? 'bg-leaf-600 text-white shadow' : 'text-earth-700 hover:bg-cream-100' }}">❤️ Sản phẩm yêu thích</a>
             <a href="{{ route('profile.address') }}" class="block px-4 py-3 rounded-lg font-medium transition {{ request()->routeIs('profile.address') ? 'bg-leaf-600 text-white shadow' : 'text-earth-700 hover:bg-cream-100' }}">📍 Địa chỉ giao hàng</a>
+            <a href="{{ route('profile.chat-history') }}" class="block px-4 py-3 rounded-lg font-medium transition {{ request()->routeIs('profile.chat-history') ? 'bg-leaf-600 text-white shadow' : 'text-earth-700 hover:bg-cream-100' }}">💬 Lịch sử chat</a>
             
             <div class="pt-4 mt-4 border-t border-cream-200">
                 <form method="POST" action="{{ route('logout') }}">

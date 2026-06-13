@@ -34,6 +34,104 @@ class ProfileController extends Controller
         return view('profile.coupons', compact('user', 'coupons'));
     }
 
+    public function chatHistory(Request $request)
+    {
+        $user = Auth::user();
+        $tab  = $request->get('tab', 'ai'); // 'ai' | 'cskh'
+
+        if ($tab === 'cskh') {
+            // Live chat (ChatMessage table)
+            $rawMessages = \App\Models\ChatMessage::where('user_id', $user->id)
+                ->orderBy('created_at')
+                ->get();
+
+            // Group into conversations: gap > 30 minutes = new conversation
+            $conversations = [];
+            $current       = [];
+            $lastTs        = null;
+
+            foreach ($rawMessages as $msg) {
+                if ($lastTs && $msg->created_at->diffInMinutes($lastTs) > 30) {
+                    if ($current) {
+                        $conversations[] = $current;
+                    }
+                    $current = [];
+                }
+                $current[] = $msg;
+                $lastTs    = $msg->created_at;
+            }
+            if ($current) {
+                $conversations[] = $current;
+            }
+
+            // Newest first
+            $conversations = array_reverse($conversations);
+        } else {
+            // AI Chat (AiChatHistory table)
+            $rawMessages = \App\Models\AiChatHistory::where('user_id', $user->id)
+                ->orderBy('created_at')
+                ->get();
+
+            $conversations = [];
+            $current       = [];
+            $lastTs        = null;
+
+            foreach ($rawMessages as $msg) {
+                if ($lastTs && $msg->created_at->diffInMinutes($lastTs) > 30) {
+                    if ($current) {
+                        $conversations[] = $current;
+                    }
+                    $current = [];
+                }
+                $current[] = $msg;
+                $lastTs    = $msg->created_at;
+            }
+            if ($current) {
+                $conversations[] = $current;
+            }
+
+            $conversations = array_reverse($conversations);
+        }
+
+        return view('profile.chat-history', compact('user', 'conversations', 'tab'));
+    }
+
+    public function deleteChatConversation(Request $request)
+    {
+        $user    = Auth::user();
+        $tab     = $request->input('tab', 'ai');
+        $startAt = $request->input('start_at');
+        $endAt   = $request->input('end_at');
+
+        if ($tab === 'cskh') {
+            \App\Models\ChatMessage::where('user_id', $user->id)
+                ->whereBetween('created_at', [$startAt, $endAt])
+                ->delete();
+        } else {
+            \App\Models\AiChatHistory::where('user_id', $user->id)
+                ->whereBetween('created_at', [$startAt, $endAt])
+                ->delete();
+        }
+
+        return redirect()->route('profile.chat-history', ['tab' => $tab])
+            ->with('success', 'Đã xóa cuộc trò chuyện.');
+    }
+
+    public function deleteAllChatHistory(Request $request)
+    {
+        $user = Auth::user();
+        $tab  = $request->input('tab', 'ai');
+
+        if ($tab === 'cskh') {
+            \App\Models\ChatMessage::where('user_id', $user->id)->delete();
+        } else {
+            \App\Models\AiChatHistory::where('user_id', $user->id)->delete();
+        }
+
+        return redirect()->route('profile.chat-history', ['tab' => $tab])
+            ->with('success', 'Đã xóa toàn bộ lịch sử chat.');
+    }
+
     public function storeAddress(Request $request)
     {
         $user = Auth::user();

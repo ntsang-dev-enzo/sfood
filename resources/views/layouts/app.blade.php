@@ -314,8 +314,8 @@
     @endphp
     <div id="live-chatbox-container" class="fixed bottom-[9.5rem] right-6 z-50 flex flex-col items-end pointer-events-none">
         <!-- Chat Window -->
-        <div id="live-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 max-h-[calc(100vh-11rem)] rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
-            <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white flex justify-between items-center">
+        <div id="live-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0" style="max-height: min(520px, calc(100vh - 13rem))">
+            <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">👨‍💻</span>
                     <div>
@@ -327,10 +327,10 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div id="live-chat-messages-container" class="flex-1 min-h-0 p-4 h-80 overflow-y-auto overscroll-contain bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
+            <div id="live-chat-messages-container" class="flex-1 min-h-0 p-4 overflow-y-auto overscroll-contain bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
                 <div class="text-center text-sm text-gray-500 mt-4" id="live-chat-empty-msg">Bắt đầu trò chuyện với nhân viên hỗ trợ.</div>
             </div>
-            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2">
+            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2 shrink-0">
                 <input type="text" id="live-chat-input-field" class="flex-1 bg-cream-50 dark:bg-gray-900 border border-cream-200 dark:border-gray-700 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-green-500 text-earth-800 dark:text-gray-300" placeholder="Nhập tin nhắn..." autocomplete="off">
                 <button type="button" id="send-live-chat-btn" class="bg-green-600 hover:bg-green-700 text-white rounded-xl px-4 py-2 transition shadow-sm">
                     <svg class="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
@@ -353,9 +353,9 @@
     {{-- AI Chatbox --}}
     <div id="ai-chatbox-container" class="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
         <!-- Chat Window -->
-        <div id="ai-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 max-h-[calc(100vh-3rem)] rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
+        <div id="ai-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0" style="max-height: min(560px, calc(100vh - 5rem))">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-leaf-600 to-leaf-500 p-4 text-white flex justify-between items-center">
+            <div class="bg-gradient-to-r from-leaf-600 to-leaf-500 p-4 text-white flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">🤖</span>
                     <div>
@@ -368,15 +368,16 @@
                 </button>
             </div>
             <!-- Messages -->
-            <div id="ai-chat-messages" class="flex-1 min-h-0 p-4 h-80 overflow-y-auto overscroll-contain bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
-                <div class="flex gap-2 w-5/6">
+            <div id="ai-chat-messages" class="flex-1 min-h-0 p-4 overflow-y-auto overscroll-contain bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
+                {{-- Welcome placeholder — replaced by JS on open --}}
+                <div class="flex gap-2 w-5/6" data-welcome="1">
                     <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-200">
                         Chào bạn! Mình có thể giúp bạn tìm kiếm món gì hôm nay? (Ví dụ: "tôi muốn mua thịt bò")
                     </div>
                 </div>
             </div>
             <!-- Input -->
-            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2">
+            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2 shrink-0">
                 <label class="cursor-pointer p-2 text-earth-400 hover:text-leaf-600 transition" title="Gửi hình ảnh">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     <input type="file" id="ai-chat-image-input" accept="image/*" class="hidden">
@@ -433,23 +434,154 @@
         }
     });
 
-    // AI Chatbox Logic
-    const toggleChatBtn = document.getElementById('toggle-chat-btn');
-    const closeChatBtn = document.getElementById('close-chat-btn');
-    const chatWindow = document.getElementById('ai-chat-window');
-    const chatIconMsg = document.getElementById('chat-icon-msg');
-    const chatIconClose = document.getElementById('chat-icon-close');
-    const chatInput = document.getElementById('ai-chat-input');
-    const sendChatBtn = document.getElementById('send-chat-btn');
-    const chatMessages = document.getElementById('ai-chat-messages');
+    // =============================================
+    // AI Chatbox — History-aware (DB + localStorage)
+    // =============================================
+    const toggleChatBtn  = document.getElementById('toggle-chat-btn');
+    const closeChatBtn   = document.getElementById('close-chat-btn');
+    const chatWindow     = document.getElementById('ai-chat-window');
+    const chatIconMsg    = document.getElementById('chat-icon-msg');
+    const chatIconClose  = document.getElementById('chat-icon-close');
+    const chatInput      = document.getElementById('ai-chat-input');
+    const sendChatBtn    = document.getElementById('send-chat-btn');
+    const chatMessages   = document.getElementById('ai-chat-messages');
 
-    let isChatOpen = false;
+    const IS_LOGGED_IN        = {{ Auth::check() ? 'true' : 'false' }};
+    const LS_KEY              = 'sfood_ai_chat_v2';   // localStorage key for guests
+    const LS_MAX_BUBBLES      = 30;                   // max bubbles to persist in LS
+    const WELCOME_HTML        = `<div class="flex gap-2 w-5/6" data-welcome="1">
+        <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-200">
+            Chào bạn! Mình có thể giúp bạn tìm kiếm món gì hôm nay? (Ví dụ: "tôi muốn mua thịt bò")
+        </div>
+    </div>`;
+
+    let isChatOpen       = false;
+    let historyLoaded    = false;   // prevent double-load
+
+    // ---- Utilities ----
+
+    function isNearBottom(el, threshold = 80) {
+        return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    }
+    function scrollToBottom(el) {
+        el.scrollTop = el.scrollHeight;
+    }
+
+    /**
+     * Render one message bubble into the container.
+     * @param {string}  htmlContent  HTML string to inject
+     * @param {boolean} isUser
+     * @param {boolean} forceScroll
+     */
+    function appendMessage(htmlContent, isUser = false, forceScroll = false) {
+        // Remove welcome placeholder if we are adding real messages
+        const welcome = chatMessages.querySelector('[data-welcome]');
+        if (welcome) welcome.remove();
+
+        const shouldScroll = forceScroll || isNearBottom(chatMessages);
+
+        const wrap = document.createElement('div');
+        wrap.className = `flex gap-2 max-w-[85%] ${isUser ? 'self-end justify-end' : 'self-start'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = isUser
+            ? 'bg-leaf-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm border border-leaf-700 text-sm'
+            : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm markdown-body';
+        bubble.innerHTML = htmlContent;
+
+        wrap.appendChild(bubble);
+        chatMessages.appendChild(wrap);
+
+        if (shouldScroll) scrollToBottom(chatMessages);
+
+        bubble.querySelectorAll('img').forEach(img => {
+            img.addEventListener('load', () => { if (shouldScroll) scrollToBottom(chatMessages); });
+        });
+    }
+
+    function showTyping() {
+        const id  = 'typing-' + Date.now();
+        const div = document.createElement('div');
+        div.id        = id;
+        div.className = 'flex gap-2 self-start w-5/6';
+        div.innerHTML = `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.1s"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.2s"></span>
+        </div>`;
+        chatMessages.appendChild(div);
+        scrollToBottom(chatMessages);
+        return id;
+    }
+
+    // ---- localStorage helpers (guests only) ----
+
+    function lsSave(role, htmlContent) {
+        try {
+            const raw    = localStorage.getItem(LS_KEY);
+            const stored = raw ? JSON.parse(raw) : [];
+            stored.push({ role, html: htmlContent, ts: Date.now() });
+            // keep only the last LS_MAX_BUBBLES
+            const trimmed = stored.slice(-LS_MAX_BUBBLES);
+            localStorage.setItem(LS_KEY, JSON.stringify(trimmed));
+        } catch (_) {}
+    }
+
+    function lsLoad() {
+        try {
+            const raw = localStorage.getItem(LS_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch (_) { return []; }
+    }
+
+    function lsClear() {
+        try { localStorage.removeItem(LS_KEY); } catch (_) {}
+    }
+
+    // ---- Load history ----
+
+    async function loadHistory() {
+        if (historyLoaded) return;
+        historyLoaded = true;
+
+        if (IS_LOGGED_IN) {
+            // Fetch from server DB
+            try {
+                const res  = await fetch('{{ route('ai.chat.history') }}');
+                const rows = await res.json();
+                if (Array.isArray(rows) && rows.length > 0) {
+                    // Remove welcome placeholder
+                    const welcome = chatMessages.querySelector('[data-welcome]');
+                    if (welcome) welcome.remove();
+
+                    rows.forEach(r => {
+                        const html = r.html_content || r.content;
+                        appendMessage(html, r.role === 'user', false);
+                    });
+                    scrollToBottom(chatMessages);
+                }
+            } catch (_) {}
+        } else {
+            // Load from localStorage
+            const stored = lsLoad();
+            if (stored.length > 0) {
+                const welcome = chatMessages.querySelector('[data-welcome]');
+                if (welcome) welcome.remove();
+
+                stored.forEach(r => {
+                    appendMessage(r.html, r.role === 'user', false);
+                });
+                scrollToBottom(chatMessages);
+            }
+        }
+    }
+
+    // ---- Toggle open / close ----
 
     function toggleChat() {
         isChatOpen = !isChatOpen;
         if (isChatOpen) {
             chatWindow.classList.remove('hidden');
-            // small delay for transition
             setTimeout(() => {
                 chatWindow.classList.remove('opacity-0', 'scale-95');
                 chatWindow.classList.add('opacity-100', 'scale-100');
@@ -459,6 +591,9 @@
             chatIconClose.classList.replace('scale-0', 'scale-100');
             chatIconClose.classList.remove('rotate-90');
             chatInput.focus();
+
+            // Load history the first time the window is opened
+            loadHistory();
         } else {
             chatWindow.classList.remove('opacity-100', 'scale-100');
             chatWindow.classList.add('opacity-0', 'scale-95');
@@ -473,156 +608,138 @@
     toggleChatBtn.addEventListener('click', toggleChat);
     closeChatBtn.addEventListener('click', toggleChat);
 
-    // Chat History Array
-    let chatHistory = [];
+    // ---- Clear history button (injected into header) ----
 
-    function isNearBottom(container, threshold = 80) {
-        return container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
-    }
+    (function injectClearBtn() {
+        const header = chatWindow ? chatWindow.querySelector('.bg-gradient-to-r') : null;
+        if (!header) return;
+        const btn = document.createElement('button');
+        btn.type      = 'button';
+        btn.title     = 'Xóa lịch sử chat';
+        btn.className = 'text-white hover:text-red-200 focus:outline-none ml-2 opacity-70 hover:opacity-100 transition';
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>`;
+        btn.addEventListener('click', async () => {
+            if (!confirm('Xóa toàn bộ lịch sử chat?')) return;
 
-    function scrollToBottom(container) {
-        container.scrollTop = container.scrollHeight;
-    }
+            if (IS_LOGGED_IN) {
+                try {
+                    await fetch('{{ route('ai.chat.history.clear') }}', {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
+                    });
+                } catch (_) {}
+            } else {
+                lsClear();
+            }
 
-    function appendMessage(content, isUser = false, forceScroll = false) {
-        const shouldScroll = forceScroll || isNearBottom(chatMessages);
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `flex gap-2 max-w-[85%] ${isUser ? 'self-end justify-end' : 'self-start'}`;
-        
-        const bubble = document.createElement('div');
-        bubble.className = isUser 
-            ? 'bg-leaf-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm border border-leaf-700 text-sm'
-            : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm markdown-body';
-        
-        bubble.innerHTML = content;
-        
-        msgDiv.appendChild(bubble);
-        chatMessages.appendChild(msgDiv);
-        if (shouldScroll) {
-            scrollToBottom(chatMessages);
-        }
-
-        // Ensure scrolling to bottom after any images finish loading
-        const images = bubble.querySelectorAll('img');
-        images.forEach(img => {
-            img.addEventListener('load', () => {
-                if (shouldScroll) {
-                    scrollToBottom(chatMessages);
-                }
-            });
+            // Reset DOM
+            chatMessages.innerHTML = WELCOME_HTML;
+            historyLoaded = false;
         });
-    }
+
+        const closeBtn = header.querySelector('#close-chat-btn');
+        if (closeBtn) header.insertBefore(btn, closeBtn);
+        else header.appendChild(btn);
+    })();
+
+    // ---- Send text message ----
 
     async function sendChatMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
-        
-        appendMessage(text, true, true);
-        chatInput.value = '';
+
+        const userHtml = htmlEscape(text);
+        appendMessage(userHtml, true, true);
+
+        // Optimistically persist user msg for guests
+        if (!IS_LOGGED_IN) lsSave('user', userHtml);
+
+        chatInput.value    = '';
         chatInput.disabled = true;
         sendChatBtn.disabled = true;
 
-        // typing indicator
-        const typingId = 'typing-' + Date.now();
-        const typingDiv = document.createElement('div');
-        typingDiv.id = typingId;
-        typingDiv.className = 'flex gap-2 self-start w-5/6';
-        typingDiv.innerHTML = `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-400 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-        </div>`;
-        chatMessages.appendChild(typingDiv);
-        scrollToBottom(chatMessages);
+        const typingId = showTyping();
 
         try {
-            const res = await fetch('{{ route('ai.chat') }}', {
+            const res  = await fetch('{{ route('ai.chat') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ 
-                    message: text,
-                    history: chatHistory
-                })
+                body: JSON.stringify({ message: text })
             });
             const data = await res.json();
-            document.getElementById(typingId).remove();
+            document.getElementById(typingId)?.remove();
+
             appendMessage(data.reply, false, isNearBottom(chatMessages));
+
+            // Persist assistant reply for guests
+            if (!IS_LOGGED_IN) lsSave('assistant', data.reply);
 
             if (data.redirect) {
                 appendMessage('<span class="text-sm italic text-gray-500">Đang chuyển hướng bạn đến trang sản phẩm...</span>', false, true);
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 1500);
+                setTimeout(() => { window.location.href = data.redirect; }, 1500);
             }
-
-            // Save to history
-            chatHistory.push({ role: 'user', content: text });
-            chatHistory.push({ role: 'assistant', content: data.reply });
-            
-            // Keep history short (e.g. max 10 messages)
-            if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
-
-        } catch (e) {
-            document.getElementById(typingId).remove();
+        } catch (_) {
+            document.getElementById(typingId)?.remove();
             appendMessage('<span class="text-red-500">Lỗi kết nối.</span>', false);
         } finally {
-            chatInput.disabled = false;
+            chatInput.disabled   = false;
             sendChatBtn.disabled = false;
             chatInput.focus();
         }
     }
 
+    function htmlEscape(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
     sendChatBtn.addEventListener('click', sendChatMessage);
-    chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendChatMessage();
-        }
+    chatInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') { e.preventDefault(); sendChatMessage(); }
     });
 
-    const chatImageInput = document.getElementById('ai-chat-image-input');
-    if(chatImageInput) {
-        chatImageInput.addEventListener('change', async function() {
-            if (!this.files || !this.files[0]) return;
-            
-            const file = this.files[0];
-            const objectUrl = URL.createObjectURL(file);
-            appendMessage(`<img src="${objectUrl}" class="max-w-[200px] rounded-lg border border-leaf-400 object-cover">`, true, true);
+    // ---- Send image ----
 
-            const typingId = 'typing-' + Date.now();
-            const typingDiv = document.createElement('div');
-            typingDiv.id = typingId;
-            typingDiv.className = 'flex gap-2 self-start w-5/6';
-            typingDiv.innerHTML = `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-400 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-            </div>`;
-            chatMessages.appendChild(typingDiv);
-            scrollToBottom(chatMessages);
+    const chatImageInput = document.getElementById('ai-chat-image-input');
+    if (chatImageInput) {
+        chatImageInput.addEventListener('change', async function () {
+            if (!this.files || !this.files[0]) return;
+
+            const file      = this.files[0];
+            const objectUrl = URL.createObjectURL(file);
+            const imgHtml   = `<img src="${objectUrl}" class="max-w-[200px] rounded-lg border border-leaf-400 object-cover">`;
+            appendMessage(imgHtml, true, true);
+            if (!IS_LOGGED_IN) lsSave('user', '<p class="text-sm italic text-gray-400">[Đã gửi hình ảnh]</p>');
+
+            const typingId = showTyping();
 
             try {
                 const formData = new FormData();
                 formData.append('ai_image', file);
 
-                const res = await fetch('{{ route('ai.chat.image') }}', {
+                const res  = await fetch('{{ route('ai.chat.image') }}', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
                     body: formData
                 });
                 const data = await res.json();
-                document.getElementById(typingId).remove();
+                document.getElementById(typingId)?.remove();
                 appendMessage(data.reply, false, isNearBottom(chatMessages));
-                
-                chatImageInput.value = '';
-            } catch (e) {
-                document.getElementById(typingId).remove();
+
+                if (!IS_LOGGED_IN) lsSave('assistant', data.reply);
+            } catch (_) {
+                document.getElementById(typingId)?.remove();
                 appendMessage('<span class="text-red-500">Lỗi gửi hình ảnh.</span>', false);
+            } finally {
                 chatImageInput.value = '';
             }
         });

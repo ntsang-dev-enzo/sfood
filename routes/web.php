@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
 
 Route::post('/ai-chat', [\App\Http\Controllers\ChatController::class, 'send'])->name('ai.chat');
 Route::post('/ai-chat/image', [\App\Http\Controllers\ChatController::class, 'chatImage'])->name('ai.chat.image');
+Route::get('/ai-chat/history', [\App\Http\Controllers\ChatController::class, 'history'])->name('ai.chat.history');
+Route::delete('/ai-chat/history', [\App\Http\Controllers\ChatController::class, 'clearHistory'])->name('ai.chat.history.clear');
 Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
 Route::post('/san-pham/ai-search', [ProductController::class, 'aiSearch'])->name('products.ai-search');
 Route::get('/san-pham/{product:slug}', [ProductController::class, 'show'])->name('products.show');
@@ -89,6 +91,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/tai-khoan/mat-khau', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::get('/tai-khoan/dia-chi', [ProfileController::class, 'address'])->name('profile.address');
     Route::get('/tai-khoan/vi-coupon', [ProfileController::class, 'coupons'])->name('profile.coupons');
+    Route::get('/tai-khoan/lich-su-chat', [ProfileController::class, 'chatHistory'])->name('profile.chat-history');
+    Route::delete('/tai-khoan/lich-su-chat/xoa', [ProfileController::class, 'deleteChatConversation'])->name('profile.chat-history.delete');
+    Route::delete('/tai-khoan/lich-su-chat/xoa-tat-ca', [ProfileController::class, 'deleteAllChatHistory'])->name('profile.chat-history.delete-all');
     // Shipping addresses management
     Route::post('/tai-khoan/dia-chi', [ProfileController::class, 'storeAddress'])->name('profile.address.store');
     Route::put('/tai-khoan/dia-chi/{address}', [ProfileController::class, 'updateAddress'])->name('profile.address.update');
