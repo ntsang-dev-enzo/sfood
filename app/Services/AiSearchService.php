@@ -335,12 +335,10 @@ class AiSearchService
             }
         }
 
-        $randomProduct = Product::where('is_active', true)->inRandomOrder()->first();
-
         return [
-            'label' => $randomProduct?->name ?? 'thực phẩm',
-            'confidence' => 0.5,
-            'keywords' => $randomProduct ? explode(' ', $randomProduct->name) : ['thực phẩm'],
+            'label' => 'Không xác định',
+            'confidence' => 0,
+            'keywords' => [],
         ];
     }
 

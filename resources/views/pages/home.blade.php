@@ -270,12 +270,47 @@
                 <p class="text-earth-500 mt-3 font-medium text-lg">Hôm nay bạn cần gì? Chúng tôi đều có tươi mới.</p>
             </div>
             <div class="flex gap-6 overflow-x-auto justify-center scrollbar-hide pb-4">
+                @php
+                    $categoryVisuals = [
+                        'rau-cu' => [
+                            'wrap' => 'from-emerald-50 to-lime-100 text-emerald-700 ring-emerald-200 group-hover:from-emerald-100 group-hover:to-lime-200 dark:from-emerald-950/40 dark:to-lime-950/30 dark:text-emerald-300 dark:ring-emerald-800',
+                            'svg' => '<svg viewBox="0 0 48 48" fill="none" class="h-11 w-11"><path d="M24 38c-8.2 0-14-5.6-14-13.8C18.7 23 24.4 17 26.8 8.8 35 12.1 40 18 40 25.8 40 33 33.5 38 24 38Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 38c.8-8 3.5-15.5 8-22.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+                        ],
+                        'trai-cay' => [
+                            'wrap' => 'from-rose-50 to-orange-100 text-rose-600 ring-rose-200 group-hover:from-rose-100 group-hover:to-orange-200 dark:from-rose-950/40 dark:to-orange-950/30 dark:text-rose-300 dark:ring-rose-800',
+                            'svg' => '<svg viewBox="0 0 48 48" fill="none" class="h-11 w-11"><path d="M25 15c4.5-5.8 8.5-6.7 13-5-1.6 5.2-5.2 8.5-12 8.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 18c-8.5-4.5-15 1.7-15 9.5C9 35.2 14.7 40 21 40c1.6 0 2.5-.5 3.8-.5 1.2 0 2.4.5 3.9.5C35 40 40 34.5 40 27.2 40 18.8 32.8 14.2 24 18Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 18c.2-2.8-.4-5-2-7" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+                        ],
+                        'thit-ca' => [
+                            'wrap' => 'from-red-50 to-pink-100 text-red-600 ring-red-200 group-hover:from-red-100 group-hover:to-pink-200 dark:from-red-950/40 dark:to-pink-950/30 dark:text-red-300 dark:ring-red-800',
+                            'svg' => '<svg viewBox="0 0 48 48" fill="none" class="h-11 w-11"><path d="M8 25c5.5-7.5 14.5-10.5 24-5 3.3 1.9 5.8 4.7 8 8-4.5 4.5-11.7 6.3-18.5 2.8C16.4 28.1 12.7 25.8 8 25Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 25 4 18m4 7-4 7m28-12 5-5m-1 13 6 4" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M27 24h.1" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
+                        ],
+                        'do-uong' => [
+                            'wrap' => 'from-sky-50 to-cyan-100 text-sky-600 ring-sky-200 group-hover:from-sky-100 group-hover:to-cyan-200 dark:from-sky-950/40 dark:to-cyan-950/30 dark:text-sky-300 dark:ring-sky-800',
+                            'svg' => '<svg viewBox="0 0 48 48" fill="none" class="h-11 w-11"><path d="M15 13h18l-2 27H17l-2-27Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M14 8h20M18 22h12M19 30h10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M31 13 36 6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+                        ],
+                        'gia-vi' => [
+                            'wrap' => 'from-amber-50 to-yellow-100 text-amber-600 ring-amber-200 group-hover:from-amber-100 group-hover:to-yellow-200 dark:from-amber-950/40 dark:to-yellow-950/30 dark:text-amber-300 dark:ring-amber-800',
+                            'svg' => '<svg viewBox="0 0 48 48" fill="none" class="h-11 w-11"><path d="M18 16h12l2 22H16l2-22Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M19 10h10v6H19v-6Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M21 25h6m-6 6h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+                        ],
+                        'do-kho' => [
+                            'wrap' => 'from-violet-50 to-fuchsia-100 text-violet-600 ring-violet-200 group-hover:from-violet-100 group-hover:to-fuchsia-200 dark:from-violet-950/40 dark:to-fuchsia-950/30 dark:text-violet-300 dark:ring-violet-800',
+                            'svg' => '<svg viewBox="0 0 48 48" fill="none" class="h-11 w-11"><path d="M12 17h24l-2.5 23h-19L12 17Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M17 17c0-5 3-8 7-8s7 3 7 8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M18 25h12m-10 7h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+                        ],
+                    ];
+                @endphp
                 @foreach ($categories as $cat)
+                    @php
+                        $visual = $categoryVisuals[$cat->slug] ?? null;
+                    @endphp
                     <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
                         class="flex-shrink-0 w-40 group bg-cream-50 dark:bg-gray-800 rounded-[2rem] p-6 text-center border border-cream-200 dark:border-gray-700 shadow-sm hover:border-leaf-400 hover:shadow-xl hover:shadow-leaf-100 hover:-translate-y-2 transition-all duration-300">
                         <div
-                            class="w-20 h-20 mx-auto rounded-[1.5rem] bg-gradient-to-br from-leaf-100 to-cream-200 group-hover:from-leaf-200 group-hover:to-leaf-300 flex items-center justify-center text-4xl group-hover:scale-110 transition duration-500 shadow-inner mb-4">
-                            {{ $cat->icon ?? '🍱' }}
+                            class="w-20 h-20 mx-auto rounded-[1.5rem] bg-gradient-to-br {{ $visual['wrap'] ?? 'from-leaf-100 to-cream-200 text-leaf-700 ring-leaf-200 group-hover:from-leaf-200 group-hover:to-leaf-300 dark:from-gray-700 dark:to-gray-800 dark:text-leaf-300 dark:ring-gray-700' }} ring-1 flex items-center justify-center group-hover:scale-110 transition duration-500 shadow-inner mb-4">
+                            @if($visual)
+                                {!! $visual['svg'] !!}
+                            @else
+                                <span class="text-4xl">{{ $cat->icon ?? '🍱' }}</span>
+                            @endif
                         </div>
                         <p class="font-bold text-earth-800 text-base group-hover:text-leaf-700 transition">{{ $cat->name }}</p>
                     </a>

@@ -187,7 +187,7 @@ def search():
             ocr_text = ""
             ocr_keywords = []
             try:
-                if HAS_PYTESSACT:
+                if HAS_PYTESSERACT:
                     img = Image.open(tmp.name)
                     ocr_text = pytesseract.image_to_string(img)
                     # simple keywords: alphanumeric words longer than 1 char

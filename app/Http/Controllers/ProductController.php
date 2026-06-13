@@ -134,8 +134,7 @@ class ProductController extends Controller
             'ai_image' => 'required|image|max:5120',
         ]);
 
-        $results = $aiSearch->searchByImage($request->file('ai_image'));
-        \Illuminate\Support\Facades\Log::info('AI_RESULTS_DUMP_PRODUCT', ['products' => $results['products']]);
+        $results = $aiSearch->searchGlobalByImage($request->file('ai_image'));
 
         return redirect()
             ->route('products.index', $request->only(['search', 'category', 'min_price', 'max_price', 'sort']))
