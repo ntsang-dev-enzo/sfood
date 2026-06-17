@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Recipe;
+use App\Support\MediaHelper;
+use App\Support\VietnameseSearch;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
@@ -30,15 +32,17 @@ class SearchController extends Controller
 
     public function suggest(Request $request)
     {
-        $q = trim($request->get('q', ''));
+        $q = VietnameseSearch::normalize($request->get('q', ''));
 
-        if (strlen($q) < 2) {
+        if (VietnameseSearch::isTooShort($q)) {
             return response()->json(['products' => [], 'recipes' => []]);
         }
 
-        $products = Product::with('category')
-            ->where('is_active', true)
-            ->where('name', 'like', "%{$q}%")
+        $products = VietnameseSearch::applyLike(
+            Product::with('category')->where('is_active', true),
+            'name',
+            $q
+        )
             ->limit(5)
             ->get()
             ->map(fn ($p) => [
@@ -47,10 +51,14 @@ class SearchController extends Controller
                 'subtitle' => $p->category?->name,
                 'url' => route('products.show', $p),
                 'price' => number_format($p->minPrice()).'đ',
+                'image' => MediaHelper::productImage($p->thumbnail, $p->id),
             ]);
 
-        $recipes = Recipe::where('is_published', true)
-            ->where('title', 'like', "%{$q}%")
+        $recipes = VietnameseSearch::applyLike(
+            Recipe::where('is_published', true),
+            'title',
+            $q
+        )
             ->limit(5)
             ->get()
             ->map(fn ($r) => [
@@ -59,6 +67,7 @@ class SearchController extends Controller
                 'subtitle' => $r->cook_time.' phút',
                 'url' => route('recipes.show', $r),
                 'price' => null,
+                'image' => MediaHelper::recipeImage($r->thumbnail, $r->id),
             ]);
 
         return response()->json([

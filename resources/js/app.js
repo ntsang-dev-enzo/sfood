@@ -49,6 +49,7 @@ function initSearchAutocomplete() {
         if (!input || !dropdown || !url) return;
 
         let debounceTimer;
+        let isComposing = false;
 
         const hide = () => dropdown.classList.remove('active');
         const show = () => dropdown.classList.add('active');
@@ -74,7 +75,7 @@ function initSearchAutocomplete() {
             show();
         };
 
-        input.addEventListener('input', () => {
+        const runSearch = () => {
             clearTimeout(debounceTimer);
             const q = input.value.trim();
             if (q.length < 2) { hide(); return; }
@@ -84,10 +85,25 @@ function initSearchAutocomplete() {
                     render(await res.json());
                 } catch { hide(); }
             }, 250);
+        };
+
+        input.addEventListener('compositionstart', () => {
+            isComposing = true;
+            clearTimeout(debounceTimer);
+        });
+
+        input.addEventListener('compositionend', () => {
+            isComposing = false;
+            runSearch();
+        });
+
+        input.addEventListener('input', (e) => {
+            if (isComposing || e.isComposing) return;
+            runSearch();
         });
 
         input.addEventListener('focus', () => {
-            if (input.value.trim().length >= 2) input.dispatchEvent(new Event('input', { bubbles: true }));
+            if (input.value.trim().length >= 2) runSearch();
         });
 
         document.addEventListener('click', (e) => {
@@ -101,14 +117,18 @@ function initSearchAutocomplete() {
     });
 }
 
-function suggestItem(item, icon) {
+function suggestItem(item, fallbackIcon) {
+    const thumb = item.image
+        ? `<img src="${item.image}" alt="" class="w-10 h-10 rounded-lg object-cover shrink-0 bg-cream-200" loading="lazy">`
+        : `<span class="w-10 h-10 rounded-lg bg-cream-200 flex items-center justify-center text-sm shrink-0">${fallbackIcon}</span>`;
+
     return `<a href="${item.url}" data-suggest-link="${item.url}"
         class="flex items-center gap-3 px-4 py-2.5 hover:bg-cream-100 transition cursor-pointer">
-        <span class="w-8 h-8 rounded-lg bg-cream-200 flex items-center justify-center text-sm">${icon}</span>
+        ${thumb}
         <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-earth-800 truncate">${item.name}</p>
             <p class="text-xs text-earth-500">${item.subtitle || ''}</p>
         </div>
-        ${item.price ? `<span class="text-sm font-semibold text-leaf-700">${item.price}</span>` : ''}
+        ${item.price ? `<span class="text-sm font-semibold text-leaf-700 shrink-0">${item.price}</span>` : ''}
     </a>`;
 }

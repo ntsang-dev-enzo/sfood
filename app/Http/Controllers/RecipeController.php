@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Recipe;
 use App\Services\CartService;
+use App\Support\VietnameseSearch;
 use Illuminate\Http\Request;
 
 class RecipeController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->get('search', '');
+        $search = VietnameseSearch::normalize($request->get('search', ''));
         $categorySlug = $request->get('category');
         $minTime = $request->get('min_time');
         $maxTime = $request->get('max_time');
@@ -19,7 +20,7 @@ class RecipeController extends Controller
         $aiResults = session('ai_results');
 
         $query = Recipe::where('is_published', true)
-            ->when($search, fn ($q) => $q->where('title', 'like', "%{$search}%"))
+            ->when($search, fn ($q) => VietnameseSearch::applyLike($q, 'title', $search))
             ->when($categorySlug, function ($q) use ($categorySlug) {
                 $q->whereHas('category', fn ($c) => $c->where('slug', $categorySlug));
             })

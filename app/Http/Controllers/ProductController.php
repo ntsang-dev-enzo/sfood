@@ -6,13 +6,14 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\AiSearchService;
 use App\Services\CartService;
+use App\Support\VietnameseSearch;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->get('search', '');
+        $search = VietnameseSearch::normalize($request->get('search', ''));
         $categorySlug = $request->get('category', '');
         $minPrice = $request->get('min_price');
         $maxPrice = $request->get('max_price');
@@ -20,7 +21,7 @@ class ProductController extends Controller
 
         $productsQuery = Product::with(['category', 'variants'])
             ->where('is_active', true)
-            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($search, fn ($q) => VietnameseSearch::applyLike($q, 'name', $search))
             ->when($categorySlug, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $categorySlug)))
             ->when($minPrice || $maxPrice, function ($q) use ($minPrice, $maxPrice) {
                 $q->whereHas('variants', function ($v) use ($minPrice, $maxPrice) {
