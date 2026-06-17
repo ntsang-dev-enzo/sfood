@@ -13,6 +13,7 @@ import numpy as np
 import json
 import tempfile
 import os
+import sys
 try:
     import pytesseract
     HAS_PYTESSERACT = True
@@ -551,7 +552,7 @@ def embed_single():
         # Rebuild and reload FAISS index
         import subprocess
         try:
-            subprocess.run(["python", "faiss_build.py"], cwd=os.path.dirname(os.path.abspath(__file__)), check=True)
+            subprocess.run([sys.executable, "faiss_build.py"], cwd=os.path.dirname(os.path.abspath(__file__)), check=True)
             global faiss_index, faiss_ids
             if HAS_FAISS and os.path.exists(FAISS_INDEX_PATH) and os.path.exists(FAISS_IDS_PATH):
                 faiss_index = faiss.read_index(FAISS_INDEX_PATH)
@@ -614,7 +615,7 @@ def embed_recipe():
 
         import subprocess
         try:
-            subprocess.run(["python", "faiss_build.py"], cwd=os.path.dirname(os.path.abspath(__file__)), check=True)
+            subprocess.run([sys.executable, "faiss_build.py"], cwd=os.path.dirname(os.path.abspath(__file__)), check=True)
             global faiss_recipe_index, faiss_recipe_ids
             if HAS_FAISS and os.path.exists(FAISS_RECIPE_INDEX_PATH) and os.path.exists(FAISS_RECIPE_IDS_PATH):
                 faiss_recipe_index = faiss.read_index(FAISS_RECIPE_INDEX_PATH)

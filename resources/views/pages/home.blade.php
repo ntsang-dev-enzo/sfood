@@ -138,7 +138,7 @@
     {{-- Trust badges --}}
     <section class="bg-cream-50 dark:bg-[#121212] relative z-20 border-b border-cream-200 dark:border-gray-800">
         <div class="max-w-7xl mx-auto px-4 py-10 -mt-10 relative z-30 grid grid-cols-2 md:grid-cols-4 gap-4">
-            @foreach ([['🚚', 'Giao nhanh 2h', 'Nội thành TP.HCM'], ['🌱', 'Nguồn gốc rõ', '100% truy xuất'], ['💳', 'Thanh toán an toàn', 'VNPay · MoMo · COD'], ['🤖', 'AI thông minh', 'Tìm ảnh & giọng nói']] as $badge)
+            @foreach ([['🚚', 'Giao nhanh 2h', 'Nội thành TP.Cần Thơ'], ['🌱', 'Nguồn gốc rõ', '100% truy xuất'], ['💳', 'Thanh toán an toàn', 'VNPay · MoMo · COD'], ['🤖', 'AI thông minh', 'Tìm ảnh & giọng nói']] as $badge)
                 <div
                     class="bg-cream-50 dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-cream-200 dark:border-gray-700 hover:shadow-md hover:-translate-y-1 transition duration-300 flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4 group">
                     <div

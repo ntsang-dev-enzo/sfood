@@ -253,7 +253,7 @@
                         <span class="font-bold text-xl text-cream-50">SFood</span>
                     </div>
                     <p class="text-sm text-cream-300 leading-relaxed">Thực phẩm tươi sạch, nguồn gốc rõ ràng. Giao hàng
-                        nhanh trong ngày tại TP.HCM và Hà Nội.</p>
+                        nhanh trong ngày tại TP.Cần Thơ.</p>
                 </div>
                 <div>
                     <h4 class="font-semibold text-cream-50 mb-4">Danh mục</h4>
@@ -282,7 +282,7 @@
                     <ul class="space-y-2 text-sm text-cream-300">
                         <li>📞 1900 1234</li>
                         <li>✉️ support@sfood.vn</li>
-                        <li>📍 123 Đường Xanh, Q.1, TP.HCM</li>
+                        <li>📍 Đường Nguyễn Văn Cừ nối dài, Q.Ninh Kiều, TP. Cần Thơ</li>
                         <li class="pt-2 flex gap-3">
                             <span
                                 class="w-8 h-8 rounded-full bg-earth-700 flex items-center justify-center text-xs">FB</span>

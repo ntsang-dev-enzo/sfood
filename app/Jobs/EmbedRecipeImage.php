@@ -32,7 +32,7 @@ class EmbedRecipeImage implements ShouldQueue
             return;
         }
 
-        $absolutePath = storage_path('app/public/' . $thumbnailPath);
+        $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($thumbnailPath);
         if (!file_exists($absolutePath)) {
             Log::warning("Recipe image not found: {$absolutePath}");
             return;

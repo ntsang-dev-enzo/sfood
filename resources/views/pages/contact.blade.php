@@ -14,7 +14,7 @@
             <h2 class="section-title mb-6">Thông tin liên hệ</h2>
             <div class="space-y-5">
                 @foreach ([
-                    ['📍', 'Địa chỉ', '123 Đường Xanh, Phường Bến Nghé, Q.1, TP.HCM'],
+                    ['📍', 'Địa chỉ', ' Đường Nguyễn Văn Cừ nối dài, Q.Ninh Kiều, TP. Cần Thơ'],
                     ['📞', 'Hotline', '1900 1234 (7:00 - 22:00)'],
                     ['✉️', 'Email', 'support@sfood.vn'],
                     ['💬', 'Zalo / Facebook', '@sfood.vn'],
