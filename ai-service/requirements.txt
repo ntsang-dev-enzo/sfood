@@ -6,3 +6,5 @@ transformers>=4.36.0
 Pillow>=10.0.0
 pytesseract>=0.3.10
 faiss-cpu>=1.7.4
+sqlalchemy>=2.0.0
+pymysql>=1.1.0

@@ -8,8 +8,9 @@ use Normalizer;
 
 class VietnameseSearch
 {
-    public static function normalize(string $text): string
+    public static function normalize(?string $text): string
     {
+        $text ??= '';
         $text = trim($text);
 
         if ($text === '') {
