@@ -5,12 +5,14 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\ProductVariant;
 use App\Models\Recipe;
 use App\Models\RecipeCategory;
 use App\Models\RecipeIngredient;
-
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class SFoodDataSeeder extends Seeder
@@ -266,6 +268,67 @@ class SFoodDataSeeder extends Seeder
         }
 
         $this->command->info("✅ Created " . count($allProductIds) . " products with variants.");
+
+        // Seed reviews for Cà chua bi
+        $caChuaBi = Product::where('slug', 'ca-chua-bi')->first();
+        if ($caChuaBi) {
+            $reviewers = [
+                [
+                    'name' => 'Phạm Minh Trí',
+                    'email' => 'tri.pham@example.com',
+                    'rating' => 5,
+                    'comment' => 'Cà chua bi rất tươi, chín đều và ngọt thanh. Tôi hay mua về làm salad hoặc cho con ăn sống rất tốt.',
+                    'days_ago' => 2,
+                ],
+                [
+                    'name' => 'Lê Thị Hồng',
+                    'email' => 'hong.le@example.com',
+                    'rating' => 5,
+                    'comment' => 'Đóng gói cẩn thận, cà chua tươi rói không bị dập nát quả nào. Sẽ tiếp tục ủng hộ shop.',
+                    'days_ago' => 5,
+                ],
+                [
+                    'name' => 'Nguyễn Hoàng Nam',
+                    'email' => 'nam.nguyen@example.com',
+                    'rating' => 4,
+                    'comment' => 'Cà chua ngon, giao hàng hơi lâu một chút nhưng bù lại chất lượng rất ổn định. Đáng mua nhé mọi người.',
+                    'days_ago' => 7,
+                ],
+                [
+                    'name' => 'Trần Thu Thảo',
+                    'email' => 'thao.tran@example.com',
+                    'rating' => 5,
+                    'comment' => 'Quả nào quả nấy mọng nước, ăn giòn ngọt cực kỳ. Làm nước ép hay xào đều ngon.',
+                    'days_ago' => 3,
+                ],
+            ];
+
+            foreach ($reviewers as $rev) {
+                $user = User::firstOrCreate(
+                    ['email' => $rev['email']],
+                    [
+                        'name' => $rev['name'],
+                        'password' => Hash::make('password'),
+                        'phone' => '09' . rand(10000000, 99999999),
+                        'role' => 'user',
+                    ]
+                );
+
+                ProductReview::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'product_id' => $caChuaBi->id,
+                    ],
+                    [
+                        'rating' => $rev['rating'],
+                        'comment' => $rev['comment'],
+                        'created_at' => now()->subDays($rev['days_ago']),
+                        'updated_at' => now()->subDays($rev['days_ago']),
+                    ]
+                );
+            }
+            $this->command->info("⭐ Created reviews for Cà chua bi.");
+        }
 
         // =============================================
         // 3. RECIPE CATEGORIES
