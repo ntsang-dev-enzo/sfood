@@ -9,7 +9,7 @@
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb bg-white p-3 rounded-3 shadow-sm border mb-0 small">
                 <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>{{ __('app.home_title') }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('cart.index') }}" class="text-decoration-none text-success">Giỏ hàng</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('cart.index') }}" onclick="if(document.getElementById('cartDropdownBtn')){ document.getElementById('cartDropdownBtn').click(); return false; }" class="text-decoration-none text-success">Giỏ hàng</a></li>
                 <li class="breadcrumb-item active fw-semibold" aria-current="page">Thanh toán đơn hàng</li>
             </ol>
         </nav>
@@ -24,74 +24,103 @@
                             <i class="bi bi-geo-alt-fill text-danger me-2"></i>1. Địa chỉ giao hàng
                         </h4>
 
+                        @php 
+                            $selectedAddrId = old('shipping_address_id', $addresses->where('is_default', true)->first()?->id ?? $addresses->first()?->id); 
+                        @endphp
+
                         @if ($addresses->count())
-                            <div class="d-flex flex-column gap-2 mb-3">
-                                @foreach ($addresses as $addr)
-                                    <div class="form-check p-3 border rounded-3 bg-light">
-                                        <input class="form-check-input ms-0 me-2" type="radio" name="shipping_address_id" 
-                                               id="addr-{{ $addr->id }}"
-                                               value="{{ $addr->id }}"
-                                               data-city="{{ $addr->city }}"
-                                               data-district="{{ $addr->district }}"
-                                               data-ward="{{ $addr->ward }}"
-                                               data-recipient="{{ $addr->recipient_name }}"
-                                               data-phone="{{ $addr->phone }}"
-                                               data-address="{{ $addr->address_line }}"
-                                               @checked(old('shipping_address_id', $addresses->where('is_default', true)->first()?->id) == $addr->id)>
-                                        <label class="form-check-label ps-2 w-100 cursor-pointer" for="addr-{{ $addr->id }}">
-                                            <div class="fw-bold text-dark">{{ $addr->recipient_name }} — {{ $addr->phone }}</div>
-                                            <div class="small text-muted">{{ $addr->fullAddress() }}</div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-secondary mb-2">Chọn địa chỉ đã lưu hoặc thêm mới:</label>
+                                <div class="d-flex flex-column gap-2">
+                                    @foreach ($addresses as $addr)
+                                        <div class="form-check p-3 border rounded-3 transition address-card {{ $selectedAddrId == $addr->id ? 'border-success bg-white shadow-sm' : 'bg-light' }}">
+                                            <input class="form-check-input ms-0 me-2" type="radio" name="shipping_address_id" 
+                                                   id="addr-{{ $addr->id }}"
+                                                   value="{{ $addr->id }}"
+                                                   data-city="{{ $addr->city }}"
+                                                   data-district="{{ $addr->district }}"
+                                                   data-ward="{{ $addr->ward }}"
+                                                   data-recipient="{{ $addr->recipient_name }}"
+                                                   data-phone="{{ $addr->phone }}"
+                                                   data-address="{{ $addr->address_line }}"
+                                                   @checked($selectedAddrId == $addr->id)>
+                                            <label class="form-check-label ps-2 w-100 cursor-pointer" for="addr-{{ $addr->id }}">
+                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                    <span class="fw-bold text-dark">{{ $addr->recipient_name }} — {{ $addr->phone }}</span>
+                                                    @if($addr->is_default)
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Mặc định</span>
+                                                    @endif
+                                                </div>
+                                                <div class="small text-muted">{{ $addr->fullAddress() }}</div>
+                                            </label>
+                                        </div>
+                                    @endforeach
+
+                                    <div class="form-check p-3 border border-dashed rounded-3 address-card {{ empty($selectedAddrId) ? 'border-success bg-white shadow-sm' : 'bg-light' }}">
+                                        <input class="form-check-input ms-0 me-2" type="radio" name="shipping_address_id" id="addr-new" value="" 
+                                               @checked(empty($selectedAddrId))>
+                                        <label class="form-check-label ps-2 cursor-pointer w-100" for="addr-new">
+                                            <div class="fw-bold text-dark"><i class="bi bi-plus-circle me-1 text-success"></i>Nhập địa chỉ mới</div>
+                                            <div class="small text-muted">Giao đến một địa chỉ khác chưa có trong danh sách</div>
                                         </label>
                                     </div>
-                                @endforeach
-
-                                <div class="form-check p-3 border border-dashed rounded-3">
-                                    <input class="form-check-input ms-0 me-2" type="radio" name="shipping_address_id" id="addr-new" value="" 
-                                           @checked(old('shipping_address_id', $addresses->where('is_default', true)->first()?->id) == '')>
-                                    <label class="form-check-label ps-2 cursor-pointer" for="addr-new">
-                                        <div class="fw-bold text-dark">Nhập địa chỉ mới</div>
-                                        <div class="small text-muted">Sử dụng biểu mẫu bên dưới để nhập địa chỉ giao hàng mới</div>
-                                    </label>
                                 </div>
                             </div>
-                            <div class="text-muted small fw-semibold mb-2">Thông tin địa chỉ chi tiết:</div>
                         @endif
 
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Họ tên người nhận <span class="text-danger">*</span></label>
-                                <input name="recipient_name" value="{{ old('recipient_name') }}" placeholder="Ví dụ: Nguyễn Văn A" class="form-control" required>
+                        {{-- Wrapper Khối Nhập Địa Chỉ Mới (Hiển thị khi chọn 'Nhập địa chỉ mới' hoặc khi chưa có địa chỉ lưu) --}}
+                        <div id="new-address-wrapper" class="{{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? 'd-none' : '' }}">
+                            <div class="p-3 bg-light rounded-3 border mb-3">
+                                <h6 class="fw-bold text-dark mb-3 small text-uppercase">
+                                    <i class="bi bi-pencil-square text-success me-1"></i>Thông tin địa chỉ nhận hàng mới
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Họ tên người nhận <span class="text-danger">*</span></label>
+                                        <input name="recipient_name" value="{{ old('recipient_name', Auth::user()?->name) }}" placeholder="Ví dụ: Nguyễn Văn A" class="form-control" {{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? '' : 'required' }}>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
+                                        <input name="phone" value="{{ old('phone', Auth::user()?->phone) }}" placeholder="Ví dụ: 0912345678" class="form-control" {{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? '' : 'required' }}>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Địa chỉ cụ thể (Số nhà, đường) <span class="text-danger">*</span></label>
+                                        <input name="address_line" value="{{ old('address_line') }}" placeholder="Ví dụ: 123 Đường 30/4" class="form-control" {{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? '' : 'required' }}>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                                        <select id="province-select" name="city" class="form-select" {{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? '' : 'required' }}>
+                                            <option value="">Chọn Tỉnh/TP</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Quận / Huyện</label>
+                                        <select id="district-select" name="district" class="form-select">
+                                            <option value="">Chọn Quận/Huyện</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Phường / Xã</label>
+                                        <select id="ward-select" name="ward" class="form-select">
+                                            <option value="">Chọn Phường/Xã</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="save_address" value="1" id="saveAddressCheck" checked>
+                                            <label class="form-check-label small text-secondary cursor-pointer" for="saveAddressCheck">
+                                                Lưu địa chỉ này vào sổ địa chỉ để sử dụng cho lần sau
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
-                                <input name="phone" value="{{ old('phone') }}" placeholder="Ví dụ: 0912345678" class="form-control" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold">Địa chỉ cụ thể (Số nhà, đường) <span class="text-danger">*</span></label>
-                                <input name="address_line" value="{{ old('address_line') }}" placeholder="Ví dụ: 123 Đường 30/4" class="form-control" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Tỉnh / Thành phố <span class="text-danger">*</span></label>
-                                <select id="province-select" name="city" class="form-select" required>
-                                    <option value="">Chọn Tỉnh/TP</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Quận / Huyện <span class="text-danger">*</span></label>
-                                <select id="district-select" name="district" class="form-select" required>
-                                    <option value="">Chọn Quận/Huyện</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Phường / Xã <span class="text-danger">*</span></label>
-                                <select id="ward-select" name="ward" class="form-select" required>
-                                    <option value="">Chọn Phường/Xã</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold">Ghi chú đơn hàng (Tuỳ chọn)</label>
-                                <textarea name="notes" placeholder="Lời dặn cho shipper (ví dụ: giao giờ hành chính, gọi trước khi đến...)" class="form-control" rows="2">{{ old('notes') }}</textarea>
-                            </div>
+                        </div>
+
+                        {{-- Ghi chú đơn hàng (Luôn hiển thị cho cả 2 trường hợp) --}}
+                        <div class="mt-3">
+                            <label class="form-label small fw-semibold">Ghi chú đơn hàng (Tuỳ chọn)</label>
+                            <textarea name="notes" placeholder="Lời dặn cho shipper (ví dụ: giao giờ hành chính, gọi trước khi đến...)" class="form-control" rows="2">{{ old('notes') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -262,15 +291,24 @@
         }
 
         function updateShippingFee() {
-            const province = provinceSelect.selectedOptions[0]?.textContent || provinceSelect.value || '';
-            const district = districtSelect.selectedOptions[0]?.textContent || districtSelect.value || '';
+            const activeRadio = document.querySelector('input[name="shipping_address_id"]:checked');
+            let province = '';
+            let district = '';
+
+            if (activeRadio && activeRadio.value) {
+                province = activeRadio.dataset.city || '';
+                district = activeRadio.dataset.district || '';
+            } else {
+                province = provinceSelect.selectedOptions[0]?.textContent || provinceSelect.value || '';
+                district = districtSelect.selectedOptions[0]?.textContent || districtSelect.value || '';
+            }
 
             currentShipping = defaultShipping;
 
-            // Free ship nội thành Cần Thơ
+            // Free ship nội thành Cần Thơ (Ninh Kiều / Cái Răng)
             if (
-                province.includes('Cần Thơ') &&
-                (district.includes('Ninh Kiều') || district.includes('Cái Răng'))
+                province.toLowerCase().includes('cần thơ') &&
+                (district.toLowerCase().includes('ninh kiều') || district.toLowerCase().includes('cái răng'))
             ) {
                 currentShipping = 0;
             }
@@ -408,113 +446,52 @@
                 return false;
             }
 
+            const newAddressWrapper = document.getElementById('new-address-wrapper');
+            const setAddressRequired = (isRequired) => {
+                const fields = ['recipient_name', 'phone', 'address_line', 'city'];
+                fields.forEach(name => {
+                    const el = document.querySelector(`[name="${name}"]`);
+                    if (el) {
+                        if (isRequired) el.setAttribute('required', 'required');
+                        else el.removeAttribute('required');
+                    }
+                });
+            };
+
+            const updateAddressMode = (radio) => {
+                document.querySelectorAll('.address-card').forEach(card => {
+                    card.classList.remove('border-success', 'bg-white', 'shadow-sm');
+                    card.classList.add('bg-light');
+                });
+                const parentCard = radio.closest('.address-card');
+                if (parentCard) {
+                    parentCard.classList.remove('bg-light');
+                    parentCard.classList.add('border-success', 'bg-white', 'shadow-sm');
+                }
+
+                if (radio.value) {
+                    // Đã chọn địa chỉ lưu sẵn -> ẩn form nhập mới và bỏ required
+                    if (newAddressWrapper) newAddressWrapper.classList.add('d-none');
+                    setAddressRequired(false);
+                } else {
+                    // Đang chọn nhập địa chỉ mới -> hiện form nhập mới và thêm required
+                    if (newAddressWrapper) newAddressWrapper.classList.remove('d-none');
+                    setAddressRequired(true);
+                }
+                updateShippingFee();
+            };
+
             document.querySelectorAll('input[name="shipping_address_id"]').forEach(function(r) {
-                r.addEventListener('change', async function() {
-                    const city = this.dataset.city || '';
-                    const district = this.dataset.district || '';
-                    const ward = this.dataset.ward || '';
-                    const recipient = this.dataset.recipient || '';
-                    const phone = this.dataset.phone || '';
-                    const addressLine = this.dataset.address || '';
-
-                    function findOption(selectEl, match) {
-                        if (!match) return null;
-                        const opts = Array.from(selectEl.options);
-                        const m = match.toLowerCase();
-                        let found = opts.find(o => o.dataset.code && o.dataset.code == match);
-                        if (!found) found = opts.find(o => o.value.toLowerCase().includes(m));
-                        if (!found) found = opts.find(o => o.textContent.toLowerCase().includes(m));
-                        return found;
-                    }
-
-                    if (city) {
-                        const provOpt = findOption(provinceSelect, city);
-                        if (provOpt) {
-                            provinceSelect.value = provOpt.value;
-                            if (provOpt.dataset.code) {
-                                await loadDistricts(provOpt.dataset.code);
-                            }
-                        }
-                    }
-
-                    if (district) {
-                        const distOpt = findOption(districtSelect, district);
-                        if (distOpt) {
-                            districtSelect.value = distOpt.value;
-                            if (distOpt.dataset.code) {
-                                await loadWards(distOpt.dataset.code);
-                            }
-                        }
-                    }
-
-                    if (ward) {
-                        const wardOpt = findOption(wardSelect, ward);
-                        if (wardOpt) wardSelect.value = wardOpt.value;
-                    }
-
-                    const nameInput = document.querySelector('input[name="recipient_name"]');
-                    const phoneInput = document.querySelector('input[name="phone"]');
-                    const addrInput = document.querySelector('input[name="address_line"]');
-                    if (nameInput) nameInput.value = recipient;
-                    if (phoneInput) phoneInput.value = phone;
-                    if (addrInput) addrInput.value = addressLine;
-
-                    updateShippingFee();
+                r.addEventListener('change', function() {
+                    updateAddressMode(this);
                 });
             });
 
-            const manualRadio = Array.from(document.querySelectorAll('input[name="shipping_address_id"]')).find(x => x.value === '');
-            if (manualRadio) {
-                manualRadio.addEventListener('change', function() {
-                    if (this.checked) {
-                        const nameInput = document.querySelector('input[name="recipient_name"]');
-                        const phoneInput = document.querySelector('input[name="phone"]');
-                        const addrInput = document.querySelector('input[name="address_line"]');
-                        if (nameInput) nameInput.value = '';
-                        if (phoneInput) phoneInput.value = '';
-                        if (addrInput) addrInput.value = '';
-                        if (provinceSelect) provinceSelect.value = '';
-                        if (districtSelect) districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
-                        if (wardSelect) wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
-                        updateShippingFee();
-                    }
-                });
-            }
-
             const preChecked = document.querySelector('input[name="shipping_address_id"]:checked');
             if (preChecked) {
-                const city = preChecked.dataset.city || '';
-                const district = preChecked.dataset.district || '';
-                const ward = preChecked.dataset.ward || '';
-                const recipient = preChecked.dataset.recipient || '';
-                const phone = preChecked.dataset.phone || '';
-                const addressLine = preChecked.dataset.address || '';
-
-                if (city) {
-                    selectOptionByMatch(provinceSelect, city);
-                    const provOpt = Array.from(provinceSelect.options).find(o => o.value === provinceSelect.value);
-                    if (provOpt && provOpt.dataset.code) {
-                        await loadDistricts(provOpt.dataset.code);
-                    }
-                }
-
-                if (district) {
-                    selectOptionByMatch(districtSelect, district);
-                    const distOpt = Array.from(districtSelect.options).find(o => o.value === districtSelect.value);
-                    if (distOpt && distOpt.dataset.code) {
-                        await loadWards(distOpt.dataset.code);
-                    }
-                }
-
-                if (ward) selectOptionByMatch(wardSelect, ward);
-
-                const nameInput = document.querySelector('input[name="recipient_name"]');
-                const phoneInput = document.querySelector('input[name="phone"]');
-                const addrInput = document.querySelector('input[name="address_line"]');
-                if (nameInput) nameInput.value = recipient;
-                if (phoneInput) phoneInput.value = phone;
-                if (addrInput) addrInput.value = addressLine;
-
+                updateAddressMode(preChecked);
+            } else if (!document.querySelector('input[name="shipping_address_id"]')) {
+                setAddressRequired(true);
                 updateShippingFee();
             }
         })();

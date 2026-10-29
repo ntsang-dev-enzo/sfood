@@ -1,13 +1,14 @@
 <?php
+
 return [
     // Header
-    'free_shipping' => '🚚 Miễn phí giao hàng đơn từ 1.000.000đ',
+    'free_shipping' => ' Miễn phí giao hàng đơn từ 1.000.000đ',
     'freeship_short' => 'Freeship > 300k',
     'about' => 'Giới thiệu',
     'contact' => 'Liên hệ',
     'faq' => 'Hỏi đáp',
     'cart' => 'Giỏ hàng',
-    
+
     // Sidebar
     'categories' => 'Danh mục',
     'all_products' => 'Tất cả sản phẩm',
@@ -26,7 +27,7 @@ return [
     'search_products' => 'Tìm kiếm sản phẩm',
     'enter_keyword' => 'Nhập từ khóa...',
     'search' => 'Tìm kiếm',
-    'ai_search_title' => '🤖 AI Nhận Diện Bằng Hình Ảnh',
+    'ai_search_title' => ' AI Nhận Diện Bằng Hình Ảnh',
     'ai_search_desc' => 'Tải ảnh thực phẩm, AI sẽ nhận diện và gợi ý sản phẩm ngay.',
     'upload_image' => 'Tải ảnh lên',
     'showing' => 'Hiển thị',
@@ -47,19 +48,19 @@ return [
     'not_found' => 'Không tìm thấy sản phẩm',
     'try_again' => 'Vui lòng thử lại với từ khóa hoặc bộ lọc khác.',
     'clear_all_filters' => 'Xóa tất cả bộ lọc',
-    
+
     // Product Card
     'details' => 'Chi tiết &rarr;',
 
     // Product Show
     'choose_variant' => 'Chọn biến thể',
     'quantity' => 'Số lượng',
-    'add_to_cart' => '🛒 Thêm vào giỏ',
-    'buy_now' => '⚡ Mua ngay',
+    'add_to_cart' => ' Thêm vào giỏ',
+    'buy_now' => ' Mua ngay',
     'description' => 'Mô tả sản phẩm',
     'reviews' => 'Đánh giá sản phẩm',
     'related_products' => 'Sản phẩm tương tự',
-    
+
     // Home
     'home_title' => 'Thực phẩm Tươi sạch',
     'home_subtitle' => 'Giao tận nhà trong 2h',
@@ -73,7 +74,7 @@ return [
     'recipes' => 'Công thức',
     'delivery' => 'Giao hàng',
     'login_to_favorite' => 'Đăng nhập để yêu thích',
-    
+
     'home_hero_desc' => 'Cung cấp rau củ, trái cây, thịt cá tươi ngon nhất mỗi ngày. Đảm bảo chất lượng vệ sinh an toàn thực phẩm.',
     'shop_now' => 'Mua Sắm Ngay',
     'smart_search' => 'Tìm Kiếm AI',
@@ -85,8 +86,8 @@ return [
         'refund' => 'Hoàn Tiền 100%',
         'refund_desc' => 'Nếu không hài lòng',
     ],
-    'flash_sale' => '⚡ Flash Sale Hôm Nay',
+    'flash_sale' => ' Flash Sale Hôm Nay',
     'view_all' => 'Xem tất cả',
     'explore_categories' => 'Khám Phá Danh Mục',
-    'best_sellers' => '🌟 Sản Phẩm Bán Chạy',
+    'best_sellers' => ' Sản Phẩm Bán Chạy',
 ];

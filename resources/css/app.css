@@ -219,6 +219,41 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Compact Grid: 5 & 6 Cards Per Row on Large Screens (>= 992px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 992px) {
+    .row-cols-lg-5 .card-product,
+    .row-cols-xl-5 .card-product,
+    .row-cols-lg-6 .card-product {
+        border-radius: 0.75rem;
+    }
+    .row-cols-lg-5 .card-product .card-body,
+    .row-cols-xl-5 .card-product .card-body,
+    .row-cols-lg-6 .card-product .card-body {
+        padding: 0.65rem 0.75rem !important;
+    }
+    .row-cols-lg-5 .product-card-title,
+    .row-cols-xl-5 .product-card-title,
+    .row-cols-lg-6 .product-card-title {
+        font-size: 0.85rem !important;
+        min-height: 2.15rem !important;
+        line-height: 1.25 !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .row-cols-lg-5 .product-card-price,
+    .row-cols-xl-5 .product-card-price,
+    .row-cols-lg-6 .product-card-price {
+        font-size: 0.92rem !important;
+    }
+    .row-cols-lg-5 .card-product .btn-quick-cart,
+    .row-cols-xl-5 .card-product .btn-quick-cart,
+    .row-cols-lg-6 .card-product .btn-quick-cart {
+        width: 28px !important;
+        height: 28px !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
    Flash Sale Widget
    -------------------------------------------------------------------------- */
 .flash-sale-badge {
@@ -292,4 +327,16 @@ body {
 
 .cursor-pointer {
     cursor: pointer;
+}
+
+/* Quick Add to Cart Button on Product Cards */
+.btn-quick-cart {
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-quick-cart:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(25, 135, 84, 0.35) !important;
+}
+.btn-quick-cart:active {
+    transform: scale(0.95);
 }

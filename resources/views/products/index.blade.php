@@ -156,8 +156,8 @@
             </div>
 
             @if ($products->count() > 0)
-                {{-- Grid Sản phẩm (3 sản phẩm 1 hàng trên điện thoại: row-cols-3) --}}
-                <div class="row row-cols-3 row-cols-md-3 row-cols-xl-3 g-2 g-md-3">
+                {{-- Grid Sản phẩm (5 sản phẩm 1 hàng trên desktop: row-cols-lg-5, 3 sản phẩm trên điện thoại: row-cols-3) --}}
+                <div class="row row-cols-3 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-2 g-md-2.5 g-xl-3">
                     @foreach ($products as $product)
                         <div class="col">
                             @include('partials.product-card', ['product' => $product])

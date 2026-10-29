@@ -251,7 +251,7 @@
             <div class="container d-flex align-items-center justify-content-between gap-3">
                 {{-- Brand Logo --}}
                 <a class="d-flex align-items-center gap-2 text-decoration-none text-dark flex-shrink-0" href="{{ route('home') }}">
-                    <img src="{{ asset('/logo.png') }}" alt="SFood Logo" style="height: 42px; width: auto;" class="rounded-2 shadow-sm border p-0.5 bg-white">
+                    <img src="{{ asset('/logo.png') }}" alt="SFood Logo" style="height: 42px; width: auto;" class="rounded-2 p-0.5 bg-white">
                     <div class="d-none d-sm-block">
                         <span class="fw-bold fs-4 text-success d-block lh-1">SFood</span>
                         <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 1px;">Fresh &amp; Organic</small>
@@ -265,16 +265,51 @@
 
                 {{-- Right Actions: Giỏ hàng, Tài khoản, Toggler --}}
                 <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                    {{-- Nút Giỏ Hàng mở Offcanvas (Không viền) --}}
-                    <button class="btn border-0 bg-light text-dark position-relative rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-none" 
-                            type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCart" aria-controls="offcanvasCart" style="border: none !important;">
-                        <i class="bi bi-cart3 fs-5 text-success"></i>
-                        <span class="d-none d-sm-inline fw-semibold small">{{ __('app.cart', ['default' => 'Giỏ hàng']) }}</span>
-                        @php $cartCount = app(\App\Services\CartService::class)->count(); @endphp
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge {{ $cartCount > 0 ? '' : 'd-none' }}" data-cart-count>
-                            {{ $cartCount }}
-                        </span>
-                    </button>
+                    {{-- Giỏ Hàng Dropdown (Viền mỏng, dạng popup tại nút) --}}
+                    <div class="dropdown">
+                        <button class="btn btn-light rounded-pill border px-3 py-1.5 d-flex align-items-center gap-2 position-relative shadow-none" 
+                                type="button" id="cartDropdownBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            <i class="bi bi-cart3 fs-5 text-success"></i>
+                            <span class="d-none d-sm-inline fw-semibold small">{{ __('app.cart', ['default' => 'Giỏ hàng']) }}</span>
+                            @php $cartCount = app(\App\Services\CartService::class)->count(); @endphp
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge {{ $cartCount > 0 ? '' : 'd-none' }}" data-cart-count>
+                                {{ $cartCount }}
+                            </span>
+                        </button>
+
+                        {{-- Popup Giỏ hàng tại nút --}}
+                        <div class="dropdown-menu dropdown-menu-end shadow-lg border rounded-4 mt-2 p-0 cart-popup-menu" 
+                             aria-labelledby="cartDropdownBtn" 
+                             style="width: 380px; max-width: calc(100vw - 2rem); z-index: 1070;">
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-cart3 text-success fs-5"></i>
+                                    <h6 class="fw-bold mb-0 text-dark">Giỏ hàng của bạn</h6>
+                                </div>
+                                <button type="button" id="mini-cart-clear-all" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;">Xóa tất cả</button>
+                            </div>
+
+                            @php
+                                $miniCartItems = app(\App\Services\CartService::class)->items();
+                                $miniCartSelectedSubtotal = app(\App\Services\CartService::class)->selectedSubtotal();
+                            @endphp
+
+                            <div class="overflow-y-auto p-3" style="max-height: 350px;" id="mini-cart-items-container">
+                                @include('partials.mini-cart-items', ['miniCartItems' => $miniCartItems])
+                            </div>
+
+                            <div class="p-3 border-top bg-light rounded-bottom-4" id="mini-cart-footer">
+                                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                    <span class="text-muted small">Tạm tính (đã chọn):</span>
+                                    <h6 class="fw-bold text-danger mb-0" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}₫</h6>
+                                </div>
+                                <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" 
+                                   class="btn btn-success w-100 fw-bold py-2 shadow-sm {{ $miniCartSelectedSubtotal > 0 ? '' : 'disabled' }}">
+                                    Tiến hành thanh toán <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- User Dropdown --}}
                     @auth
@@ -542,67 +577,64 @@
         </div>
     </div>
 
-    {{-- Offcanvas Giỏ Hàng (Bootstrap 5 Offcanvas) --}}
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCart" aria-labelledby="offcanvasCartLabel">
-        <div class="offcanvas-header bg-success text-white">
-            <h5 class="offcanvas-title fw-bold" id="offcanvasCartLabel"><i class="bi bi-cart3 me-2"></i>Giỏ hàng của bạn</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body d-flex flex-column p-0">
-            @php
-                $miniCartItems = app(\App\Services\CartService::class)->items();
-                $miniCartSelectedSubtotal = app(\App\Services\CartService::class)->selectedSubtotal();
-            @endphp
-            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
-                <span class="small text-muted fw-semibold">Sản phẩm đã chọn</span>
-                <button type="button" id="mini-cart-clear-all" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;">Xóa tất cả</button>
-            </div>
-
-            <div class="flex-grow-1 overflow-y-auto p-3" id="mini-cart-items-container">
-                @if($miniCartItems->isEmpty())
-                    <div class="text-center py-5 text-muted" id="mini-cart-empty-msg">
-                        <i class="bi bi-cart-x fs-1 text-secondary opacity-50 d-block mb-2"></i>
-                        Giỏ hàng trống
-                    </div>
-                @else
-                    <div class="list-group list-group-flush">
-                        @foreach($miniCartItems as $item)
-                            <div class="list-group-item px-0 py-3 d-flex align-items-center gap-3 mini-cart-item {{ !$item->is_selected ? 'opacity-50' : '' }}" data-id="{{ $item->id }}">
-                                <input type="checkbox" class="form-check-input mini-cart-item-checkbox m-0 cursor-pointer" data-id="{{ $item->id }}" {{ $item->is_selected ? 'checked' : '' }}>
-                                <img src="{{ \App\Support\MediaHelper::productImage($item->productVariant->product->thumbnail) }}" 
-                                     class="rounded-3 border object-fit-cover" style="width: 50px; height: 50px;" alt="">
-                                <div class="flex-grow-1 min-w-0">
-                                    <h6 class="mb-0 text-truncate fw-semibold small text-dark">{{ $item->productVariant->product->name }}</h6>
-                                    <small class="text-muted d-block">{{ $item->productVariant->name }}</small>
-                                    <div class="d-flex align-items-center gap-2 mt-1">
-                                        <div class="input-group input-group-sm" style="width: 90px;">
-                                            <button class="btn btn-outline-secondary mini-cart-btn-minus px-2" type="button" data-id="{{ $item->id }}">-</button>
-                                            <input type="number" class="form-control text-center mini-cart-input-qty p-0" data-id="{{ $item->id }}" value="{{ $item->quantity }}" min="1">
-                                            <button class="btn btn-outline-secondary mini-cart-btn-plus px-2" type="button" data-id="{{ $item->id }}">+</button>
-                                        </div>
-                                        <span class="text-danger fw-bold small ms-auto mini-cart-item-subtotal" data-id="{{ $item->id }}">
-                                            {{ number_format($item->subtotal()) }}₫
-                                        </span>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-sm text-secondary hover-danger mini-cart-btn-remove p-1" data-id="{{ $item->id }}" title="Xóa">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-
-            <div class="p-3 border-top bg-light mt-auto" id="mini-cart-footer">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted small">Tạm tính (đã chọn):</span>
-                    <h5 class="fw-bold text-danger mb-0" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}₫</h5>
+    {{-- Modal Chọn Biến Thể Nhanh Cho Card Sản Phẩm --}}
+    <div class="modal fade" id="quickVariantModal" tabindex="-1" aria-labelledby="quickVariantModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-bottom p-3">
+                    <h6 class="modal-title fw-bold text-dark" id="quickVariantModalLabel">
+                        <i class="bi bi-bag-plus text-success me-1.5"></i>Tùy chọn sản phẩm
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" 
-                   class="btn btn-success w-100 fw-bold py-2 shadow-sm {{ $miniCartSelectedSubtotal > 0 ? '' : 'disabled' }}">
-                    Tiến hành thanh toán <i class="bi bi-arrow-right ms-1"></i>
-                </a>
+                <div class="modal-body p-3">
+                    {{-- Thông tin sản phẩm --}}
+                    <div class="d-flex align-items-center gap-2.5 mb-3 pb-2.5 border-bottom">
+                        <img id="quickModalImg" src="" class="rounded-3 border object-fit-cover flex-shrink-0" style="width: 52px; height: 52px;" alt="">
+                        <div class="min-w-0">
+                            <h6 id="quickModalName" class="fw-bold text-dark mb-1 text-truncate" style="font-size: 0.9rem;"></h6>
+                            <div id="quickModalPrice" class="fw-bold text-danger fs-6"></div>
+                        </div>
+                    </div>
+
+                    {{-- Chọn phân loại biến thể --}}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1.5">Phân loại / Quy cách:</label>
+                        <div id="quickModalVariantsList" class="d-flex flex-wrap gap-1.5">
+                            {{-- Được render động bằng JS --}}
+                        </div>
+                    </div>
+
+                    {{-- Chọn số lượng --}}
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="form-label small fw-bold text-secondary mb-0">Số lượng:</label>
+                        <div class="input-group input-group-sm" style="width: 100px;">
+                            <button class="btn btn-outline-secondary" type="button" id="quickModalQtyMinus">-</button>
+                            <input type="number" class="form-control text-center p-0" id="quickModalQty" value="1" min="1" max="99">
+                            <button class="btn btn-outline-secondary" type="button" id="quickModalQtyPlus">+</button>
+                        </div>
+                    </div>
+                    <div id="quickModalStockNotice" class="text-muted small" style="font-size: 0.75rem;"></div>
+                </div>
+                <div class="modal-footer border-top p-3 bg-light rounded-bottom-4">
+                    <button type="button" id="quickModalSubmitBtn" class="btn btn-success w-100 fw-bold rounded-pill py-2 shadow-sm d-flex align-items-center justify-content-center gap-1.5">
+                        <i class="bi bi-cart-plus fs-5"></i>
+                        <span>Thêm vào giỏ hàng</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Toast Thông Báo Thêm Giỏ Hàng --}}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+        <div id="cartToast" class="toast align-items-center text-white bg-success border-0 shadow-lg rounded-3" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2 py-2.5">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <span id="cartToastMessage" class="fw-semibold small">Đã thêm vào giỏ hàng!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     </div>
@@ -723,8 +755,8 @@
                 <div class="col-12 col-md-6 col-lg-4">
                     <h6 class="fw-bold text-uppercase mb-3 text-white">Liên Hệ Nhóm Thực Hiện</h6>
                     <ul class="list-unstyled small text-white-50 d-flex flex-column gap-2 mb-0">
-                        <li><i class="bi bi-geo-alt-fill text-success me-2"></i>123 Đường Nông Nghiệp Xanh, TP. Hồ Chí Minh</li>
-                        <li><i class="bi bi-telephone-fill text-success me-2"></i>Hotline: 1900 6868 - (028) 3822 5588</li>
+                        <li><i class="bi bi-geo-alt-fill text-success me-2"></i>123 An Bình, TP. Cần Thơ</li>
+                        <li><i class="bi bi-telephone-fill text-success me-2"></i>Hotline: 1900 9999</li>
                         <li><i class="bi bi-envelope-fill text-success me-2"></i>Email: contact@sfood.vn</li>
                         <li><i class="bi bi-server text-success me-2"></i>Tương thích: Apache (XAMPP) / IIS Server</li>
                     </ul>
@@ -759,29 +791,33 @@
 
             const fetchApi = async (url, bodyData) => {
                 try {
+                    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrfToken
                         },
                         body: JSON.stringify(bodyData)
                     });
-                    return await res.json();
+                    const data = await res.json();
+                    return data;
                 } catch (e) {
-                    console.error(e);
+                    console.error('fetchApi error:', e);
                     return null;
                 }
             };
 
             const updateMiniCartUI = (data) => {
                 if (!data) return;
-                const countBadge = document.querySelector('[data-cart-count]');
-                if (countBadge) {
+                document.querySelectorAll('[data-cart-count]').forEach(countBadge => {
                     countBadge.textContent = data.count;
                     if (data.count > 0) countBadge.classList.remove('d-none');
                     else countBadge.classList.add('d-none');
-                }
+                });
                 const subtotalEl = document.getElementById('mini-cart-subtotal');
                 if (subtotalEl && data.subtotal !== undefined) {
                     subtotalEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.subtotal);
@@ -790,6 +826,9 @@
                 if (checkoutBtn) {
                     if (data.subtotal > 0) checkoutBtn.classList.remove('disabled');
                     else checkoutBtn.classList.add('disabled');
+                }
+                if (data.items_html && miniCartContainer) {
+                    miniCartContainer.innerHTML = data.items_html;
                 }
             };
 
@@ -848,6 +887,174 @@
                     }
                 });
             }
+
+            // Quick Add to Cart & Variant Selection Modal from Product Cards
+            const quickVariantModalEl = document.getElementById('quickVariantModal');
+            const getQuickVariantModal = () => {
+                if (!quickVariantModalEl) return null;
+                if (window.bootstrap && bootstrap.Modal) {
+                    return bootstrap.Modal.getOrCreateInstance(quickVariantModalEl);
+                }
+                return null;
+            };
+            const cartToastEl = document.getElementById('cartToast');
+            const getCartToast = () => {
+                if (!cartToastEl) return null;
+                if (window.bootstrap && bootstrap.Toast) {
+                    return bootstrap.Toast.getOrCreateInstance(cartToastEl, { delay: 3000 });
+                }
+                return null;
+            };
+
+            let currentQuickProduct = {
+                addUrl: '',
+                selectedVariantId: null,
+                variants: []
+            };
+
+            const showCartToast = (message) => {
+                const msgEl = document.getElementById('cartToastMessage');
+                if (msgEl) msgEl.textContent = message;
+                const toast = getCartToast();
+                if (toast) toast.show();
+            };
+
+            // Global delegation for .btn-quick-cart
+            document.addEventListener('click', async (e) => {
+                const btnQuick = e.target.closest('.btn-quick-cart');
+                if (!btnQuick) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const action = btnQuick.getAttribute('data-action');
+                const addUrl = btnQuick.getAttribute('data-add-url');
+
+                if (action === 'quick-add') {
+                    // Single variant: direct instant add
+                    const variantId = btnQuick.getAttribute('data-variant-id');
+                    const prodName = btnQuick.getAttribute('data-product-name') || 'Sản phẩm';
+                    
+                    btnQuick.disabled = true;
+                    const origIcon = btnQuick.innerHTML;
+                    btnQuick.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" style="width: 12px; height: 12px;"></span>';
+
+                    const data = await fetchApi(addUrl, { variant_id: variantId, quantity: 1 });
+                    btnQuick.disabled = false;
+                    btnQuick.innerHTML = '<i class="bi bi-check-lg fs-6"></i>';
+                    setTimeout(() => { btnQuick.innerHTML = origIcon; }, 1200);
+
+                    if (data && data.success) {
+                        updateMiniCartUI(data);
+                        showCartToast(`Đã thêm ${prodName} vào giỏ hàng!`);
+                    } else if (data && data.message) {
+                        alert(data.message);
+                    } else {
+                        alert('Không thể thêm sản phẩm vào giỏ hàng lúc này.');
+                    }
+                } else if (action === 'open-variant-modal') {
+                    // Multiple variants: open quick selection modal
+                    const prodName = btnQuick.getAttribute('data-product-name');
+                    const prodImg = btnQuick.getAttribute('data-product-img');
+                    let variants = [];
+                    try {
+                        const rawVariants = btnQuick.getAttribute('data-variants') || '[]';
+                        variants = typeof rawVariants === 'string' ? JSON.parse(rawVariants) : rawVariants;
+                    } catch (err) {
+                        console.error('Lỗi phân tích biến thể:', err);
+                    }
+
+                    currentQuickProduct.addUrl = addUrl;
+                    currentQuickProduct.variants = variants;
+                    currentQuickProduct.selectedVariantId = variants.length > 0 ? variants[0].id : null;
+
+                    const nameEl = document.getElementById('quickModalName');
+                    const imgEl = document.getElementById('quickModalImg');
+                    const qtyEl = document.getElementById('quickModalQty');
+                    const priceEl = document.getElementById('quickModalPrice');
+                    const stockNoticeEl = document.getElementById('quickModalStockNotice');
+                    const listEl = document.getElementById('quickModalVariantsList');
+
+                    if (nameEl) nameEl.textContent = prodName;
+                    if (imgEl) imgEl.src = prodImg;
+                    if (qtyEl) qtyEl.value = 1;
+                    if (listEl) listEl.innerHTML = '';
+
+                    variants.forEach((v, idx) => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = `btn btn-sm rounded-pill px-2.5 py-1 small fw-semibold transition ${idx === 0 ? 'btn-success text-white' : 'btn-outline-secondary'}`;
+                        btn.style.fontSize = '0.78rem';
+                        btn.textContent = `${v.name} - ${v.price_formatted}`;
+                        if (!v.in_stock) {
+                            btn.disabled = true;
+                            btn.classList.add('opacity-50');
+                            btn.textContent += ' (Hết)';
+                        }
+                        btn.addEventListener('click', () => {
+                            currentQuickProduct.selectedVariantId = v.id;
+                            listEl.querySelectorAll('button').forEach(b => {
+                                b.classList.remove('btn-success', 'text-white');
+                                b.classList.add('btn-outline-secondary');
+                            });
+                            btn.classList.remove('btn-outline-secondary');
+                            btn.classList.add('btn-success', 'text-white');
+                            if (priceEl) priceEl.textContent = v.price_formatted;
+                            if (stockNoticeEl) stockNoticeEl.textContent = `Còn ${v.stock} sản phẩm`;
+                        });
+                        if (listEl) listEl.appendChild(btn);
+                    });
+
+                    if (variants.length > 0) {
+                        if (priceEl) priceEl.textContent = variants[0].price_formatted;
+                        if (stockNoticeEl) stockNoticeEl.textContent = `Còn ${variants[0].stock} sản phẩm`;
+                    }
+
+                    const modal = getQuickVariantModal();
+                    if (modal) modal.show();
+                }
+            });
+
+            // Modal quantity buttons
+            const modalQtyInput = document.getElementById('quickModalQty');
+            document.getElementById('quickModalQtyPlus')?.addEventListener('click', () => {
+                if (modalQtyInput) modalQtyInput.value = parseInt(modalQtyInput.value || 1) + 1;
+            });
+            document.getElementById('quickModalQtyMinus')?.addEventListener('click', () => {
+                if (modalQtyInput && parseInt(modalQtyInput.value) > 1) {
+                    modalQtyInput.value = parseInt(modalQtyInput.value) - 1;
+                }
+            });
+
+            // Modal submit button
+            document.getElementById('quickModalSubmitBtn')?.addEventListener('click', async () => {
+                if (!currentQuickProduct.selectedVariantId || !currentQuickProduct.addUrl) return;
+
+                const qty = parseInt(modalQtyInput?.value || 1);
+                const submitBtn = document.getElementById('quickModalSubmitBtn');
+                submitBtn.disabled = true;
+                const origText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang thêm...';
+
+                const data = await fetchApi(currentQuickProduct.addUrl, {
+                    variant_id: currentQuickProduct.selectedVariantId,
+                    quantity: qty
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+
+                if (data && data.success) {
+                    const modal = getQuickVariantModal();
+                    if (modal) modal.hide();
+                    updateMiniCartUI(data);
+                    showCartToast('Đã thêm sản phẩm vào giỏ hàng!');
+                } else if (data && data.message) {
+                    alert(data.message);
+                } else {
+                    alert('Không thể thêm sản phẩm vào giỏ hàng.');
+                }
+            });
 
             // Live Chat with Support Staff (No AI)
             const toggleChatBtn = document.getElementById('toggle-live-chat-btn');

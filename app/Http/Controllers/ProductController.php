@@ -64,7 +64,7 @@ class ProductController extends Controller
                 break;
         }
 
-        $products = $productsQuery->paginate(12)->withQueryString();
+        $products = $productsQuery->paginate(15)->withQueryString();
 
         // Lấy danh sách sản phẩm đã xem gần nhất từ session
         $recentIds = session()->get('recently_viewed', []);
@@ -163,11 +163,24 @@ class ProductController extends Controller
         try {
             $cart->add((int) $data['variant_id'], (int) $data['quantity']);
         } catch (\RuntimeException $e) {
+            if ($request->wantsJson() || $request->ajax() || $request->expectsJson() || $request->isJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
 
         if ($request->input('action') === 'buy_now') {
             return redirect()->route('checkout.index');
+        }
+
+        if ($request->wantsJson() || $request->ajax() || $request->expectsJson() || $request->isJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã thêm vào giỏ hàng thành công!',
+                'count' => $cart->count(),
+                'subtotal' => $cart->selectedSubtotal(),
+                'items_html' => view('partials.mini-cart-items', ['miniCartItems' => $cart->items()])->render(),
+            ]);
         }
 
         return back()->with('success', 'Đã thêm vào giỏ hàng!');

@@ -7,6 +7,15 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    public function index(CartService $cart)
+    {
+        if ($cart->items()->isEmpty()) {
+            return redirect()->route('products.index')->with('info', 'Giỏ hàng của bạn đang trống.');
+        }
+
+        return redirect()->route('checkout.index');
+    }
+
     public function update(Request $request, CartService $cart)
     {
         $data = $request->validate([

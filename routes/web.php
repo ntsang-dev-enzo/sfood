@@ -56,6 +56,8 @@ Route::get('/cong-thuc/{recipe:slug}', [RecipeController::class, 'show'])->name(
 Route::post('/cong-thuc/{recipe:slug}/mua-nhanh', [RecipeController::class, 'quickBuy'])->name('recipes.quick-buy');
 Route::post('/cong-thuc/{recipe:slug}/favorite', [RecipeController::class, 'toggleFavorite'])->middleware('auth')->name('recipes.favorite');
 
+Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
+Route::get('/cart', fn() => redirect()->route('cart.index'))->name('cart');
 Route::post('/gio-hang/cap-nhat', [CartController::class, 'update'])->name('cart.update');
 Route::post('/gio-hang/xoa', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/gio-hang/xoa-tat-ca', [CartController::class, 'clear'])->name('cart.clear');

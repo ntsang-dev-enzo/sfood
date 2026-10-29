@@ -77,6 +77,7 @@ class CheckoutController extends Controller
             // shipping fee từ frontend
             'shipping_fee' => 'nullable|numeric|min:0',
             'use_points' => 'nullable|boolean',
+            'save_address' => 'nullable|boolean',
         ];
 
         if (! $request->shipping_address_id) {
@@ -103,6 +104,23 @@ class CheckoutController extends Controller
                 $data['ward'] = $saved->ward ?? ($data['ward'] ?? '');
                 $data['district'] = $saved->district ?? ($data['district'] ?? '');
                 $data['city'] = $saved->city ?? ($data['city'] ?? '');
+            }
+        } else {
+            // Lưu địa chỉ mới vào sổ địa chỉ để lần sau có sẵn
+            if (Auth::check() && ($request->boolean('save_address') || Auth::user()->shippingAddresses()->count() === 0)) {
+                if (Auth::user()->shippingAddresses()->count() < 10) {
+                    $isFirst = Auth::user()->shippingAddresses()->count() === 0;
+                    $newSaved = Auth::user()->shippingAddresses()->create([
+                        'recipient_name' => $data['recipient_name'],
+                        'phone' => $data['phone'],
+                        'address_line' => $data['address_line'],
+                        'city' => $data['city'],
+                        'district' => $data['district'] ?? null,
+                        'ward' => $data['ward'] ?? null,
+                        'is_default' => $isFirst,
+                    ]);
+                    $data['shipping_address_id'] = $newSaved->id;
+                }
             }
         }
 

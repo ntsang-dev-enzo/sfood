@@ -17,4 +17,11 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    public function test_products_page_returns_successful_response(): void
+    {
+        $response = $this->get('/san-pham');
+
+        $response->assertStatus(200);
+    }
 }
