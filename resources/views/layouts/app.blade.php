@@ -492,14 +492,17 @@
         </div>
         <div class="offcanvas-body p-0">
             @auth
-                <div class="p-3 bg-light border-bottom d-flex align-items-center gap-3">
+                <a href="{{ route('profile') }}" class="p-3 bg-light border-bottom d-flex align-items-center gap-3 text-decoration-none text-dark hover-bg-light">
                     <img src="{{ \App\Support\MediaHelper::avatar(auth()->user()->avatar, auth()->user()->name) }}"
                          class="rounded-circle border" style="width: 46px; height: 46px; object-fit: cover;" alt="">
                     <div class="flex-grow-1 overflow-hidden">
-                        <h6 class="fw-bold mb-0 text-truncate text-dark">{{ auth()->user()->name }}</h6>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="fw-bold mb-0 text-truncate text-dark">{{ auth()->user()->name }}</h6>
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </div>
                         <small class="badge bg-success-subtle text-success"><i class="bi bi-coin me-1"></i>{{ number_format(auth()->user()->reward_points ?? 0) }} điểm</small>
                     </div>
-                </div>
+                </a>
             @endauth
 
             {{-- Danh sách điều hướng Mobile (Gọn gàng, sạch sẽ, không icon màu mè) --}}
@@ -1168,43 +1171,7 @@
                 });
             }
 
-            // User Profile Dropdown Click Handler (Đảm bảo click mở/đóng mượt mà 100%)
-            const profileBtn = document.getElementById('userProfileDropdown');
-            if (profileBtn) {
-                profileBtn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const menu = this.nextElementSibling;
-                    if (menu) {
-                        const isShown = menu.classList.contains('show');
-                        document.querySelectorAll('.dropdown-menu.show').forEach(m => {
-                            if (!m.classList.contains('mega-menu-3cols')) {
-                                m.classList.remove('show');
-                            }
-                        });
-                        if (!isShown) {
-                            menu.classList.add('show');
-                            this.setAttribute('aria-expanded', 'true');
-                        } else {
-                            menu.classList.remove('show');
-                            this.setAttribute('aria-expanded', 'false');
-                        }
-                    }
-                });
-            }
 
-            // Đóng dropdown khi click ra ngoài
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.show').forEach(m => {
-                        if (!m.classList.contains('mega-menu-3cols')) {
-                            m.classList.remove('show');
-                        }
-                    });
-                    const pBtn = document.getElementById('userProfileDropdown');
-                    if (pBtn) pBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
         });
     </script>
 

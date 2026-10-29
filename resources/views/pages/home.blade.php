@@ -21,10 +21,13 @@
         }
     }
     @media (max-width: 575px) {
+        .hero-carousel-container {
+            border-radius: 0.85rem;
+        }
         #homeCarousel, 
         #homeCarousel .carousel-inner, 
         #homeCarousel .carousel-item {
-            height: 220px;
+            height: 170px;
         }
     }
     #homeCarousel img {
@@ -217,8 +220,8 @@
             </div>
         </div>
 
-        {{-- Bento Promo Cards Bên Cạnh (Col 4 - Tạo bố cục E-commerce chuyên nghiệp) --}}
-        <div class="col-lg-4 d-flex flex-column justify-content-between gap-3">
+        {{-- Bento Promo Cards Bên Cạnh (Col 4 - Chỉ hiển thị trên Desktop d-none d-lg-flex) --}}
+        <div class="col-lg-4 d-none d-lg-flex flex-column justify-content-between gap-3">
             {{-- Card 1 --}}
             <div class="promo-card-side p-4 text-white d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" 
                  style="background: linear-gradient(135deg, #1b4332 0%, #40916c 100%);">
@@ -258,8 +261,8 @@
     </div>
 </div>
 
-{{-- 2. CAM KẾT & CHẤT LƯỢNG (Bootstrap 5 Grid 12 cột) --}}
-<div class="container py-3">
+{{-- 2. CAM KẾT & CHẤT LƯỢNG (Chỉ hiển thị trên desktop d-none d-lg-block) --}}
+<div class="container py-3 d-none d-lg-block">
     <div class="row g-3">
         <div class="col-6 col-md-3">
             <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-white hover-lift">
