@@ -2,20 +2,13 @@ const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content;
 
 function setFavoriteState(btn, favorited) {
     btn.dataset.favorited = favorited ? 'true' : 'false';
-    btn.classList.toggle('bg-red-50', favorited);
-    btn.classList.toggle('border-red-300', favorited);
-    btn.classList.toggle('text-red-500', favorited);
-    btn.classList.toggle('border-gray-200', !favorited);
-    btn.classList.toggle('border-cream-300', !favorited);
-    btn.classList.toggle('bg-white', !favorited);
-    btn.classList.toggle('bg-cream-50', !favorited);
-    btn.classList.toggle('hover:bg-gray-50', !favorited);
-    btn.classList.toggle('hover:bg-cream-200', !favorited);
-    btn.classList.toggle('text-earth-700', !favorited);
+    btn.classList.toggle('btn-danger', favorited);
+    btn.classList.toggle('text-white', favorited);
+    btn.classList.toggle('btn-outline-danger', !favorited);
 
     const icon = btn.querySelector('.favorite-icon');
     if (icon) {
-        icon.textContent = favorited ? '❤️' : '🤍';
+        icon.innerHTML = favorited ? '<i class="bi bi-heart-fill text-danger"></i>' : '<i class="bi bi-heart"></i>';
     }
 }
 

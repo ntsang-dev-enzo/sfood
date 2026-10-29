@@ -1,170 +1,159 @@
 @extends('layouts.app')
-@section('title', 'Công thức nấu ăn - SFood')
+@section('title', 'Công Thức Nấu Ăn & Thực Đơn Món Ngon - SFood')
+
 @section('content')
-<div class="bg-earth-800 text-cream-50 py-12">
-    <div class="max-w-7xl mx-auto px-4">
-        <h1 class="text-3xl font-bold">Công thức & Video nấu ăn</h1>
-        <p class="text-cream-300 mt-2">Học nấu ăn và mua nhanh nguyên liệu</p>
+<div class="bg-success text-white py-4 shadow-sm" style="background: linear-gradient(135deg, #2b2d42 0%, #3d2c1e 100%);">
+    <div class="container">
+        <h1 class="h3 fw-bold mb-1"><i class="bi bi-journal-richtext me-2"></i>Công Thức Món Ngon Mỗi Ngày</h1>
+        <p class="text-white-50 mb-0 small">Học nấu ăn ngon và đặt mua nhanh nguyên liệu tươi sạch chỉ với 1 chạm</p>
     </div>
 </div>
 
-<div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="max-w-xl mb-6">
-        @include('partials.search-box', [
-            'action' => route('recipes.index'),
-            'aiAction' => route('recipes.ai-search'),
-            'value' => $search,
-            'placeholder' => 'Tìm công thức, món ăn...',
-            'showVoice' => true,
-        ])
+<div class="container py-4">
+    {{-- Search Bar --}}
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            @include('partials.search-box', [
+                'action' => route('recipes.index'),
+                'value' => $search,
+                'placeholder' => 'Tìm kiếm công thức, món ăn gia đình...',
+                'showVoice' => true,
+            ])
+        </div>
     </div>
 
-    <!-- Filter Module -->
-    <form method="GET" action="{{ route('recipes.index') }}" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-cream-200 dark:border-gray-700 mb-8 flex flex-wrap gap-4 items-end">
-        @if($search)
-            <input type="hidden" name="search" value="{{ $search }}">
-        @endif
-        
-        <div class="flex-1 min-w-[150px]">
-            <label class="block text-sm font-bold text-earth-700 mb-1">Danh mục</label>
-            <select name="category" class="w-full border-cream-200 rounded-lg focus:ring-leaf-500 focus:border-leaf-500 text-sm">
-                <option value="">Tất cả danh mục</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->slug }}" {{ $categorySlug === $cat->slug ? 'selected' : '' }}>{{ $cat->name }}</option>
-                @endforeach
-            </select>
-        </div>
+    {{-- Bộ lọc công thức (Bootstrap 5 Form) --}}
+    <div class="card border-0 shadow-sm p-3 mb-4 rounded-3 bg-white">
+        <form method="GET" action="{{ route('recipes.index') }}">
+            @if($search)
+                <input type="hidden" name="search" value="{{ $search }}">
+            @endif
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Danh mục món</label>
+                    <select name="category" class="form-select form-select-sm shadow-none">
+                        <option value="">-- Tất cả danh mục --</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->slug }}" {{ $categorySlug === $cat->slug ? 'selected' : '' }}>{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-        <div class="flex-1 min-w-[200px]">
-            <label class="block text-sm font-bold text-earth-700 mb-1">Thời gian nấu (phút)</label>
-            <div class="flex items-center gap-2">
-                <input type="number" name="min_time" value="{{ $minTime }}" placeholder="Từ" class="w-full border-cream-200 rounded-lg focus:ring-leaf-500 focus:border-leaf-500 text-sm">
-                <span class="text-earth-400">-</span>
-                <input type="number" name="max_time" value="{{ $maxTime }}" placeholder="Đến" class="w-full border-cream-200 rounded-lg focus:ring-leaf-500 focus:border-leaf-500 text-sm">
+                <div class="col-12 col-md-4 col-lg-4">
+                    <label class="form-label small fw-bold text-muted mb-1">Thời gian nấu (phút)</label>
+                    <div class="input-group input-group-sm">
+                        <input type="number" name="min_time" value="{{ $minTime }}" placeholder="Từ" class="form-control" min="0">
+                        <span class="input-group-text bg-light border-start-0 border-end-0">-</span>
+                        <input type="number" name="max_time" value="{{ $maxTime }}" placeholder="Đến" class="form-control" min="0">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label small fw-bold text-muted mb-1">Sắp xếp</label>
+                    <select name="sort" class="form-select form-select-sm shadow-none">
+                        <option value="newest" {{ $sort === 'newest' ? 'selected' : '' }}>Mới nhất</option>
+                        <option value="shortest" {{ $sort === 'shortest' ? 'selected' : '' }}>Nấu nhanh nhất</option>
+                        <option value="popular" {{ $sort === 'popular' ? 'selected' : '' }}>Phổ biến nhất</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-lg-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-success fw-bold flex-grow-1">Lọc món</button>
+                    <a href="{{ route('recipes.index') }}" class="btn btn-sm btn-outline-secondary">Xóa</a>
+                </div>
             </div>
-        </div>
+        </form>
+    </div>
 
-        <div class="flex-1 min-w-[150px]">
-            <label class="block text-sm font-bold text-earth-700 mb-1">Sắp xếp</label>
-            <select name="sort" class="w-full border-cream-200 rounded-lg focus:ring-leaf-500 focus:border-leaf-500 text-sm">
-                <option value="newest" {{ $sort === 'newest' ? 'selected' : '' }}>Mới nhất</option>
-                <option value="shortest" {{ $sort === 'shortest' ? 'selected' : '' }}>Thời gian ngắn nhất</option>
-                <option value="popular" {{ $sort === 'popular' ? 'selected' : '' }}>Phổ biến nhất</option>
-            </select>
-        </div>
-
-        <div class="flex gap-2 w-full md:w-auto">
-            <button type="submit" class="btn-primary flex-1 md:w-auto h-[42px] px-6">Lọc kết quả</button>
-            <a href="{{ route('recipes.index') }}" class="flex items-center justify-center h-[42px] px-4 text-earth-600 bg-cream-100 hover:bg-cream-200 rounded-xl transition font-medium border border-cream-200">Xóa lọc</a>
-        </div>
-    </form>
-
-    @if(isset($aiResults) && isset($aiResults['recipes']) && count($aiResults['recipes']) > 0)
-        <div class="mb-8 bg-gradient-to-br from-orange-50 to-cream-50 dark:from-gray-800 dark:to-gray-900 border border-orange-200 dark:border-gray-700 shadow-sm rounded-xl p-5">
-            <div class="flex items-center gap-2 mb-4">
-                <span class="text-2xl">✨</span>
-                <h2 class="text-lg font-bold text-orange-800 dark:text-orange-400">Kết quả tìm kiếm bằng hình ảnh</h2>
-            </div>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach(collect($aiResults['recipes'] ?? [])->take(6) as $res)
-                    @php
-                        $r = null;
-                        if ($res instanceof \App\Models\Recipe) {
-                            $r = $res;
-                        } elseif (is_array($res)) {
-                            $rId = $res['id'] ?? $res['recipe_id'] ?? null;
-                            if ($rId) $r = \App\Models\Recipe::find($rId);
-                        } elseif (is_numeric($res) || is_string($res)) {
-                            $r = \App\Models\Recipe::find($res);
-                        } elseif (is_object($res)) {
-                            $rId = $res->id ?? $res->recipe_id ?? null;
-                            if ($rId) $r = \App\Models\Recipe::find($rId);
-                        }
-                    @endphp
-                    @if($r)
-                        @include('partials.recipe-card', ['recipe' => $r])
-                    @else
-                        <div class="p-4 bg-red-100 text-red-800">
-                            <p>Debug: Không thể hiển thị công thức.</p>
-                            <p>Type of res: {{ gettype($res) }}</p>
-                            <p>Class of res: {{ is_object($res) ? get_class($res) : 'N/A' }}</p>
-                            <p>Dump: {{ json_encode($res) }}</p>
+    {{-- Main Content: Danh sách công thức & Sidebar Voucher --}}
+    <div class="row g-4">
+        {{-- Danh sách bài viết công thức (Col 8/9) --}}
+        <div class="col-lg-8 col-xl-9">
+            @if ($recipes->count() > 0)
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3 g-md-4">
+                    @foreach ($recipes as $recipe)
+                        <div class="col">
+                            @include('partials.recipe-card', ['recipe' => $recipe])
                         </div>
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    @endif
+                    @endforeach
+                </div>
 
-    <div class="grid lg:grid-cols-4 gap-8">
-        <!-- Recipes List -->
-        <div class="lg:col-span-3">
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse ($recipes as $recipe)
-                    @include('partials.recipe-card', ['recipe' => $recipe])
-                @empty
-                    <p class="col-span-full text-center text-earth-500 py-12">Chưa có công thức nào.</p>
-                @endforelse
-            </div>
-            
-            <div class="mt-10">{{ $recipes->links() }}</div>
+                @if($recipes->hasPages())
+                    <div class="d-flex justify-content-center mt-5">
+                        {{ $recipes->links() }}
+                    </div>
+                @endif
+            @else
+                <div class="card border-0 shadow-sm rounded-4 bg-white text-center py-5 px-3 my-2 w-100">
+                    <div class="card-body py-5">
+                        <div class="mb-4">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light border p-4 shadow-sm" style="width: 96px; height: 96px;">
+                                <i class="bi bi-journal-x text-secondary" style="font-size: 2.75rem;"></i>
+                            </span>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-2">Chưa có công thức phù hợp</h4>
+                        <p class="text-muted mx-auto mb-4" style="max-width: 520px; font-size: 0.95rem;">
+                            Hãy thử tìm kiếm với từ khóa khác hoặc xóa bớt bộ lọc thời gian để khám phá thêm nhiều món ngon.
+                        </p>
+                        <a href="{{ route('recipes.index') }}" class="btn btn-success fw-bold px-4 py-2.5 rounded-pill shadow-sm">
+                            Xem tất cả công thức
+                        </a>
+                    </div>
+                </div>
+            @endif
         </div>
 
-        <!-- Voucher Sidebar -->
-        <div class="lg:col-span-1">
-            <div class="sticky top-24">
-                <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-5 border border-orange-200 dark:border-gray-700 shadow-sm mb-6">
-                    <h3 class="font-bold text-lg text-orange-800 dark:text-orange-400 mb-4 flex items-center gap-2">
-                        <span>🎁</span> Trạm Khuyến Mãi
-                    </h3>
-                    <p class="text-sm text-orange-700 dark:text-orange-300 mb-4">Sưu tầm mã giảm giá để mua nguyên liệu rẻ hơn nhé!</p>
-                    
-                    <div class="space-y-4">
+        {{-- Sidebar Trạm Khuyến Mãi (Col 4/3) --}}
+        <div class="col-lg-4 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #fff3cd 0%, #ffecb5 100%);">
+                <div class="card-header bg-warning border-0 py-3 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-ticket-perforated-fill fs-5"></i>
+                    <h6 class="fw-bold mb-0">Trạm Khuyến Mãi</h6>
+                </div>
+                <div class="card-body p-3">
+                    <p class="small text-muted mb-3">Lưu ngay mã giảm giá để mua nguyên liệu nấu ăn tiết kiệm hơn:</p>
+                    <div class="d-flex flex-column gap-3">
                         @forelse ($coupons as $coupon)
                             @php
                                 $isCollected = in_array($coupon->id, $collectedIds);
                                 $isUsedUp = $coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit;
                             @endphp
-                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-orange-200 dark:border-gray-700 overflow-hidden {{ $isUsedUp ? 'opacity-70 grayscale' : '' }}">
-                                <div class="p-4 border-b border-dashed border-orange-200 dark:border-gray-700 relative">
-                                    <div class="absolute -bottom-2 -left-2 w-4 h-4 bg-orange-50 dark:bg-gray-900 rounded-full border border-orange-200 dark:border-gray-700"></div>
-                                    <div class="absolute -bottom-2 -right-2 w-4 h-4 bg-orange-50 dark:bg-gray-900 rounded-full border border-orange-200 dark:border-gray-700"></div>
-                                    
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h4 class="font-bold text-earth-800 dark:text-gray-200">
-                                            @if ($coupon->type === 'percent') Giảm {{ $coupon->value }}%
-                                            @elseif ($coupon->type === 'fixed') Giảm {{ number_format($coupon->value) }}đ
-                                            @else Free Ship
-                                            @endif
-                                        </h4>
-                                    </div>
-                                    @if ($coupon->min_order_amount > 0)
-                                        <p class="text-xs text-earth-600 dark:text-gray-400">Đơn từ {{ number_format($coupon->min_order_amount) }}đ</p>
-                                    @endif
-                                    <p class="font-mono font-bold text-sm text-leaf-600 mt-2 bg-cream-50 dark:bg-gray-700 px-2 py-1 rounded inline-block">{{ $coupon->code }}</p>
+                            <div class="card border-0 shadow-sm rounded-3 bg-white p-3 {{ $isUsedUp ? 'opacity-50' : '' }}">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge bg-danger">
+                                        @if ($coupon->type === 'percent') Giảm {{ $coupon->value }}%
+                                        @elseif ($coupon->type === 'fixed') Giảm {{ number_format($coupon->value) }}₫
+                                        @else Freeship
+                                        @endif
+                                    </span>
+                                    <code class="fw-bold text-success">{{ $coupon->code }}</code>
                                 </div>
-                                <div class="p-3 bg-cream-50 dark:bg-gray-900 flex flex-col gap-2">
+                                @if ($coupon->min_order_amount > 0)
+                                    <small class="text-muted">Đơn từ {{ number_format($coupon->min_order_amount) }}₫</small>
+                                @endif
+                                <div class="mt-2">
                                     @if($isUsedUp)
-                                        <button class="w-full text-xs py-2 rounded-lg font-medium bg-gray-200 dark:bg-gray-700 text-gray-500 cursor-not-allowed" disabled>Hết lượt</button>
+                                        <button class="btn btn-sm btn-secondary w-100 disabled py-1" style="font-size: 0.75rem;">Hết lượt</button>
                                     @elseif($isCollected)
-                                        <button class="w-full text-xs py-2 rounded-lg font-medium bg-cream-200 dark:bg-gray-800 text-earth-600 dark:text-gray-400 border border-cream-300 dark:border-gray-600 pointer-events-none" disabled>✓ Đã thu thập</button>
+                                        <button class="btn btn-sm btn-outline-success w-100 disabled py-1" style="font-size: 0.75rem;"><i class="bi bi-check-circle me-1"></i>Đã lưu</button>
                                     @else
-                                        <button onclick="collectVoucher({{ $coupon->id }}, this)" class="w-full text-xs py-2 rounded-lg font-medium bg-leaf-600 text-white hover:bg-leaf-700 transition shadow-sm">Thu thập ngay</button>
+                                        <button onclick="collectVoucher({{ $coupon->id }}, this)" class="btn btn-sm btn-success w-100 py-1" style="font-size: 0.75rem;">Thu thập ngay</button>
                                     @endif
                                 </div>
                             </div>
                         @empty
-                            <p class="text-sm text-earth-500">Chưa có mã giảm giá nào.</p>
+                            <p class="small text-muted mb-0">Hiện chưa có mã giảm giá nào.</p>
                         @endforelse
                     </div>
-                    
-                    <a href="{{ route('vouchers.index') }}" class="block text-center text-sm font-medium text-orange-700 dark:text-orange-400 hover:text-orange-800 mt-4 transition">Xem tất cả ></a>
+                    <a href="{{ route('vouchers.index') }}" class="btn btn-outline-dark btn-sm w-100 mt-3 fw-semibold">
+                        Xem tất cả mã giảm giá <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-@push('scripts')
 <script>
     async function collectVoucher(id, btn) {
         @if(!Auth::check())
@@ -173,7 +162,7 @@
         @endif
 
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="animate-pulse">Đang lưu...</span>';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang lưu...';
         btn.disabled = true;
 
         try {
@@ -188,21 +177,18 @@
             const data = await res.json();
             
             if (res.ok) {
-                btn.className = "w-full text-xs py-2 rounded-lg font-medium bg-cream-200 dark:bg-gray-800 text-earth-600 dark:text-gray-400 border border-cream-300 dark:border-gray-600 pointer-events-none";
-                btn.innerHTML = "✓ Đã thu thập";
-                alert(data.message);
+                btn.className = "btn btn-sm btn-outline-success w-100 disabled py-1";
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Đã lưu';
+                alert(data.message || 'Lưu mã giảm giá thành công!');
             } else {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                alert(data.message || 'Có lỗi xảy ra');
+                alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
             }
-        } catch(e) {
+        } catch (e) {
             btn.innerHTML = originalText;
             btn.disabled = false;
-            alert('Lỗi kết nối');
         }
     }
 </script>
-@endpush
-</div>
 @endsection

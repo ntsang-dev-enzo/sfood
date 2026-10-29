@@ -32,7 +32,6 @@ Route::post('/ma-giam-gia/luu/{coupon}', [\App\Http\Controllers\PromoController:
 Route::post('/coupon/validate', [App\Http\Controllers\CouponController::class, 'validateForCart'])->name('coupon.validate');
 Route::post('/coupon/remove', [App\Http\Controllers\CouponController::class, 'remove'])->name('coupon.remove');
 
-Route::post('/search/ai-global', [SearchController::class, 'aiSearchGlobal'])->name('search.ai-global');
 Route::get('/goi-y', [SearchController::class, 'suggest'])->name('search.suggest');
 
 Route::get('/gioi-thieu', [PageController::class, 'about'])->name('about');
@@ -46,17 +45,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/chat-truc-tuyen/send', [\App\Http\Controllers\ClientChatController::class, 'sendMessage'])->name('live-chat.send');
 });
 
-Route::post('/ai-chat', [\App\Http\Controllers\ChatController::class, 'send'])->name('ai.chat');
-Route::post('/ai-chat/image', [\App\Http\Controllers\ChatController::class, 'chatImage'])->name('ai.chat.image');
 Route::get('/san-pham', [ProductController::class, 'index'])->name('products.index');
-Route::post('/san-pham/ai-search', [ProductController::class, 'aiSearch'])->name('products.ai-search');
 Route::get('/san-pham/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/san-pham/{product:slug}/suggestions', [ProductController::class, 'suggestions'])->name('products.suggestions');
 Route::post('/san-pham/{product:slug}/cart', [ProductController::class, 'addToCart'])->name('products.add-to-cart');
 Route::post('/san-pham/{product:slug}/favorite', [ProductController::class, 'toggleFavorite'])->middleware('auth')->name('products.favorite');
 
 Route::get('/cong-thuc', [RecipeController::class, 'index'])->name('recipes.index');
-Route::post('/cong-thuc/ai-search', [RecipeController::class, 'aiSearch'])->name('recipes.ai-search');
 Route::get('/cong-thuc/{recipe:slug}', [RecipeController::class, 'show'])->name('recipes.show');
 Route::post('/cong-thuc/{recipe:slug}/mua-nhanh', [RecipeController::class, 'quickBuy'])->name('recipes.quick-buy');
 Route::post('/cong-thuc/{recipe:slug}/favorite', [RecipeController::class, 'toggleFavorite'])->middleware('auth')->name('recipes.favorite');
@@ -97,19 +92,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
 });
 
-Route::get('/dang-nhap', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/dang-nhap', [AuthController::class, 'login']);
-Route::get('/dang-ky', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/dang-ky', [AuthController::class, 'register']);
-Route::post('/dang-xuat', [AuthController::class, 'logout'])->name('logout');
+Route::middleware('guest')->group(function () {
+    Route::get('/dang-nhap', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/dang-nhap', [AuthController::class, 'login']);
+    Route::get('/dang-ky', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/dang-ky', [AuthController::class, 'register']);
 
-Route::get('/quen-mat-khau', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
-Route::post('/quen-mat-khau', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
-Route::get('/dat-lai-mat-khau/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-Route::post('/dat-lai-mat-khau', [PasswordResetController::class, 'resetPassword'])->name('password.store');
+    Route::get('/quen-mat-khau', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/quen-mat-khau', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/dat-lai-mat-khau/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/dat-lai-mat-khau', [PasswordResetController::class, 'resetPassword'])->name('password.store');
 
-Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+    Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+});
+
+Route::post('/dang-xuat', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::get('/payment/callback/{gateway}', [PaymentController::class, 'callback'])->name('payment.callback');
 Route::post('/payment/webhook/payos', [PaymentController::class, 'payosWebhook'])->name('payment.payos.webhook');

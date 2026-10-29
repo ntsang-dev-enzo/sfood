@@ -1,73 +1,95 @@
 @extends('layouts.app')
 @section('title', 'Thu thập Voucher - SFood')
-@section('content')
-    <div class="bg-gradient-to-r from-earth-800 to-earth-700 text-cream-50 py-12">
-        <div class="max-w-7xl mx-auto px-4">
-            <h1 class="text-3xl font-bold">Trạm Khuyến Mãi</h1>
-            <p class="text-cream-300 mt-2">Săn mã giảm giá, mua sắm thả ga</p>
-        </div>
-    </div>
 
-    <div class="max-w-7xl mx-auto px-4 py-12">
+@section('content')
+<div class="bg-body-tertiary py-4 min-vh-100">
+    <div class="container py-2">
+        {{-- Breadcrumb --}}
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-white p-3 rounded-3 shadow-sm border mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>{{ __('app.home_title') }}</a></li>
+                <li class="breadcrumb-item active fw-semibold" aria-current="page">Trạm Voucher Khuyến Mãi</li>
+            </ol>
+        </nav>
+
+        <div class="p-4 p-md-5 rounded-4 text-white mb-4 shadow-sm" style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2">
+                        <i class="bi bi-stars me-1"></i> Ưu đãi độc quyền SFood
+                    </span>
+                    <h2 class="fw-bold mb-2">Trạm Săn Mã Giảm Giá</h2>
+                    <p class="text-white-50 mb-0">Thu thập các mã giảm giá hấp dẫn để nhận ưu đãi trực tiếp khi thanh toán đơn hàng.</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{{ route('profile.coupons') }}" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
+                        <i class="bi bi-wallet2 me-1"></i> Xem ví voucher của tôi
+                    </a>
+                </div>
+            </div>
+        </div>
+
         @if ($coupons->count())
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 @foreach ($coupons as $coupon)
                     @php
                         $isCollected = in_array($coupon->id, $collectedIds);
                         $isUsedUp = $coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit;
                     @endphp
-                    <div class="bg-white rounded-2xl shadow-sm border border-cream-200 overflow-hidden flex flex-col relative {{ $isUsedUp ? 'opacity-70 grayscale' : '' }}">
-                        <div class="p-6 flex-1 flex flex-col items-center text-center border-b border-dashed border-cream-300 relative bg-cream-50">
-                            <!-- Notch cuts for ticket effect -->
-                            <div class="absolute -bottom-3 -left-3 w-6 h-6 bg-cream-100 dark:bg-[#121212] rounded-full border border-cream-200"></div>
-                            <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-cream-100 dark:bg-[#121212] rounded-full border border-cream-200"></div>
-                            
-                            <span class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-leaf-100 text-leaf-600 mb-4">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
-                            </span>
-                            
-                            <h3 class="font-bold text-xl text-earth-800 mb-2">
-                                @if ($coupon->type === 'percent') Giảm {{ $coupon->value }}%
-                                @elseif ($coupon->type === 'fixed') Giảm {{ number_format($coupon->value) }}đ
-                                @else Miễn phí vận chuyển
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden {{ $isUsedUp ? 'bg-light opacity-75' : 'bg-white' }}">
+                            <div class="p-4 text-center border-bottom border-dashed bg-light">
+                                <span class="badge bg-danger rounded-pill px-3 py-1.5 mb-2 fs-6">
+                                    @if ($coupon->type === 'percent') Giảm {{ $coupon->value }}%
+                                    @elseif ($coupon->type === 'fixed') Giảm {{ number_format($coupon->value) }}đ
+                                    @else Miễn phí vận chuyển
+                                    @endif
+                                </span>
+                                @if ($coupon->min_order_amount > 0)
+                                    <div class="small text-muted mb-2">Cho đơn từ {{ number_format($coupon->min_order_amount) }}đ</div>
                                 @endif
-                            </h3>
-                            
-                            @if ($coupon->min_order_amount > 0)
-                                <p class="text-sm text-earth-600">Cho đơn từ {{ number_format($coupon->min_order_amount) }}đ</p>
-                            @endif
-                            <p class="font-mono font-bold text-lg text-leaf-600 mt-3 bg-white px-4 py-1.5 rounded-lg border border-leaf-200 shadow-sm">{{ $coupon->code }}</p>
-                        </div>
-                        <div class="p-6 bg-white flex flex-col justify-between">
-                            <div class="text-xs text-earth-500 mb-4 space-y-1">
-                                @if ($coupon->expires_at)
-                                    <p>HSD: {{ $coupon->expires_at->format('d/m/Y H:i') }}</p>
-                                @endif
-                                @if ($coupon->usage_limit)
-                                    <p>Đã dùng: {{ $coupon->used_count }}/{{ $coupon->usage_limit }}</p>
+                                <div class="font-monospace fw-bold fs-4 text-success bg-white py-1 px-3 rounded-3 border d-inline-block shadow-sm">
+                                    {{ $coupon->code }}
+                                </div>
+                            </div>
+                            <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div class="small text-muted mb-3">
+                                    @if ($coupon->expires_at)
+                                        <div><i class="bi bi-clock me-1"></i>HSD: {{ $coupon->expires_at->format('d/m/Y H:i') }}</div>
+                                    @endif
+                                    @if ($coupon->usage_limit)
+                                        <div><i class="bi bi-people me-1"></i>Đã dùng: {{ $coupon->used_count }}/{{ $coupon->usage_limit }} lượt</div>
+                                    @endif
+                                </div>
+                                
+                                @if($isUsedUp)
+                                    <button class="btn btn-secondary w-100 rounded-pill py-2 disabled" disabled>Đã hết lượt</button>
+                                @elseif($isCollected)
+                                    <button class="btn btn-outline-secondary w-100 rounded-pill py-2 disabled" disabled><i class="bi bi-check-lg me-1"></i>Đã thu thập</button>
+                                @else
+                                    <button onclick="collectVoucher({{ $coupon->id }}, this)" class="btn btn-success w-100 rounded-pill py-2 fw-semibold shadow-sm">
+                                        <i class="bi bi-box-arrow-in-down me-1"></i> Thu thập ngay
+                                    </button>
                                 @endif
                             </div>
-                            
-                            @if($isUsedUp)
-                                <button class="btn-secondary w-full opacity-50 cursor-not-allowed" disabled>Đã hết lượt</button>
-                            @elseif($isCollected)
-                                <button class="btn-outline w-full bg-cream-100 text-earth-600 border-cream-200 pointer-events-none" disabled>✓ Đã thu thập</button>
-                            @else
-                                <button onclick="collectVoucher({{ $coupon->id }}, this)" class="btn-primary w-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">Thu thập ngay</button>
-                            @endif
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
-            <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-cream-300">
-                <div class="text-6xl mb-4">🎫</div>
-                <h2 class="text-2xl font-bold text-earth-800 mb-2">Chưa có mã giảm giá nào</h2>
-                <p class="text-earth-500 mb-6">Hãy quay lại sau để nhận những ưu đãi hấp dẫn nhé!</p>
-                <a href="{{ route('products.index') }}" class="btn-primary inline-flex">Tiếp tục mua sắm</a>
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                <i class="bi bi-ticket-perforated display-3 text-muted opacity-50 mb-3"></i>
+                <h5 class="fw-bold text-dark">Chưa có mã giảm giá nào đang mở</h5>
+                <p class="text-muted small">Hãy quay lại sau để nhận những ưu đãi hấp dẫn từ SFood nhé!</p>
+                <div class="mt-2">
+                    <a href="{{ route('products.index') }}" class="btn btn-success rounded-pill px-4 py-2 fw-semibold">
+                        Tiếp tục mua sắm
+                    </a>
+                </div>
             </div>
         @endif
     </div>
+</div>
 
 @push('scripts')
 <script>
@@ -78,7 +100,7 @@
         @endif
 
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="animate-pulse">Đang lưu...</span>';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...';
         btn.disabled = true;
 
         try {
@@ -93,9 +115,8 @@
             const data = await res.json();
             
             if (res.ok) {
-                btn.className = "btn-outline w-full bg-cream-100 text-earth-600 border-cream-200 pointer-events-none";
-                btn.innerHTML = "✓ Đã thu thập";
-                // Show a mini toast
+                btn.className = "btn btn-outline-secondary w-100 rounded-pill py-2 disabled";
+                btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Đã thu thập';
                 alert(data.message);
             } else {
                 btn.innerHTML = originalText;
@@ -105,7 +126,7 @@
         } catch(e) {
             btn.innerHTML = originalText;
             btn.disabled = false;
-            alert('Lỗi kết nối');
+            alert('Lỗi kết nối máy chủ');
         }
     }
 </script>

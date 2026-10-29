@@ -13,6 +13,10 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
+        if (Auth::check()) {
+            return redirect()->route('home')->with('info', 'Bạn đã đăng nhập vào hệ thống.');
+        }
+
         return view('auth.login');
     }
 
@@ -27,17 +31,36 @@ class AuthController extends Controller
             'password.required' => 'Vui lòng nhập mật khẩu.',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            return redirect()->intended(route('home'));
+        // Kiểm tra xem tài khoản có tồn tại trong hệ thống hay chưa
+        $user = User::where('email', $credentials['email'])->first();
+        if (!$user) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors([
+                    'email' => 'Tài khoản chưa tồn tại trên hệ thống. Vui lòng đăng ký tài khoản mới trước khi đăng nhập.',
+                ]);
         }
 
-        return back()->withErrors(['email' => 'Email hoặc mật khẩu không đúng.']);
+        // Kiểm tra thông tin đăng nhập
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors([
+                    'password' => 'Mật khẩu không chính xác. Vui lòng thử lại hoặc bấm "Quên mật khẩu".',
+                ]);
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('home'));
     }
 
     public function showRegister()
     {
+        if (Auth::check()) {
+            return redirect()->route('home')->with('info', 'Bạn đã đăng nhập, không thể truy cập trang đăng ký.');
+        }
+
         return view('auth.register');
     }
 

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE breakfast_menu SYSTEM "breakfast-menu.dtd">
+<breakfast_menu>
+    <restaurant>
+        <name>SFood - Nông Sản &amp; Thực Phẩm Tươi Sống</name>
+        <phone>1900 6868</phone>
+        <address>123 Đường Nông Nghiệp Xanh, TP. Hồ Chí Minh</address>
+        <website>https://sfood.vn</website>
+    </restaurant>
+    
+    <food id="f01" category="mon_an_sang" status="available">
+        <name>Bánh Mì Thịt Nướng Rau Củ Hữu Cơ</name>
+        <price>35000</price>
+        <unit>Ổ</unit>
+        <calories>380 kcal</calories>
+        <description>Bánh mì giòn rụm kết hợp thịt nướng thảo mộc, dưa chuột và cà rốt ngâm giòn chuẩn vị.</description>
+        <origin>Đà Lạt, Lâm Đồng</origin>
+        <preparation_time>10 phút</preparation_time>
+        <image>/logo.png</image>
+    </food>
+
+    <food id="f02" category="mon_an_sang" status="available">
+        <name>Phở Bò Tươi Sạch Thượng Hạng</name>
+        <price>55000</price>
+        <unit>Tô</unit>
+        <calories>450 kcal</calories>
+        <description>Bánh phở tươi mềm, thịt thăn bò hữu cơ thái mỏng, nước dùng hầm xương 12 tiếng.</description>
+        <origin>Ba Vì, Hà Nội</origin>
+        <preparation_time>15 phút</preparation_time>
+        <image>/logo.png</image>
+    </food>
+
+    <food id="f03" category="rau_cu" status="available">
+        <name>Cải Xoăn Kale Hữu Cơ Chuẩn VietGAP</name>
+        <price>42000</price>
+        <unit>Gói 500g</unit>
+        <calories>49 kcal</calories>
+        <description>Rau siêu dinh dưỡng trồng nhà kính, giàu vitamin A, K, C, chất chống oxy hóa.</description>
+        <origin>Nông Trại SFood Đà Lạt</origin>
+        <preparation_time>5 phút</preparation_time>
+        <image>/logo.png</image>
+    </food>
+
+    <food id="f04" category="trai_cay" status="available">
+        <name>Dâu Tây Giống Nhật Cao Cấp</name>
+        <price>120000</price>
+        <unit>Hộp 500g</unit>
+        <calories>65 kcal</calories>
+        <description>Dâu tây mọng nước, vị ngọt thanh tự nhiên, thu hoạch thủ công vào mỗi sáng sớm.</description>
+        <origin>Đà Lạt, Lâm Đồng</origin>
+        <preparation_time>Ăn ngay</preparation_time>
+        <image>/logo.png</image>
+    </food>
+
+    <food id="f05" category="thit_tuoi" status="available">
+        <name>Thịt Bò Fuji Úc Cắt Lát Áp Chảo</name>
+        <price>185000</price>
+        <unit>Khay 400g</unit>
+        <calories>520 kcal</calories>
+        <description>Vân mỡ cẩm thạch mềm tan, thịt bò tươi sạch nhập khẩu nguyên tảng, trữ lạnh đạt chuẩn.</description>
+        <origin>Nhập khẩu Úc</origin>
+        <preparation_time>12 phút</preparation_time>
+        <image>/logo.png</image>
+    </food>
+
+    <food id="f06" category="hai_san" status="available">
+        <name>Cá Hồi Na Uy Tươi Phi Lê</name>
+        <price>230000</price>
+        <unit>Khay 300g</unit>
+        <calories>410 kcal</calories>
+        <description>Giàu Omega-3 và Protein, thịt cá cam sáng tự nhiên, thích hợp ăn sống sashimi hoặc áp chảo.</description>
+        <origin>Biển Na Uy</origin>
+        <preparation_time>10 phút</preparation_time>
+        <image>/logo.png</image>
+    </food>
+
+    <food id="f07" category="mon_an_sang" status="available">
+        <name>Salad Trứng Gà Ta &amp; Quả Bơ Sáp</name>
+        <price>48000</price>
+        <unit>Phần</unit>
+        <calories>310 kcal</calories>
+        <description>Bữa sáng lành mạnh eat-clean, bơ 034 dẻo béo cùng trứng gà ta lòng đào và sốt mè rang.</description>
+        <origin>Đắk Lắk</origin>
+        <preparation_time>8 phút</preparation_time>
+        <image>/logo.png</image>
+    </food>
+
+    <food id="f08" category="trai_cay" status="available">
+        <name>Bơ Sáp 034 Đặc Sản Lâm Đồng</name>
+        <price>65000</price>
+        <unit>Kg</unit>
+        <calories>160 kcal</calories>
+        <description>Quả thon dài, hạt nhỏ, cơm dày màu vàng mỡ gà, béo ngậy thơm ngon.</description>
+        <origin>Bảo Lộc, Lâm Đồng</origin>
+        <preparation_time>Ăn ngay</preparation_time>
+        <image>/logo.png</image>
+    </food>
+</breakfast_menu>

@@ -4,932 +4,1003 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'SFood - Thực phẩm tươi sống')</title>
-    <meta name="description" content="SFood - Cửa hàng thực phẩm tươi sống, giao hàng nhanh, AI tìm kiếm thông minh">
+    <title>@yield('title', 'SFood - Nông Sản & Thực Phẩm Tươi Sống')</title>
+    <meta name="description" content="SFood - Cửa hàng thực phẩm tươi sống, nông sản hữu cơ đạt chuẩn VietGAP, giao hàng nhanh trong ngày.">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=be-vietnam-pro:400,500,600,700" rel="stylesheet" />
-    <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 & Bootstrap Icons (Local & CDN Fallback) -->
+    <link href="{{ asset('bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('bootstrap/icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- App Assets (Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        :root {
+            --bs-primary: #2d6a4f;
+            --bs-primary-rgb: 45, 106, 79;
+            --bs-success: #2d6a4f;
+            --bs-success-rgb: 45, 106, 79;
+            --sfood-primary: #2d6a4f;
+            --sfood-primary-hover: #1b4332;
+            --sfood-accent: #40916c;
+            --sfood-cream: #faf7f2;
+            --sfood-earth: #3d2c1e;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--sfood-cream);
+            color: #2b2d42;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bg-sfood-primary {
+            background-color: var(--sfood-primary) !important;
+        }
+
+        .bg-sfood-dark {
+            background-color: var(--sfood-earth) !important;
+        }
+
+        .text-sfood-primary {
+            color: var(--sfood-primary) !important;
+        }
+
+        .btn-success, .btn-primary {
+            background-color: var(--sfood-primary);
+            border-color: var(--sfood-primary);
+        }
+
+        .btn-success:hover, .btn-primary:hover {
+            background-color: var(--sfood-primary-hover);
+            border-color: var(--sfood-primary-hover);
+        }
+
+        .btn-outline-success {
+            color: var(--sfood-primary);
+            border-color: var(--sfood-primary);
+        }
+
+        .btn-outline-success:hover {
+            background-color: var(--sfood-primary);
+            border-color: var(--sfood-primary);
+            color: #fff;
+        }
+
+        .navbar-brand img {
+            height: 44px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--sfood-primary) !important;
+        }
+
+        .dropdown-item:active, .dropdown-item.active {
+            background-color: var(--sfood-primary);
+        }
+
+        /* Product & Recipe Cards */
+        .card-product {
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 1rem;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .card-product:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+        }
+
+        /* Suggest dropdown */
+        /* Hover effects */
+        .hover-success {
+            transition: all 0.2s ease;
+        }
+        .hover-success:hover {
+            color: #198754 !important;
+            background-color: rgba(25, 135, 84, 0.08);
+        }
+
+        /* Mega Menu 3 Cột Hiển Thị Khi Hover */
+        .header-nav-container {
+            position: relative !important;
+        }
+
+        @media (min-width: 992px) {
+            .nav-item.dropdown-hover {
+                position: static !important;
+            }
+            .mega-menu-3cols {
+                position: absolute !important;
+                top: 100% !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                background: #ffffff;
+                border-radius: 0.85rem;
+                box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.16);
+                border: 1px solid rgba(0, 0, 0, 0.08);
+                padding: 1.5rem;
+                z-index: 1060;
+                display: none !important;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateY(6px);
+                transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+            }
+            /* Chỉ hiển thị khi có class is-open (kích hoạt khi hover đúng nút Sản phẩm) */
+            .mega-menu-3cols.is-open {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+                transform: translateY(0) !important;
+            }
+        }
+
+        .hover-category-item {
+            transition: all 0.15s ease-in-out;
+            color: #334155;
+            text-decoration: none;
+        }
+        .hover-category-item:hover {
+            background-color: #f0fdf4 !important;
+            color: #15803d !important;
+            transform: translateX(4px);
+        }
+
+        .suggest-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            max-height: 320px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggest-dropdown.active {
+            display: block;
+        }
+
+        /* Mini cart offcanvas/dropdown */
+        .cart-badge {
+            font-size: 0.65rem;
+            padding: 0.35em 0.55em;
+        }
+
+        /* Voice search button seamless integration */
+        .voice-search-btn {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+        .voice-search-btn:focus, .voice-search-btn:active {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+    </style>
+
+    @stack('styles')
 </head>
 
-<body class="bg-cream-100 dark:bg-[#121212] text-earth-800 dark:text-gray-300 font-sans antialiased min-h-screen flex flex-col">
-    {{-- Top bar --}}
-    <div class="bg-earth-800 text-cream-200 text-[11px] sm:text-xs">
-        <div class="max-w-7xl mx-auto px-4 py-1.5 flex justify-between items-center">
-            <span class="truncate">{{ __('app.free_shipping') }}<span class="sm:hidden">{{ __('app.freeship_short') }}</span></span>
-            <div class="flex items-center gap-3 sm:gap-4">
+<body>
+    {{-- Top Bar (Bootstrap 5 Utilities) --}}
+    <div class="bg-sfood-dark text-white py-1 small">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-truck text-warning"></i>
+                <span class="d-none d-sm-inline">{{ __('app.free_shipping', ['default' => 'Miễn phí vận chuyển cho đơn hàng từ 300.000₫']) }}</span>
+                <span class="d-inline d-sm-none">Freeship từ 300k</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
                 @auth
-                    <a href="{{ route('favorites.index') }}" class="hover:text-white transition hidden sm:inline">Yêu thích</a>
-                    <a href="{{ route('orders.index') }}" class="hover:text-white transition hidden sm:inline">{{ __('nav.orders') }}</a>
+                    <a href="{{ route('favorites.index') }}" class="text-white text-decoration-none d-none d-md-inline opacity-75 hover-opacity-100">
+                        <i class="bi bi-heart me-1"></i>Yêu thích
+                    </a>
+                    <a href="{{ route('orders.index') }}" class="text-white text-decoration-none d-none d-md-inline opacity-75 hover-opacity-100">
+                        <i class="bi bi-box-seam me-1"></i>{{ __('nav.orders', ['default' => 'Đơn hàng']) }}
+                    </a>
                 @endauth
-                
-                <div class="flex items-center gap-2 sm:border-l sm:border-earth-600 sm:pl-3 pl-1">
-                    {{-- Language Switcher (Small) --}}
-                    @if(session('locale', 'vi') === 'en')
-                        <a href="{{ route('lang.switch', 'vi') }}" class="hover:scale-110 transition text-sm leading-none" title="Tiếng Việt">🇻🇳</a>
-                    @else
-                        <a href="{{ route('lang.switch', 'en') }}" class="hover:scale-110 transition text-sm leading-none" title="English">🇺🇸</a>
-                    @endif
 
-                    {{-- Dark Mode Toggle (Small) --}}
-                    <button type="button" id="theme-toggle" class="hover:text-white transition text-cream-200 ml-0.5" title="Đổi giao diện">
-                        <svg id="theme-toggle-light-icon" class="hidden w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
-                        </svg>
-                        <svg id="theme-toggle-dark-icon" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-                        </svg>
-                    </button>
+                {{-- Chuyển đổi ngôn ngữ --}}
+                <div class="d-flex align-items-center gap-2 border-start border-secondary ps-3">
+                    @if(session('locale', 'vi') === 'en')
+                        <a href="{{ route('lang.switch', 'vi') }}" class="text-white text-decoration-none small" title="Tiếng Việt">
+                            <span class="badge bg-light text-dark fw-bold">VI</span> Tiếng Việt
+                        </a>
+                    @else
+                        <a href="{{ route('lang.switch', 'en') }}" class="text-white text-decoration-none small" title="English">
+                            <span class="badge bg-light text-dark fw-bold">EN</span> English
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Header --}}
-    <header class="bg-cream-50 dark:bg-[#1e1e1e] border-b border-cream-300 dark:border-gray-800 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex items-center gap-4 py-4">
-                <a href="{{ route('home') }}" class="flex items-center gap-3 flex-shrink-0">
-                    <img src="{{ asset('/logo.png') }}" alt="SFood Logo" class="w-auto h-12 rounded-xl object-contain shadow-sm border border-cream-200 dark:border-gray-700 bg-white">
-                    <div class="hidden sm:block">
-                        <p class="font-bold text-xl text-earth-800 dark:text-white leading-tight">SFood</p>
-                        <p class="text-[10px] text-leaf-600 dark:text-leaf-400 uppercase tracking-widest font-semibold">Fresh & Organic</p>
+    {{-- Header Chính (2 Tầng chuẩn E-commerce) --}}
+    <header class="bg-white sticky-top shadow-sm border-bottom">
+        {{-- Tầng 1: Logo, Search Box, Giỏ hàng, Tài khoản --}}
+        <div class="py-2 py-lg-3">
+            <div class="container d-flex align-items-center justify-content-between gap-3">
+                {{-- Brand Logo --}}
+                <a class="d-flex align-items-center gap-2 text-decoration-none text-dark flex-shrink-0" href="{{ route('home') }}">
+                    <img src="{{ asset('/logo.png') }}" alt="SFood Logo" style="height: 42px; width: auto;" class="rounded-2 shadow-sm border p-0.5 bg-white">
+                    <div class="d-none d-sm-block">
+                        <span class="fw-bold fs-4 text-success d-block lh-1">SFood</span>
+                        <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 1px;">Fresh &amp; Organic</small>
                     </div>
                 </a>
 
-                <div class="flex-1 max-w-xl hidden md:block">
+                {{-- Form Tìm kiếm trên Desktop (Rộng rãi ở giữa) --}}
+                <div class="d-none d-lg-block flex-grow-1 mx-4" style="max-width: 560px;">
                     @include('partials.search-box', ['size' => 'md'])
                 </div>
 
-                <div class="flex items-center gap-2 ml-auto">
+                {{-- Right Actions: Giỏ hàng, Tài khoản, Toggler --}}
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    {{-- Nút Giỏ Hàng mở Offcanvas (Không viền) --}}
+                    <button class="btn border-0 bg-light text-dark position-relative rounded-pill px-3 py-2 d-flex align-items-center gap-2 shadow-none" 
+                            type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCart" aria-controls="offcanvasCart" style="border: none !important;">
+                        <i class="bi bi-cart3 fs-5 text-success"></i>
+                        <span class="d-none d-sm-inline fw-semibold small">{{ __('app.cart', ['default' => 'Giỏ hàng']) }}</span>
+                        @php $cartCount = app(\App\Services\CartService::class)->count(); @endphp
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge {{ $cartCount > 0 ? '' : 'd-none' }}" data-cart-count>
+                            {{ $cartCount }}
+                        </span>
+                    </button>
 
-
-
+                    {{-- User Dropdown --}}
                     @auth
-                        <livewire:notification-bell />
-                    @endauth
-                    <div class="relative" id="cart-dropdown-wrapper">
-                        <button type="button" id="cart-dropdown-toggle"
-                            class="relative px-4 py-2.5 rounded-2xl bg-leaf-600 text-white hover:bg-leaf-700 hover:shadow-lg transition duration-300 flex items-center gap-2" title="Giỏ hàng">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span class="font-bold text-sm hidden sm:inline">{{ __('app.cart') }}</span>
-                            <span data-cart-count
-                                class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-cream-50 {{ ($cartCount ?? 0) > 0 ? '' : 'hidden' }}">{{ $cartCount ?? 0 }}</span>
-                        </button>
-
-                        {{-- Mini Cart Popup --}}
-                        <div id="mini-cart-dropdown" class="absolute top-full right-0 mt-2 w-[360px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 opacity-0 invisible transition-all duration-300 z-50 transform origin-top-right scale-95">
-                            <div class="p-4 border-b border-cream-100 dark:border-gray-700 flex flex-col gap-2">
-                                <div class="flex justify-between items-center">
-                                    <h4 class="font-bold text-earth-800 dark:text-gray-100">Giỏ hàng của bạn</h4>
-                                    <button type="button" id="mini-cart-clear-all" class="text-xs text-red-500 hover:text-red-700 transition font-medium px-2 py-1 bg-red-50 hover:bg-red-100 rounded-md">Xóa tất cả</button>
-                                </div>
-                                <label class="flex items-center gap-2 cursor-pointer text-sm text-earth-600 dark:text-gray-400 hover:text-earth-800 transition w-max">
-                                    <input type="checkbox" id="mini-cart-select-all" class="w-4 h-4 rounded text-leaf-600 focus:ring-leaf-500 border-gray-300">
-                                    <span>Chọn tất cả</span>
-                                </label>
-                            </div>
-                            @php
-                                $miniCartItems = app(\App\Services\CartService::class)->items();
-                                $miniCartSelectedSubtotal = app(\App\Services\CartService::class)->selectedSubtotal();
-                            @endphp
-                            <div class="max-h-80 overflow-y-auto p-2" id="mini-cart-items-container">
-                                @if($miniCartItems->isEmpty())
-                                    <div class="p-4 text-center text-sm text-gray-500" id="mini-cart-empty-msg">Giỏ hàng trống</div>
-                                @else
-                                    <div class="space-y-4 p-2">
-                                        @foreach($miniCartItems as $item)
-                                            <div class="flex items-start gap-3 mini-cart-item {{ !$item->is_selected ? 'opacity-60' : '' }}" data-id="{{ $item->id }}">
-                                                <div class="flex items-center h-14">
-                                                    <input type="checkbox" class="mini-cart-item-checkbox w-4 h-4 rounded text-leaf-600 focus:ring-leaf-500 border-gray-300 cursor-pointer" data-id="{{ $item->id }}" {{ $item->is_selected ? 'checked' : '' }}>
-                                                </div>
-                                                <img src="{{ \App\Support\MediaHelper::productImage($item->productVariant->product->thumbnail) }}" class="w-14 h-14 rounded-lg object-cover border border-cream-200" alt="">
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-bold text-earth-800 dark:text-gray-200 truncate">{{ $item->productVariant->product->name }}</p>
-                                                    <p class="text-xs text-gray-500 mb-1">{{ $item->productVariant->name }}</p>
-                                                    <div class="flex items-center gap-2">
-                                                        <div class="flex items-center border border-cream-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
-                                                            <button type="button" class="px-2 py-1 text-earth-500 hover:text-leaf-600 transition mini-cart-btn-minus" data-id="{{ $item->id }}">-</button>
-                                                            <input type="number" class="w-8 text-center text-xs font-medium border-x border-cream-200 dark:border-gray-700 bg-transparent mini-cart-input-qty focus:outline-none" data-id="{{ $item->id }}" value="{{ $item->quantity }}" min="1">
-                                                            <button type="button" class="px-2 py-1 text-earth-500 hover:text-leaf-600 transition mini-cart-btn-plus" data-id="{{ $item->id }}">+</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-col items-end justify-between h-14">
-                                                    <button type="button" class="text-gray-400 hover:text-red-500 transition mini-cart-btn-remove" data-id="{{ $item->id }}" title="Xóa">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                    </button>
-                                                    <div class="font-bold text-sm text-leaf-600 mini-cart-item-subtotal" data-id="{{ $item->id }}">
-                                                        {{ number_format($item->subtotal()) }}đ
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="p-4 border-t border-cream-100 dark:border-gray-700 bg-cream-50 dark:bg-gray-900 rounded-b-2xl {{ $miniCartItems->isEmpty() ? 'hidden' : '' }}" id="mini-cart-footer">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="text-sm font-medium text-earth-700 dark:text-gray-300">Tạm tính:</span>
-                                    <span class="font-bold text-lg text-earth-800 dark:text-white" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}đ</span>
-                                </div>
-                                <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" class="block w-full text-center bg-leaf-600 hover:bg-leaf-700 text-white font-bold py-2.5 rounded-xl transition shadow-md shadow-leaf-500/30 {{ $miniCartSelectedSubtotal > 0 ? '' : 'opacity-50 pointer-events-none' }}">Tiến hành thanh toán</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    @auth
-                        <div class="hidden sm:flex items-center gap-3">
-                            <a href="{{ route('profile') }}"
-                                class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-cream-200 transition"
-                                title="Tài khoản">
+                        <div class="dropdown d-none d-sm-block">
+                            <button class="btn btn-light rounded-pill dropdown-toggle d-flex align-items-center gap-2 border px-2.5 py-1.5" 
+                                    type="button" id="userProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 <img src="{{ \App\Support\MediaHelper::avatar(auth()->user()->avatar, auth()->user()->name) }}"
-                                    class="w-8 h-8 rounded-full object-cover border border-cream-200" alt="">
-                                <span class="text-xs font-bold text-leaf-700 bg-leaf-100 px-2 py-0.5 rounded-full border border-leaf-200">
-                                    {{ number_format(auth()->user()->reward_points) }} điểm
-                                </span>
-                            </a>
-                            <form method="POST" action="{{ route('logout') }}" class="flex items-center">
-                                @csrf
-                                <button class="text-sm font-medium text-earth-500 hover:text-earth-800 px-2 py-1">Thoát</button>
-                            </form>
+                                     class="rounded-circle border" style="width: 28px; height: 28px; object-fit: cover;" alt="">
+                                <span class="small fw-semibold text-truncate" style="max-width: 120px;">{{ auth()->user()->name }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 py-2" aria-labelledby="userProfileDropdown" style="min-width: 200px; z-index: 1070;">
+                                <li><h6 class="dropdown-header text-success">{{ number_format(auth()->user()->reward_points ?? 0) }} điểm</h6></li>
+                                <li><a class="dropdown-item py-1.5" href="{{ route('profile') }}">Tài khoản</a></li>
+                                <li><a class="dropdown-item py-1.5" href="{{ route('orders.index') }}">Đơn mua</a></li>
+                                <li><a class="dropdown-item py-1.5" href="{{ route('favorites.index') }}">Món yêu thích</a></li>
+                                @if(auth()->user()->is_admin ?? false)
+                                    <li><a class="dropdown-item py-1.5 text-danger" href="{{ url('/admin') }}">Quản trị (Filament)</a></li>
+                                @endif
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}" class="m-0">
+                                        @csrf
+                                        <button class="dropdown-item py-1.5 text-danger" type="submit">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="btn-primary !px-4 !py-2.5 !text-sm hidden sm:inline-flex">Đăng
-                            nhập</a>
+                        <a href="{{ route('login') }}" class="btn btn-success rounded-pill px-3 py-2 small fw-semibold d-none d-sm-inline-flex align-items-center gap-1 shadow-sm">
+                            Đăng nhập
+                        </a>
                     @endauth
 
-                    <button type="button" id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-cream-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                    {{-- Toggler cho Mobile --}}
+                    <button class="navbar-toggler border-0 shadow-none p-1 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNav" aria-controls="offcanvasNav">
+                        <i class="bi bi-list fs-2 text-dark"></i>
                     </button>
                 </div>
             </div>
-
-            {{-- Mobile search --}}
-            <div class="md:hidden pb-4">
-                @include('partials.search-box', ['size' => 'md'])
-            </div>
-
-            {{-- Nav --}}
-            <nav class="hidden md:flex items-center gap-1 pb-3 border-t border-cream-200 pt-3 -mt-1">
-                <a href="{{ route('home') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('home') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.home') }}</a>
-                <a href="{{ route('products.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('products.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.products') }}</a>
-                <a href="{{ route('recipes.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('recipes.*') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.recipes') }}</a>
-                <a href="{{ route('about') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('about') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.about') }}</a>
-                <a href="{{ route('contact') }}" class="px-4 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('contact') ? 'bg-leaf-600 text-white' : 'text-earth-700 hover:bg-cream-200' }} transition">{{ __('nav.contact') }}</a>
-            </nav>
         </div>
 
-        {{-- Mobile menu --}}
-        <div id="mobile-menu" class="hidden md:hidden border-t border-cream-300 bg-cream-50 px-4 py-3 space-y-1">
-            @auth
-                <div class="flex items-center gap-3 mb-3 p-2 bg-white rounded-xl border border-cream-200">
-                    <img src="{{ \App\Support\MediaHelper::avatar(auth()->user()->avatar, auth()->user()->name) }}"
-                        class="w-10 h-10 rounded-full object-cover border border-cream-200" alt="">
-                    <div>
-                        <p class="font-bold text-earth-800">{{ auth()->user()->name }}</p>
-                        <span class="text-[10px] font-bold text-leaf-700 bg-leaf-100 px-2 py-0.5 rounded-full border border-leaf-200">
-                            {{ number_format(auth()->user()->reward_points) }} điểm
-                        </span>
+        {{-- Mobile Search Box (Below Navbar on small screens) --}}
+        <div class="container d-lg-none pb-2">
+            @include('partials.search-box', ['size' => 'md'])
+        </div>
+
+        {{-- Tầng 2: Thanh Menu Điều Hướng (Secondary Nav Bar - Trải rộng toàn bộ hàng ngang) --}}
+        <div class="border-top py-2 d-none d-lg-block bg-white position-relative">
+            <div class="container d-flex align-items-center justify-content-between header-nav-container">
+                <nav class="nav gap-1 align-items-center">
+                    {{-- Trang chủ --}}
+                    <a class="nav-link px-3 py-1.5 rounded-pill fw-semibold {{ request()->routeIs('home') ? 'bg-success text-white shadow-sm' : 'text-dark hover-success' }}" href="{{ route('home') }}">
+                        Trang chủ
+                    </a>
+                    
+                    {{-- Dropdown Sản phẩm dạng Mega Menu 3 Cột (Chỉ mở khi hover vào nút Sản phẩm) --}}
+                    <div class="nav-item dropdown dropdown-hover">
+                        <a class="nav-link dropdown-toggle px-3 py-1.5 rounded-pill fw-semibold {{ request()->routeIs('products.*') ? 'bg-success text-white shadow-sm' : 'text-dark hover-success' }}" 
+                           href="{{ route('products.index') }}" id="productMegaDropdownToggle">
+                            Sản phẩm
+                        </a>
+
+                        {{-- Bảng Mega Menu 3 Cột Hiển Thị Khi Hover --}}
+                        <div class="dropdown-menu mega-menu-3cols p-4 border-0 shadow-lg mt-0" id="productMegaMenuContainer">
+                            @php
+                                $menuCats = ($allNavCategories ?? collect())->count() ? $allNavCategories : \App\Models\Category::where('is_active', true)->orderBy('sort_order')->withCount('products')->get();
+                                $col1 = $menuCats->slice(0, 4);
+                                $col2 = $menuCats->slice(4, 3);
+                                $col3 = $menuCats->slice(7);
+                            @endphp
+                            <div class="row g-4">
+                                {{-- Cột 1: Nông Sản & Tươi Sống --}}
+                                <div class="col-4 border-end">
+                                    <div class="mb-3 pb-2 border-bottom">
+                                        <h6 class="fw-bold mb-0 text-success text-uppercase small" style="letter-spacing: 0.5px;">Nông Sản &amp; Tươi Sống</h6>
+                                    </div>
+                                    <div class="d-flex flex-column gap-1">
+                                        @foreach($col1 as $cItem)
+                                            <a href="{{ route('products.index', ['category' => $cItem->slug]) }}" class="p-2 rounded-2 hover-category-item d-flex align-items-center justify-content-between text-decoration-none">
+                                                <span class="fw-medium">{{ $cItem->name }}</span>
+                                                @if($cItem->products_count > 0)
+                                                    <span class="badge bg-light text-muted border small">{{ $cItem->products_count }}</span>
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                {{-- Cột 2: Bách Hóa & Đồ Khô --}}
+                                <div class="col-4 border-end">
+                                    <div class="mb-3 pb-2 border-bottom">
+                                        <h6 class="fw-bold mb-0 text-dark text-uppercase small" style="letter-spacing: 0.5px;">Bách Hóa &amp; Đồ Khô</h6>
+                                    </div>
+                                    <div class="d-flex flex-column gap-1">
+                                        @foreach($col2 as $cItem)
+                                            <a href="{{ route('products.index', ['category' => $cItem->slug]) }}" class="p-2 rounded-2 hover-category-item d-flex align-items-center justify-content-between text-decoration-none">
+                                                <span class="fw-medium">{{ $cItem->name }}</span>
+                                                @if($cItem->products_count > 0)
+                                                    <span class="badge bg-light text-muted border small">{{ $cItem->products_count }}</span>
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                {{-- Cột 3: Đồ Uống & Tiêu Dùng --}}
+                                <div class="col-4">
+                                    <div class="mb-3 pb-2 border-bottom">
+                                        <h6 class="fw-bold mb-0 text-dark text-uppercase small" style="letter-spacing: 0.5px;">Đồ Uống &amp; Tiêu Dùng</h6>
+                                    </div>
+                                    <div class="d-flex flex-column gap-1 mb-3">
+                                        @foreach($col3 as $cItem)
+                                            <a href="{{ route('products.index', ['category' => $cItem->slug]) }}" class="p-2 rounded-2 hover-category-item d-flex align-items-center justify-content-between text-decoration-none">
+                                                <span class="fw-medium">{{ $cItem->name }}</span>
+                                                @if($cItem->products_count > 0)
+                                                    <span class="badge bg-light text-muted border small">{{ $cItem->products_count }}</span>
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                    </div>
+
+                                    {{-- Khối xem tất cả sản phẩm --}}
+                                    <div class="p-3 rounded-3 bg-light border text-center">
+                                        <div class="fw-bold text-success small mb-1">Toàn Bộ Sản Phẩm</div>
+                                        <p class="text-muted mb-2" style="font-size: 0.72rem;">Cam kết tươi ngon, an toàn vệ sinh thực phẩm</p>
+                                        <a href="{{ route('products.index') }}" class="btn btn-success btn-sm w-100 fw-bold rounded-pill">
+                                            Xem tất cả sản phẩm
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    {{-- Công thức món ngon --}}
+                    <a class="nav-link px-3 py-1.5 rounded-pill fw-semibold {{ request()->routeIs('recipes.*') ? 'bg-success text-white shadow-sm' : 'text-dark hover-success' }}" href="{{ route('recipes.index') }}">
+                        Công thức nấu ăn
+                    </a>
+
+                    {{-- Khuyến mãi --}}
+                    <a class="nav-link px-3 py-1.5 rounded-pill fw-semibold {{ request()->routeIs('promo.index') ? 'bg-success text-white shadow-sm' : 'text-dark hover-success' }}" href="{{ route('promo.index') }}">
+                        Khuyến mãi
+                    </a>
+
+                    {{-- Giới thiệu --}}
+                    <a class="nav-link px-3 py-1.5 rounded-pill fw-semibold {{ request()->routeIs('about') ? 'bg-success text-white shadow-sm' : 'text-dark hover-success' }}" href="{{ route('about') }}">
+                        Giới thiệu
+                    </a>
+
+                    {{-- Liên hệ --}}
+                    <a class="nav-link px-3 py-1.5 rounded-pill fw-semibold {{ request()->routeIs('contact') ? 'bg-success text-white shadow-sm' : 'text-dark hover-success' }}" href="{{ route('contact') }}">
+                        Liên hệ
+                    </a>
+                </nav>
+
+                {{-- Thông tin hotline & cam kết bên phải --}}
+                <div class="d-flex align-items-center gap-3 small text-muted">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill">
+                        100% VietGAP
+                    </span>
+                    <span class="d-none d-xl-inline text-secondary">
+                        Hotline: <strong class="text-dark">1900 6868</strong>
+                    </span>
                 </div>
-            @endauth
-            <a href="{{ route('home') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.home') }}</a>
-            <a href="{{ route('products.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.products') }}</a>
-            <a href="{{ route('recipes.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.recipes') }}</a>
-            @auth
-                <a href="{{ route('favorites.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">Yêu thích</a>
-                <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.orders') }}</a>
-                <a href="{{ route('profile') }}" class="block px-3 py-2 rounded-lg hover:bg-cream-200">{{ __('nav.account') }}</a>
-                <form method="POST" action="{{ route('logout') }}" class="mt-1">
-                    @csrf
-                    <button class="w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium">Thoát</button>
-                </form>
-            @else
-                <a href="{{ route('login') }}" class="block px-3 py-2 rounded-lg bg-leaf-600 text-white text-center mt-2">{{ __('nav.login') }}</a>
-            @endauth
+            </div>
         </div>
     </header>
 
+    {{-- Offcanvas Menu (Mobile Navigation - Bootstrap 5 Offcanvas) --}}
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNav" aria-labelledby="offcanvasNavLabel">
+        <div class="offcanvas-header bg-success text-white">
+            <div class="d-flex align-items-center gap-2">
+                <img src="{{ asset('/logo.png') }}" alt="SFood Logo" style="height: 36px; width: auto;" class="rounded bg-white p-1">
+                <div>
+                    <h5 class="offcanvas-title fw-bold mb-0 lh-1" id="offcanvasNavLabel">SFood Organic</h5>
+                    <small class="text-white-50" style="font-size: 0.7rem;">Thực phẩm sạch cho mọi nhà</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            @auth
+                <div class="p-3 bg-light border-bottom d-flex align-items-center gap-3">
+                    <img src="{{ \App\Support\MediaHelper::avatar(auth()->user()->avatar, auth()->user()->name) }}"
+                         class="rounded-circle border" style="width: 46px; height: 46px; object-fit: cover;" alt="">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <h6 class="fw-bold mb-0 text-truncate text-dark">{{ auth()->user()->name }}</h6>
+                        <small class="badge bg-success-subtle text-success"><i class="bi bi-coin me-1"></i>{{ number_format(auth()->user()->reward_points ?? 0) }} điểm</small>
+                    </div>
+                </div>
+            @endauth
+
+            {{-- Danh sách điều hướng Mobile (Gọn gàng, sạch sẽ, không icon màu mè) --}}
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action py-3 fw-semibold {{ request()->routeIs('home') ? 'text-success bg-light' : 'text-dark' }}" href="{{ route('home') }}">
+                    Trang chủ
+                </a>
+
+                {{-- Accordion Danh mục sản phẩm trên mobile --}}
+                <div class="list-group-item p-0 border-0">
+                    <a class="list-group-item list-group-item-action py-3 d-flex align-items-center justify-content-between {{ request()->routeIs('products.*') ? 'text-success fw-bold' : 'text-dark' }}" 
+                       data-bs-toggle="collapse" href="#mobileCategoryCollapse" role="button" aria-expanded="false">
+                        <span class="fw-semibold">Danh mục sản phẩm</span>
+                        <i class="bi bi-chevron-down small text-muted"></i>
+                    </a>
+                    <div class="collapse bg-light {{ request()->routeIs('products.*') ? 'show' : '' }}" id="mobileCategoryCollapse">
+                        <div class="py-1">
+                            <a class="list-group-item list-group-item-action py-2 ps-4 border-0 bg-transparent text-success fw-bold small" href="{{ route('products.index') }}">
+                                &bull; Tất cả sản phẩm
+                            </a>
+                            @php
+                                $mobileCats = ($allNavCategories ?? collect())->count() ? $allNavCategories : \App\Models\Category::where('is_active', true)->orderBy('sort_order')->get();
+                            @endphp
+                            @foreach($mobileCats as $mCat)
+                                <a class="list-group-item list-group-item-action py-2 ps-4 border-0 bg-transparent text-dark small" href="{{ route('products.index', ['category' => $mCat->slug]) }}">
+                                    &bull; {{ $mCat->name }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Công thức nấu ăn --}}
+                <a class="list-group-item list-group-item-action py-3 fw-semibold {{ request()->routeIs('recipes.*') ? 'text-success bg-light' : 'text-dark' }}" href="{{ route('recipes.index') }}">
+                    Công thức nấu ăn
+                </a>
+
+                {{-- Khuyến mãi --}}
+                <a class="list-group-item list-group-item-action py-3 fw-semibold {{ request()->routeIs('promo.index') ? 'text-success bg-light' : 'text-dark' }}" href="{{ route('promo.index') }}">
+                    Khuyến mãi &amp; Ưu đãi
+                </a>
+
+                {{-- Giới thiệu --}}
+                <a class="list-group-item list-group-item-action py-3 fw-semibold {{ request()->routeIs('about') ? 'text-success bg-light' : 'text-dark' }}" href="{{ route('about') }}">
+                    Giới thiệu SFood
+                </a>
+
+                {{-- Liên hệ --}}
+                <a class="list-group-item list-group-item-action py-3 fw-semibold {{ request()->routeIs('contact') ? 'text-success bg-light' : 'text-dark' }}" href="{{ route('contact') }}">
+                    Liên hệ &amp; Góp ý
+                </a>
+            </div>
+
+            {{-- Thông tin tài khoản Mobile --}}
+            <div class="p-3 mt-3 border-top bg-light">
+                @auth
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('profile') }}" class="btn btn-outline-success btn-sm">Tài khoản của tôi</a>
+                        <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary btn-sm">Đơn hàng đã đặt</a>
+                        @if(auth()->user()->is_admin ?? false)
+                            <a href="{{ url('/admin') }}" class="btn btn-outline-danger btn-sm">Trang Quản trị</a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}" class="m-0">
+                            @csrf
+                            <button class="btn btn-danger btn-sm w-100" type="submit">Đăng xuất</button>
+                        </form>
+                    </div>
+                @else
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('login') }}" class="btn btn-success fw-semibold">Đăng nhập</a>
+                        <a href="{{ route('register') }}" class="btn btn-outline-secondary">Đăng ký tài khoản</a>
+                    </div>
+                @endauth
+            </div>
+        </div>
+    </div>
+
+    {{-- Offcanvas Giỏ Hàng (Bootstrap 5 Offcanvas) --}}
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCart" aria-labelledby="offcanvasCartLabel">
+        <div class="offcanvas-header bg-success text-white">
+            <h5 class="offcanvas-title fw-bold" id="offcanvasCartLabel"><i class="bi bi-cart3 me-2"></i>Giỏ hàng của bạn</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column p-0">
+            @php
+                $miniCartItems = app(\App\Services\CartService::class)->items();
+                $miniCartSelectedSubtotal = app(\App\Services\CartService::class)->selectedSubtotal();
+            @endphp
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+                <span class="small text-muted fw-semibold">Sản phẩm đã chọn</span>
+                <button type="button" id="mini-cart-clear-all" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;">Xóa tất cả</button>
+            </div>
+
+            <div class="flex-grow-1 overflow-y-auto p-3" id="mini-cart-items-container">
+                @if($miniCartItems->isEmpty())
+                    <div class="text-center py-5 text-muted" id="mini-cart-empty-msg">
+                        <i class="bi bi-cart-x fs-1 text-secondary opacity-50 d-block mb-2"></i>
+                        Giỏ hàng trống
+                    </div>
+                @else
+                    <div class="list-group list-group-flush">
+                        @foreach($miniCartItems as $item)
+                            <div class="list-group-item px-0 py-3 d-flex align-items-center gap-3 mini-cart-item {{ !$item->is_selected ? 'opacity-50' : '' }}" data-id="{{ $item->id }}">
+                                <input type="checkbox" class="form-check-input mini-cart-item-checkbox m-0 cursor-pointer" data-id="{{ $item->id }}" {{ $item->is_selected ? 'checked' : '' }}>
+                                <img src="{{ \App\Support\MediaHelper::productImage($item->productVariant->product->thumbnail) }}" 
+                                     class="rounded-3 border object-fit-cover" style="width: 50px; height: 50px;" alt="">
+                                <div class="flex-grow-1 min-w-0">
+                                    <h6 class="mb-0 text-truncate fw-semibold small text-dark">{{ $item->productVariant->product->name }}</h6>
+                                    <small class="text-muted d-block">{{ $item->productVariant->name }}</small>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <div class="input-group input-group-sm" style="width: 90px;">
+                                            <button class="btn btn-outline-secondary mini-cart-btn-minus px-2" type="button" data-id="{{ $item->id }}">-</button>
+                                            <input type="number" class="form-control text-center mini-cart-input-qty p-0" data-id="{{ $item->id }}" value="{{ $item->quantity }}" min="1">
+                                            <button class="btn btn-outline-secondary mini-cart-btn-plus px-2" type="button" data-id="{{ $item->id }}">+</button>
+                                        </div>
+                                        <span class="text-danger fw-bold small ms-auto mini-cart-item-subtotal" data-id="{{ $item->id }}">
+                                            {{ number_format($item->subtotal()) }}₫
+                                        </span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm text-secondary hover-danger mini-cart-btn-remove p-1" data-id="{{ $item->id }}" title="Xóa">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <div class="p-3 border-top bg-light mt-auto" id="mini-cart-footer">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small">Tạm tính (đã chọn):</span>
+                    <h5 class="fw-bold text-danger mb-0" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}₫</h5>
+                </div>
+                <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" 
+                   class="btn btn-success w-100 fw-bold py-2 shadow-sm {{ $miniCartSelectedSubtotal > 0 ? '' : 'disabled' }}">
+                    Tiến hành thanh toán <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Alert Messages --}}
     @if (session('success'))
-        <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
-            <div class="bg-leaf-100 border border-leaf-500/30 text-leaf-800 px-4 py-3 rounded-xl flex items-center gap-2">
-                <span>✓</span> {{ session('success') }}
+        <div class="container mt-3">
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                <div>{{ session('success') }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
     @endif
 
     @if (session('error'))
-        <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
-            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">{{ session('error') }}</div>
+        <div class="container mt-3">
+            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                <div>{{ session('error') }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         </div>
     @endif
 
-    <main class="flex-1">
+    {{-- Main Page Content --}}
+    <main class="flex-grow-1">
         @yield('content')
     </main>
 
-    {{-- Footer --}}
-    <footer class="bg-earth-800 text-cream-200 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 py-12">
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span
-                            class="w-10 h-10 rounded-xl bg-leaf-600 flex items-center justify-center text-white font-bold">S</span>
-                        <span class="font-bold text-xl text-cream-50">SFood</span>
-                    </div>
-                    <p class="text-sm text-cream-300 leading-relaxed">Thực phẩm tươi sạch, nguồn gốc rõ ràng. Giao hàng
-                        nhanh trong ngày tại TP.HCM và Hà Nội.</p>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-cream-50 mb-4">Danh mục</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{{ route('products.index') }}" class="hover:text-leaf-400 transition">Tất cả sản
-                                phẩm</a></li>
-                        <li><a href="{{ route('recipes.index') }}" class="hover:text-leaf-400 transition">Công thức nấu
-                                ăn</a></li>
-                        <li><a href="{{ route('products.index', ['category' => 'rau-cu']) }}"
-                                class="hover:text-leaf-400 transition">Rau củ</a></li>
-                        <li><a href="{{ route('products.index', ['category' => 'thit-ca']) }}"
-                                class="hover:text-leaf-400 transition">Thịt cá</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-cream-50 mb-4">Hỗ trợ</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="{{ route('about') }}" class="hover:text-leaf-400 transition">Giới thiệu</a></li>
-                        <li><a href="{{ route('contact') }}" class="hover:text-leaf-400 transition">Liên hệ</a></li>
-                        <li><a href="{{ route('faq') }}" class="hover:text-leaf-400 transition">Hỏi đáp</a></li>
-                        <li><a href="{{ route('policy') }}" class="hover:text-leaf-400 transition">Chính sách</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-cream-50 mb-4">Liên hệ</h4>
-                    <ul class="space-y-2 text-sm text-cream-300">
-                        <li>📞 1900 1234</li>
-                        <li>✉️ support@sfood.vn</li>
-                        <li>📍 123 Đường Xanh, Q.1, TP.HCM</li>
-                        <li class="pt-2 flex gap-3">
-                            <span
-                                class="w-8 h-8 rounded-full bg-earth-700 flex items-center justify-center text-xs">FB</span>
-                            <span
-                                class="w-8 h-8 rounded-full bg-earth-700 flex items-center justify-center text-xs">IG</span>
-                            <span
-                                class="w-8 h-8 rounded-full bg-earth-700 flex items-center justify-center text-xs">YT</span>
-                        </li>
-                    </ul>
-                </div>
-            <div
-                class="border-t border-earth-700 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-cream-400">
-                <p>© {{ date('Y') }} SFood. Tất cả quyền được bảo lưu.</p>
-                <p>Thiết kế cho trải nghiệm mua sắm tươi mỗi ngày 🌿</p>
-            </div>
-        </div>
-    </footer>
-
-    {{-- Messenger/Facebook Button --}}
-    <a href="https://m.me/yourpage" target="_blank" rel="noopener noreferrer" class="fixed bottom-[5.5rem] right-6 z-40 w-14 h-14 bg-gradient-to-tr from-blue-500 to-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-blue-500/50 transition-all duration-300 group">
-        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.26c0 2.91 1.503 5.506 3.824 7.24v3.5l3.29-1.808c.91.252 1.87.388 2.886.388 5.523 0 10-4.145 10-9.26C22 6.145 17.523 2 12 2zm1.09 12.3l-2.82-3.02-5.49 3.02 6.03-6.4 2.91 3.02 5.38-3.02-6.01 6.4z"/></svg>
-        <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Chat Messenger</span>
-    </a>
-
-    {{-- Live Chatbox --}}
+    {{-- Live Chat Với Nhân Viên Hỗ Trợ (Human Support - Không dùng AI) --}}
     @auth
     @php
         $unreadChatCount = \App\Models\ChatMessage::where('user_id', auth()->id())->where('sender', 'admin')->where('is_read', false)->count();
     @endphp
-    <div id="live-chatbox-container" class="fixed bottom-[9.5rem] right-6 z-50 flex flex-col items-end pointer-events-none">
+    <div id="live-chatbox-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
         <!-- Chat Window -->
-        <div id="live-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
-            <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl">👨‍💻</span>
+        <div id="live-chat-window" class="card shadow-lg border-0 mb-3 d-none" style="width: 340px; border-radius: 1rem; overflow: hidden;">
+            <div class="card-header bg-success text-white py-2 px-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-headset fs-5"></i>
                     <div>
-                        <h4 class="font-bold">Chăm sóc khách hàng</h4>
-                        <p class="text-[10px] text-green-100">Chúng tôi luôn sẵn sàng hỗ trợ</p>
+                        <h6 class="mb-0 fw-bold small">Hỗ trợ khách hàng</h6>
+                        <small class="text-white-50" style="font-size: 0.65rem;">Nhân viên SFood trực tuyến</small>
                     </div>
                 </div>
-                <button type="button" id="close-live-chat-btn" class="text-white hover:text-green-100 focus:outline-none">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <button type="button" id="close-live-chat-btn" class="btn-close btn-close-white small"></button>
             </div>
-            <div id="live-chat-messages-container" class="flex-1 p-4 h-80 overflow-y-auto bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
-                <div class="text-center text-sm text-gray-500 mt-4" id="live-chat-empty-msg">Bắt đầu trò chuyện với nhân viên hỗ trợ.</div>
+            <div id="live-chat-messages-container" class="card-body p-3 overflow-y-auto bg-light" style="height: 280px;">
+                <div class="text-center text-muted small my-3" id="live-chat-empty-msg">Chào bạn! Nhắn tin để gặp nhân viên hỗ trợ SFood.</div>
             </div>
-            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2">
-                <input type="text" id="live-chat-input-field" class="flex-1 bg-cream-50 dark:bg-gray-900 border border-cream-200 dark:border-gray-700 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-green-500 text-earth-800 dark:text-gray-300" placeholder="Nhập tin nhắn..." autocomplete="off">
-                <button type="button" id="send-live-chat-btn" class="bg-green-600 hover:bg-green-700 text-white rounded-xl px-4 py-2 transition shadow-sm">
-                    <svg class="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                </button>
+            <div class="card-footer bg-white p-2">
+                <div class="input-group input-group-sm">
+                    <input type="text" id="live-chat-input-field" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off">
+                    <button class="btn btn-success" type="button" id="send-live-chat-btn"><i class="bi bi-send-fill"></i></button>
+                </div>
             </div>
         </div>
-        
+
         <!-- Toggle Button -->
-        <button type="button" id="toggle-live-chat-btn" class="pointer-events-auto w-14 h-14 bg-gradient-to-tr from-green-500 to-green-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-green-500/50 transition-all duration-300 focus:outline-none z-50 group relative">
-            <svg id="live-chat-icon-msg" class="w-6 h-6 absolute transition-transform duration-300 scale-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
-            <svg id="live-chat-icon-close" class="w-6 h-6 absolute transition-transform duration-300 scale-0 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Chat Nhân Viên</span>
+        <button type="button" id="toggle-live-chat-btn" class="btn btn-success rounded-circle shadow-lg p-0 d-flex align-items-center justify-center ms-auto position-relative" style="width: 54px; height: 54px;" title="Chat nhân viên hỗ trợ">
+            <i class="bi bi-chat-dots-fill fs-4 m-auto"></i>
             @if($unreadChatCount > 0)
-                <span id="live-chat-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">{{ $unreadChatCount }}</span>
+                <span id="live-chat-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white">
+                    {{ $unreadChatCount }}
+                </span>
             @endif
         </button>
     </div>
     @endauth
 
-    {{-- AI Chatbox --}}
-    <div id="ai-chatbox-container" class="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
-        <!-- Chat Window -->
-        <div id="ai-chat-window" class="hidden pointer-events-auto bg-white dark:bg-gray-800 w-80 sm:w-96 rounded-2xl shadow-2xl border border-cream-200 dark:border-gray-700 mb-4 overflow-hidden flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-leaf-600 to-leaf-500 p-4 text-white flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl">🤖</span>
-                    <div>
-                        <h4 class="font-bold">SFood AI Assistant</h4>
-                        <p class="text-[10px] text-leaf-100">Tìm kiếm sản phẩm nhanh chóng</p>
+    {{-- Footer (Bootstrap 5 Grid 12 cột & Logo thương hiệu tự thiết kế) --}}
+    <footer class="bg-sfood-dark text-white pt-5 pb-3 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                {{-- Cột 1: Logo thương hiệu nhóm & Giới thiệu --}}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="{{ asset('/logo.png') }}" alt="SFood Logo" style="height: 48px; width: auto;" class="rounded bg-white p-1">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-white">SFood Organic</h5>
+                            <small class="text-success text-uppercase fw-semibold" style="letter-spacing: 1px;">Fresh &amp; Clean Food</small>
+                        </div>
+                    </div>
+                    <p class="text-white-50 small pe-lg-3">
+                        Hệ thống cung cấp thực phẩm tươi sống, nông sản sạch chuẩn VietGAP và công thức món ngon mỗi ngày. 
+                        Cam kết 100% tươi sạch, an toàn vệ sinh thực phẩm và giao nhanh trong 2 giờ.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-sm btn-outline-light rounded-circle" style="width: 32px; height: 32px;"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-light rounded-circle" style="width: 32px; height: 32px;"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-light rounded-circle" style="width: 32px; height: 32px;"><i class="bi bi-youtube"></i></a>
                     </div>
                 </div>
-                <button type="button" id="close-chat-btn" class="text-white hover:text-cream-200 focus:outline-none">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <!-- Messages -->
-            <div id="ai-chat-messages" class="flex-1 p-4 h-80 overflow-y-auto bg-cream-50 dark:bg-gray-900 flex flex-col gap-3">
-                <div class="flex gap-2 w-5/6">
-                    <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-200">
-                        Chào bạn! Mình có thể giúp bạn tìm kiếm món gì hôm nay? (Ví dụ: "tôi muốn mua thịt bò")
-                    </div>
+
+                {{-- Cột 2: Danh mục sản phẩm --}}
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="fw-bold text-uppercase mb-3 text-white">Danh Mục</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                        <li><a href="{{ route('products.index') }}" class="text-white-50 text-decoration-none hover-white">Tất cả sản phẩm</a></li>
+                        <li><a href="{{ route('recipes.index') }}" class="text-white-50 text-decoration-none hover-white">Công thức nấu ăn</a></li>
+                        <li><a href="{{ route('promo.index') }}" class="text-white-50 text-decoration-none hover-white">Khuyến mãi hot</a></li>
+                    </ul>
+                </div>
+
+                {{-- Cột 3: Hỗ trợ & Chính sách --}}
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="fw-bold text-uppercase mb-3 text-white">Hỗ Trợ</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                        <li><a href="{{ route('about') }}" class="text-white-50 text-decoration-none hover-white">Về chúng tôi</a></li>
+                        <li><a href="{{ route('contact') }}" class="text-white-50 text-decoration-none hover-white">Liên hệ hợp tác</a></li>
+                        <li><a href="{{ route('faq') }}" class="text-white-50 text-decoration-none hover-white">Câu hỏi thường gặp</a></li>
+                        <li><a href="{{ route('policy') }}" class="text-white-50 text-decoration-none hover-white">Chính sách giao hàng</a></li>
+                    </ul>
+                </div>
+
+                {{-- Cột 4: Thông tin liên hệ nhóm --}}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <h6 class="fw-bold text-uppercase mb-3 text-white">Liên Hệ Nhóm Thực Hiện</h6>
+                    <ul class="list-unstyled small text-white-50 d-flex flex-column gap-2 mb-0">
+                        <li><i class="bi bi-geo-alt-fill text-success me-2"></i>123 Đường Nông Nghiệp Xanh, TP. Hồ Chí Minh</li>
+                        <li><i class="bi bi-telephone-fill text-success me-2"></i>Hotline: 1900 6868 - (028) 3822 5588</li>
+                        <li><i class="bi bi-envelope-fill text-success me-2"></i>Email: contact@sfood.vn</li>
+                        <li><i class="bi bi-server text-success me-2"></i>Tương thích: Apache (XAMPP) / IIS Server</li>
+                    </ul>
                 </div>
             </div>
-            <!-- Input -->
-            <div class="p-3 bg-white dark:bg-gray-800 border-t border-cream-200 dark:border-gray-700 flex items-center gap-2">
-                <label class="cursor-pointer p-2 text-earth-400 hover:text-leaf-600 transition" title="Gửi hình ảnh">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <input type="file" id="ai-chat-image-input" accept="image/*" class="hidden">
-                </label>
-                <input type="text" id="ai-chat-input" class="flex-1 bg-cream-50 dark:bg-gray-900 border border-cream-200 dark:border-gray-700 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-leaf-500 text-earth-800 dark:text-gray-300" placeholder="Nhập tin nhắn..." autocomplete="off">
-                <button type="button" id="send-chat-btn" class="bg-leaf-600 hover:bg-leaf-700 text-white rounded-xl px-4 py-2 transition shadow-sm">
-                    <svg class="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                </button>
+
+            <hr class="border-secondary my-4">
+
+            <div class="row align-items-center small text-white-50">
+                <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+                    &copy; {{ date('Y') }} SFood Organic. Tất cả các quyền được bảo lưu.
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    Thương hiệu nông sản &amp; thực phẩm tươi sạch đạt chuẩn VietGAP
+                </div>
             </div>
         </div>
-        
-        <!-- Toggle Button -->
-        <button type="button" id="toggle-chat-btn" class="pointer-events-auto w-14 h-14 bg-gradient-to-tr from-leaf-600 to-green-400 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:shadow-leaf-500/50 transition-all duration-300 focus:outline-none z-50 group relative">
-            <svg id="chat-icon-msg" class="w-6 h-6 absolute transition-transform duration-300 scale-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-            <svg id="chat-icon-close" class="w-6 h-6 absolute transition-transform duration-300 scale-0 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            <span class="absolute right-full mr-4 bg-white text-earth-800 text-xs font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Chat AI</span>
-        </button>
-    </div>
+    </footer>
 
-<script>
-    var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
-    var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    <!-- Bootstrap 5 Bundle JS (Local) -->
+    <script src="{{ asset('bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
-    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        themeToggleLightIcon.classList.remove('hidden');
-        themeToggleDarkIcon.classList.add('hidden');
-    } else {
-        themeToggleDarkIcon.classList.remove('hidden');
-        themeToggleLightIcon.classList.add('hidden');
-    }
+    <!-- Client-side Validation JS -->
+    <script src="{{ asset('js/form-validation.js') }}"></script>
 
-    var themeToggleBtn = document.getElementById('theme-toggle');
+    <!-- App JS -->
+    <script>
+        // Mini Cart AJAX Logic
+        document.addEventListener('DOMContentLoaded', function () {
+            const miniCartContainer = document.getElementById('mini-cart-items-container');
+            const clearAllBtn = document.getElementById('mini-cart-clear-all');
 
-    themeToggleBtn.addEventListener('click', function() {
-        themeToggleDarkIcon.classList.toggle('hidden');
-        themeToggleLightIcon.classList.toggle('hidden');
-
-        if (localStorage.getItem('theme')) {
-            if (localStorage.getItem('theme') === 'light') {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            }
-        } else {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-    });
-
-    // AI Chatbox Logic
-    const toggleChatBtn = document.getElementById('toggle-chat-btn');
-    const closeChatBtn = document.getElementById('close-chat-btn');
-    const chatWindow = document.getElementById('ai-chat-window');
-    const chatIconMsg = document.getElementById('chat-icon-msg');
-    const chatIconClose = document.getElementById('chat-icon-close');
-    const chatInput = document.getElementById('ai-chat-input');
-    const sendChatBtn = document.getElementById('send-chat-btn');
-    const chatMessages = document.getElementById('ai-chat-messages');
-
-    let isChatOpen = false;
-
-    function toggleChat() {
-        isChatOpen = !isChatOpen;
-        if (isChatOpen) {
-            chatWindow.classList.remove('hidden');
-            // small delay for transition
-            setTimeout(() => {
-                chatWindow.classList.remove('opacity-0', 'scale-95');
-                chatWindow.classList.add('opacity-100', 'scale-100');
-            }, 10);
-            chatIconMsg.classList.replace('scale-100', 'scale-0');
-            chatIconMsg.classList.add('-rotate-90');
-            chatIconClose.classList.replace('scale-0', 'scale-100');
-            chatIconClose.classList.remove('rotate-90');
-            chatInput.focus();
-        } else {
-            chatWindow.classList.remove('opacity-100', 'scale-100');
-            chatWindow.classList.add('opacity-0', 'scale-95');
-            setTimeout(() => chatWindow.classList.add('hidden'), 300);
-            chatIconMsg.classList.replace('scale-0', 'scale-100');
-            chatIconMsg.classList.remove('-rotate-90');
-            chatIconClose.classList.replace('scale-100', 'scale-0');
-            chatIconClose.classList.add('rotate-90');
-        }
-    }
-
-    toggleChatBtn.addEventListener('click', toggleChat);
-    closeChatBtn.addEventListener('click', toggleChat);
-
-    // Chat History Array
-    let chatHistory = [];
-
-    function appendMessage(content, isUser = false) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `flex gap-2 max-w-[85%] ${isUser ? 'self-end justify-end' : 'self-start'}`;
-        
-        const bubble = document.createElement('div');
-        bubble.className = isUser 
-            ? 'bg-leaf-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm border border-leaf-700 text-sm'
-            : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm markdown-body';
-        
-        bubble.innerHTML = content;
-        
-        msgDiv.appendChild(bubble);
-        chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        // Ensure scrolling to bottom after any images finish loading
-        const images = bubble.querySelectorAll('img');
-        images.forEach(img => {
-            img.addEventListener('load', () => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-        });
-    }
-
-    async function sendChatMessage() {
-        const text = chatInput.value.trim();
-        if (!text) return;
-        
-        appendMessage(text, true);
-        chatInput.value = '';
-        chatInput.disabled = true;
-        sendChatBtn.disabled = true;
-
-        // typing indicator
-        const typingId = 'typing-' + Date.now();
-        const typingDiv = document.createElement('div');
-        typingDiv.id = typingId;
-        typingDiv.className = 'flex gap-2 self-start w-5/6';
-        typingDiv.innerHTML = `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-400 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
-            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-        </div>`;
-        chatMessages.appendChild(typingDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        try {
-            const res = await fetch('{{ route('ai.chat') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ 
-                    message: text,
-                    history: chatHistory
-                })
-            });
-            const data = await res.json();
-            document.getElementById(typingId).remove();
-            appendMessage(data.reply, false);
-
-            if (data.redirect) {
-                appendMessage('<span class="text-sm italic text-gray-500">Đang chuyển hướng bạn đến trang sản phẩm...</span>', false);
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 1500);
-            }
-
-            // Save to history
-            chatHistory.push({ role: 'user', content: text });
-            chatHistory.push({ role: 'assistant', content: data.reply });
-            
-            // Keep history short (e.g. max 10 messages)
-            if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
-
-        } catch (e) {
-            document.getElementById(typingId).remove();
-            appendMessage('<span class="text-red-500">Lỗi kết nối.</span>', false);
-        } finally {
-            chatInput.disabled = false;
-            sendChatBtn.disabled = false;
-            chatInput.focus();
-        }
-    }
-
-    sendChatBtn.addEventListener('click', sendChatMessage);
-    chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendChatMessage();
-        }
-    });
-
-    const chatImageInput = document.getElementById('ai-chat-image-input');
-    if(chatImageInput) {
-        chatImageInput.addEventListener('change', async function() {
-            if (!this.files || !this.files[0]) return;
-            
-            const file = this.files[0];
-            const objectUrl = URL.createObjectURL(file);
-            appendMessage(`<img src="${objectUrl}" class="max-w-[200px] rounded-lg border border-leaf-400 object-cover">`, true);
-
-            const typingId = 'typing-' + Date.now();
-            const typingDiv = document.createElement('div');
-            typingDiv.id = typingId;
-            typingDiv.className = 'flex gap-2 self-start w-5/6';
-            typingDiv.innerHTML = `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl rounded-tl-sm shadow-sm border border-cream-100 dark:border-gray-700 text-sm text-earth-800 dark:text-gray-400 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
-            </div>`;
-            chatMessages.appendChild(typingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            try {
-                const formData = new FormData();
-                formData.append('ai_image', file);
-
-                const res = await fetch('{{ route('ai.chat.image') }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: formData
-                });
-                const data = await res.json();
-                document.getElementById(typingId).remove();
-                appendMessage(data.reply, false);
-                
-                chatImageInput.value = '';
-            } catch (e) {
-                document.getElementById(typingId).remove();
-                appendMessage('<span class="text-red-500">Lỗi gửi hình ảnh.</span>', false);
-                chatImageInput.value = '';
-            }
-        });
-    }
-
-    // Live Chat Logic
-    const toggleLiveChatBtn = document.getElementById('toggle-live-chat-btn');
-    const closeLiveChatBtn = document.getElementById('close-live-chat-btn');
-    const liveChatWindow = document.getElementById('live-chat-window');
-    const liveChatIconMsg = document.getElementById('live-chat-icon-msg');
-    const liveChatIconClose = document.getElementById('live-chat-icon-close');
-    const liveChatBadge = document.getElementById('live-chat-badge');
-    const liveChatMessagesContainer = document.getElementById('live-chat-messages-container');
-    const liveChatInputField = document.getElementById('live-chat-input-field');
-    const sendLiveChatBtn = document.getElementById('send-live-chat-btn');
-    let liveChatInterval = null;
-
-    if (toggleLiveChatBtn && liveChatWindow) {
-        const toggleLiveChat = () => {
-            const isHidden = liveChatWindow.classList.contains('hidden');
-            if (isHidden) {
-                liveChatWindow.classList.remove('hidden');
-                setTimeout(() => {
-                    liveChatWindow.classList.remove('scale-95', 'opacity-0');
-                    liveChatWindow.classList.add('scale-100', 'opacity-100');
-                }, 10);
-                liveChatIconMsg.classList.replace('scale-100', 'scale-0');
-                liveChatIconClose.classList.replace('scale-0', 'scale-100');
-                liveChatIconClose.classList.replace('rotate-90', 'rotate-0');
-                
-                if (liveChatBadge) liveChatBadge.style.display = 'none';
-
-                fetchLiveMessages();
-                liveChatInterval = setInterval(fetchLiveMessages, 5000);
-            } else {
-                liveChatWindow.classList.remove('scale-100', 'opacity-100');
-                liveChatWindow.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => {
-                    liveChatWindow.classList.add('hidden');
-                }, 300);
-                liveChatIconClose.classList.replace('scale-100', 'scale-0');
-                liveChatIconClose.classList.replace('rotate-0', 'rotate-90');
-                liveChatIconMsg.classList.replace('scale-0', 'scale-100');
-                
-                if (liveChatInterval) clearInterval(liveChatInterval);
-            }
-        };
-
-        toggleLiveChatBtn.addEventListener('click', toggleLiveChat);
-        closeLiveChatBtn.addEventListener('click', toggleLiveChat);
-
-        const appendLiveMessage = (msg) => {
-            const emptyMsg = document.getElementById('live-chat-empty-msg');
-            if (emptyMsg) emptyMsg.style.display = 'none';
-
-            const div = document.createElement('div');
-            const isUser = msg.sender === 'user';
-            div.className = `max-w-[85%] rounded-2xl p-3 text-sm shadow-sm ${isUser ? 'bg-green-600 text-white self-end rounded-tr-sm' : 'bg-white dark:bg-gray-800 text-earth-800 dark:text-gray-300 border border-cream-200 dark:border-gray-700 self-start rounded-tl-sm'}`;
-            div.textContent = msg.message;
-            liveChatMessagesContainer.appendChild(div);
-            liveChatMessagesContainer.scrollTop = liveChatMessagesContainer.scrollHeight;
-        };
-
-        const fetchLiveMessages = async () => {
-            try {
-                const res = await fetch('{{ route('live-chat.fetch') }}');
-                const data = await res.json();
-                if (data.length > 0) {
-                    liveChatMessagesContainer.innerHTML = '';
-                    data.forEach(msg => appendLiveMessage(msg));
-                }
-            } catch (e) { console.error(e); }
-        };
-
-        const sendLiveMessage = async () => {
-            const text = liveChatInputField.value.trim();
-            if (!text) return;
-            
-            liveChatInputField.value = '';
-            appendLiveMessage({ sender: 'user', message: text });
-
-            try {
-                await fetch('{{ route('live-chat.send') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({ message: text })
-                });
-            } catch (e) { console.error(e); }
-        };
-
-        sendLiveChatBtn.addEventListener('click', sendLiveMessage);
-        liveChatInputField.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendLiveMessage();
-        });
-    }
-
-    // Global Countdown Script
-    function updateCountdowns() {
-        document.querySelectorAll('[data-countdown]').forEach(el => {
-            const endsAt = new Date(el.dataset.countdown).getTime();
-            const now = new Date().getTime();
-            const distance = endsAt - now;
-            const timerEl = el.querySelector('.countdown-timer');
-
-            if (!timerEl) return;
-
-            if (distance < 0) {
-                timerEl.textContent = '00:00:00';
-                const badge = el.closest('.badge');
-                if (badge) badge.style.display = 'none';
-                
-                const section = el.closest('section');
-                if (section && section.classList.contains('flash-sale-section')) {
-                    section.style.display = 'none';
-                }
-                return;
-            }
-
-            const hours = Math.floor(distance / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            timerEl.textContent = String(hours).padStart(2, '0') + ':' + 
-                                  String(minutes).padStart(2, '0') + ':' + 
-                                  String(seconds).padStart(2, '0');
-        });
-    }
-    
-    updateCountdowns();
-    setInterval(updateCountdowns, 1000);
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const miniCartContainer = document.getElementById('mini-cart-items-container');
-    const cartToggleBtn = document.getElementById('cart-dropdown-toggle');
-    const cartDropdown = document.getElementById('mini-cart-dropdown');
-    const cartWrapper = document.getElementById('cart-dropdown-wrapper');
-    const clearAllBtn = document.getElementById('mini-cart-clear-all');
-
-    if (cartToggleBtn && cartDropdown) {
-        cartToggleBtn.addEventListener('click', () => {
-            const isHidden = cartDropdown.classList.contains('invisible');
-            if (isHidden) {
-                cartDropdown.classList.remove('invisible', 'opacity-0', 'scale-95');
-                cartDropdown.classList.add('visible', 'opacity-100', 'scale-100');
-            } else {
-                cartDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
-                cartDropdown.classList.remove('visible', 'opacity-100', 'scale-100');
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (cartWrapper && !cartWrapper.contains(e.target)) {
-                cartDropdown.classList.add('invisible', 'opacity-0', 'scale-95');
-                cartDropdown.classList.remove('visible', 'opacity-100', 'scale-100');
-            }
-        });
-    }
-
-    if (miniCartContainer) {
-        const fetchApi = async (url, bodyData) => {
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(bodyData)
-                });
-                if (res.ok) {
+            const fetchApi = async (url, bodyData) => {
+                try {
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify(bodyData)
+                    });
                     return await res.json();
+                } catch (e) {
+                    console.error(e);
+                    return null;
                 }
-            } catch (e) { console.error('Cart API error', e); }
-            return null;
-        };
+            };
 
-        const updateCartItem = async (itemId, quantity) => {
-            if (quantity < 1) return;
-            const data = await fetchApi('{{ route('cart.update') }}', { item_id: itemId, quantity: quantity });
-            if (data) updateMiniCartUI(data, itemId);
-        };
-
-        const removeCartItem = async (itemId) => {
-            const data = await fetchApi('{{ route('cart.remove') }}', { item_id: itemId });
-            if (data) {
-                const itemEl = document.querySelector(`.mini-cart-item[data-id="${itemId}"]`);
-                if (itemEl) itemEl.remove();
-                updateMiniCartUI(data);
-            }
-        };
-
-        const clearCart = async () => {
-            const data = await fetchApi('{{ route('cart.clear') }}', {});
-            if (data) {
-                document.querySelectorAll('.mini-cart-item').forEach(el => el.remove());
-                updateMiniCartUI(data);
-            }
-        };
-
-        if (clearAllBtn) {
-            clearAllBtn.addEventListener('click', () => {
-                if (confirm('Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?')) {
-                    clearCart();
+            const updateMiniCartUI = (data) => {
+                if (!data) return;
+                const countBadge = document.querySelector('[data-cart-count]');
+                if (countBadge) {
+                    countBadge.textContent = data.count;
+                    if (data.count > 0) countBadge.classList.remove('d-none');
+                    else countBadge.classList.add('d-none');
                 }
-            });
-        }
+                const subtotalEl = document.getElementById('mini-cart-subtotal');
+                if (subtotalEl && data.subtotal !== undefined) {
+                    subtotalEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.subtotal);
+                }
+                const checkoutBtn = document.getElementById('mini-cart-checkout-btn');
+                if (checkoutBtn) {
+                    if (data.subtotal > 0) checkoutBtn.classList.remove('disabled');
+                    else checkoutBtn.classList.add('disabled');
+                }
+            };
 
-        const toggleSelect = async (itemId, selected) => {
-            const data = await fetchApi('{{ route('cart.toggle_select') }}', { item_id: itemId, selected: selected });
-            if (data) updateMiniCartUI(data, itemId);
-        };
+            if (miniCartContainer) {
+                miniCartContainer.addEventListener('click', async (e) => {
+                    const btnPlus = e.target.closest('.mini-cart-btn-plus');
+                    const btnMinus = e.target.closest('.mini-cart-btn-minus');
+                    const btnRemove = e.target.closest('.mini-cart-btn-remove');
 
-        const toggleSelectAll = async (selected) => {
-            const data = await fetchApi('{{ route('cart.toggle_select_all') }}', { selected: selected });
-            if (data) {
-                document.querySelectorAll('.mini-cart-item-checkbox').forEach(cb => {
-                    cb.checked = selected;
-                    const itemEl = cb.closest('.mini-cart-item');
-                    if (selected) itemEl.classList.remove('opacity-60');
-                    else itemEl.classList.add('opacity-60');
-                });
-                updateMiniCartUI(data);
-            }
-        };
-
-        const updateMiniCartUI = (data, updatedItemId = null) => {
-            // Update counts
-            document.querySelectorAll('[data-cart-count]').forEach(el => {
-                el.textContent = data.count;
-                if (data.count > 0) el.classList.remove('hidden');
-                else el.classList.add('hidden');
-            });
-            
-            // Update subtotal
-            const subtotalEl = document.getElementById('mini-cart-subtotal');
-            if (subtotalEl) subtotalEl.textContent = data.selected_subtotal_formatted;
-
-            // Checkout button state
-            const checkoutBtn = document.getElementById('mini-cart-checkout-btn');
-            if (checkoutBtn) {
-                if (data.selected_subtotal > 0) checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
-                else checkoutBtn.classList.add('opacity-50', 'pointer-events-none');
-            }
-
-            if (data.empty) {
-                const emptyMsg = document.getElementById('mini-cart-empty-msg');
-                const footer = document.getElementById('mini-cart-footer');
-                if (emptyMsg) emptyMsg.classList.remove('hidden');
-                else miniCartContainer.innerHTML = '<div class="p-4 text-center text-sm text-gray-500" id="mini-cart-empty-msg">Giỏ hàng trống</div>';
-                if (footer) footer.classList.add('hidden');
-            } else {
-                if (updatedItemId && data.item) {
-                    const itemSubtotalEl = document.querySelector(`.mini-cart-item-subtotal[data-id="${updatedItemId}"]`);
-                    const itemInput = document.querySelector(`.mini-cart-input-qty[data-id="${updatedItemId}"]`);
-                    const itemEl = document.querySelector(`.mini-cart-item[data-id="${updatedItemId}"]`);
-                    if (itemSubtotalEl) itemSubtotalEl.textContent = data.item.subtotal_formatted;
-                    if (itemInput) itemInput.value = data.item.quantity;
-                    if (itemEl) {
-                        if (data.item.is_selected) itemEl.classList.remove('opacity-60');
-                        else itemEl.classList.add('opacity-60');
+                    if (btnPlus) {
+                        const id = btnPlus.getAttribute('data-id');
+                        const input = miniCartContainer.querySelector(`.mini-cart-input-qty[data-id="${id}"]`);
+                        const newQty = parseInt(input.value) + 1;
+                        input.value = newQty;
+                        const data = await fetchApi('{{ route('cart.update') }}', { item_id: id, quantity: newQty });
+                        updateMiniCartUI(data);
+                    } else if (btnMinus) {
+                        const id = btnMinus.getAttribute('data-id');
+                        const input = miniCartContainer.querySelector(`.mini-cart-input-qty[data-id="${id}"]`);
+                        if (parseInt(input.value) > 1) {
+                            const newQty = parseInt(input.value) - 1;
+                            input.value = newQty;
+                            const data = await fetchApi('{{ route('cart.update') }}', { item_id: id, quantity: newQty });
+                            updateMiniCartUI(data);
+                        }
+                    } else if (btnRemove) {
+                        const id = btnRemove.getAttribute('data-id');
+                        const data = await fetchApi('{{ route('cart.remove') }}', { item_id: id });
+                        const itemRow = miniCartContainer.querySelector(`.mini-cart-item[data-id="${id}"]`);
+                        if (itemRow) itemRow.remove();
+                        updateMiniCartUI(data);
+                        if (!miniCartContainer.querySelector('.mini-cart-item')) {
+                            miniCartContainer.innerHTML = '<div class="text-center py-5 text-muted" id="mini-cart-empty-msg"><i class="bi bi-cart-x fs-1 text-secondary opacity-50 d-block mb-2"></i>Giỏ hàng trống</div>';
+                        }
                     }
-                }
-                
-                // Update select all checkbox state
-                const selectAllCb = document.getElementById('mini-cart-select-all');
-                if (selectAllCb) {
-                    const allChecked = Array.from(document.querySelectorAll('.mini-cart-item-checkbox')).every(cb => cb.checked);
-                    selectAllCb.checked = allChecked && document.querySelectorAll('.mini-cart-item-checkbox').length > 0;
-                }
-            }
-        };
+                });
 
-        // Initialize select all state
-        const selectAllCb = document.getElementById('mini-cart-select-all');
-        if (selectAllCb) {
-            const allChecked = Array.from(document.querySelectorAll('.mini-cart-item-checkbox')).every(cb => cb.checked);
-            selectAllCb.checked = allChecked && document.querySelectorAll('.mini-cart-item-checkbox').length > 0;
-            
-            selectAllCb.addEventListener('change', (e) => {
-                toggleSelectAll(e.target.checked);
+                miniCartContainer.addEventListener('change', async (e) => {
+                    if (e.target.classList.contains('mini-cart-item-checkbox')) {
+                        const id = e.target.getAttribute('data-id');
+                        const checked = e.target.checked;
+                        const data = await fetchApi('{{ route('cart.toggle_select') }}', { item_id: id, selected: checked });
+                        updateMiniCartUI(data);
+                    }
+                });
+            }
+
+            if (clearAllBtn) {
+                clearAllBtn.addEventListener('click', async () => {
+                    if (confirm('Bạn có chắc muốn xóa tất cả sản phẩm khỏi giỏ hàng?')) {
+                        const data = await fetchApi('{{ route('cart.clear') }}', {});
+                        if (miniCartContainer) {
+                            miniCartContainer.innerHTML = '<div class="text-center py-5 text-muted" id="mini-cart-empty-msg"><i class="bi bi-cart-x fs-1 text-secondary opacity-50 d-block mb-2"></i>Giỏ hàng trống</div>';
+                        }
+                        updateMiniCartUI(data);
+                    }
+                });
+            }
+
+            // Live Chat with Support Staff (No AI)
+            const toggleChatBtn = document.getElementById('toggle-live-chat-btn');
+            const closeChatBtn = document.getElementById('close-live-chat-btn');
+            const chatWindow = document.getElementById('live-chat-window');
+            const chatMessagesContainer = document.getElementById('live-chat-messages-container');
+            const chatInputField = document.getElementById('live-chat-input-field');
+            const sendChatBtn = document.getElementById('send-live-chat-btn');
+            const liveChatBadge = document.getElementById('live-chat-badge');
+            let liveChatInterval = null;
+
+            if (toggleChatBtn && chatWindow) {
+                const toggleChat = () => {
+                    const isHidden = chatWindow.classList.contains('d-none');
+                    if (isHidden) {
+                        chatWindow.classList.remove('d-none');
+                        if (liveChatBadge) liveChatBadge.style.display = 'none';
+                        fetchLiveMessages();
+                        liveChatInterval = setInterval(fetchLiveMessages, 5000);
+                    } else {
+                        chatWindow.classList.add('d-none');
+                        if (liveChatInterval) clearInterval(liveChatInterval);
+                    }
+                };
+
+                toggleChatBtn.addEventListener('click', toggleChat);
+                if (closeChatBtn) closeChatBtn.addEventListener('click', toggleChat);
+
+                const appendLiveMessage = (msg) => {
+                    const emptyMsg = document.getElementById('live-chat-empty-msg');
+                    if (emptyMsg) emptyMsg.style.display = 'none';
+
+                    const div = document.createElement('div');
+                    const isUser = msg.sender === 'user';
+                    div.className = `p-2 mb-2 rounded-3 small ${isUser ? 'bg-success text-white ms-auto text-end' : 'bg-white border text-dark me-auto text-start'}`;
+                    div.style.maxWidth = '85%';
+                    div.textContent = msg.message;
+                    chatMessagesContainer.appendChild(div);
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                };
+
+                const fetchLiveMessages = async () => {
+                    try {
+                        const res = await fetch('{{ route('live-chat.fetch') }}');
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            chatMessagesContainer.innerHTML = '';
+                            data.forEach(msg => appendLiveMessage(msg));
+                        }
+                    } catch (e) {}
+                };
+
+                const sendLiveMessage = async () => {
+                    const text = chatInputField.value.trim();
+                    if (!text) return;
+                    chatInputField.value = '';
+                    appendLiveMessage({ sender: 'user', message: text });
+
+                    try {
+                        await fetch('{{ route('live-chat.send') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({ message: text })
+                        });
+                    } catch (e) {}
+                };
+
+                if (sendChatBtn) sendChatBtn.addEventListener('click', sendLiveMessage);
+                if (chatInputField) chatInputField.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendLiveMessage();
+                });
+            }
+
+            // Mega Menu Dropdown Hover cho Desktop (Chỉ mở khi hover đúng vào nút Sản phẩm)
+            const toggleBtn = document.getElementById('productMegaDropdownToggle');
+            const megaMenu = document.getElementById('productMegaMenuContainer');
+            if (toggleBtn && megaMenu) {
+                let hoverTimer = null;
+
+                const openMenu = () => {
+                    if (window.innerWidth >= 992) {
+                        clearTimeout(hoverTimer);
+                        megaMenu.classList.add('is-open');
+                    }
+                };
+
+                const closeMenu = () => {
+                    if (window.innerWidth >= 992) {
+                        hoverTimer = setTimeout(() => {
+                            megaMenu.classList.remove('is-open');
+                        }, 180);
+                    }
+                };
+
+                // CHỈ bắt sự kiện khi chuột đi vào đúng nút "Sản phẩm"
+                toggleBtn.addEventListener('mouseenter', openMenu);
+                toggleBtn.addEventListener('mouseleave', closeMenu);
+
+                // Giữ menu mở khi rê chuột bên trong bảng menu
+                megaMenu.addEventListener('mouseenter', openMenu);
+                megaMenu.addEventListener('mouseleave', closeMenu);
+
+                // Nếu click vào nút trên desktop: chuyển thẳng đến trang danh sách sản phẩm
+                toggleBtn.addEventListener('click', (e) => {
+                    if (window.innerWidth >= 992) {
+                        window.location.href = "{{ route('products.index') }}";
+                    }
+                });
+            }
+
+            // User Profile Dropdown Click Handler (Đảm bảo click mở/đóng mượt mà 100%)
+            const profileBtn = document.getElementById('userProfileDropdown');
+            if (profileBtn) {
+                profileBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const menu = this.nextElementSibling;
+                    if (menu) {
+                        const isShown = menu.classList.contains('show');
+                        document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                            if (!m.classList.contains('mega-menu-3cols')) {
+                                m.classList.remove('show');
+                            }
+                        });
+                        if (!isShown) {
+                            menu.classList.add('show');
+                            this.setAttribute('aria-expanded', 'true');
+                        } else {
+                            menu.classList.remove('show');
+                            this.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+            }
+
+            // Đóng dropdown khi click ra ngoài
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                        if (!m.classList.contains('mega-menu-3cols')) {
+                            m.classList.remove('show');
+                        }
+                    });
+                    const pBtn = document.getElementById('userProfileDropdown');
+                    if (pBtn) pBtn.setAttribute('aria-expanded', 'false');
+                }
             });
-        }
-
-        miniCartContainer.addEventListener('click', (e) => {
-            const btnMinus = e.target.closest('.mini-cart-btn-minus');
-            const btnPlus = e.target.closest('.mini-cart-btn-plus');
-            const btnRemove = e.target.closest('.mini-cart-btn-remove');
-
-            if (btnMinus) {
-                const id = btnMinus.dataset.id;
-                const input = document.querySelector(`.mini-cart-input-qty[data-id="${id}"]`);
-                if (input) updateCartItem(id, parseInt(input.value) - 1);
-            } else if (btnPlus) {
-                const id = btnPlus.dataset.id;
-                const input = document.querySelector(`.mini-cart-input-qty[data-id="${id}"]`);
-                if (input) updateCartItem(id, parseInt(input.value) + 1);
-            } else if (btnRemove) {
-                const id = btnRemove.dataset.id;
-                removeCartItem(id);
-            }
         });
+    </script>
 
-        miniCartContainer.addEventListener('change', (e) => {
-            if (e.target.classList.contains('mini-cart-input-qty')) {
-                const id = e.target.dataset.id;
-                updateCartItem(id, parseInt(e.target.value));
-            } else if (e.target.classList.contains('mini-cart-item-checkbox')) {
-                const id = e.target.dataset.id;
-                toggleSelect(id, e.target.checked);
-            }
-        });
-    }
-});
-</script>
-@stack('scripts')
+    @stack('scripts')
 </body>
 </html>

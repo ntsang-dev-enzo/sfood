@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Jobs\EmbedImage;
 use Illuminate\Support\Facades\DB;
 
 class Product extends Model
@@ -158,37 +157,5 @@ class Product extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
-    }
-
-    protected static function booted(): void
-    {
-        // when thumbnail changes, re-embed
-        static::updated(function (Product $p) {
-            try {
-                if ($p->isDirty('thumbnail')) {
-                    // remove existing product-level embedding (product_image_id = 0) for the old thumbnail
-                    DB::table('product_embeddings')
-                        ->where('product_id', $p->id)
-                        ->where('product_image_id', 0)
-                        ->where('image_path', $p->getOriginal('thumbnail'))
-                        ->delete();
-
-                    if (!empty($p->thumbnail)) {
-                        EmbedImage::dispatch($p->id, 0, $p->thumbnail);
-                    }
-                }
-            } catch (\Throwable $e) {
-                // ignore
-            }
-        });
-
-        static::created(function (Product $p) {
-            try {
-                if (!empty($p->thumbnail)) {
-                    EmbedImage::dispatch($p->id, 0, $p->thumbnail);
-                }
-            } catch (\Throwable $e) {
-            }
-        });
     }
 }

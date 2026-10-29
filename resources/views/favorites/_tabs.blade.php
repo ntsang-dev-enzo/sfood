@@ -1,12 +1,12 @@
-<div class="max-w-7xl mx-auto px-4 mt-6 mb-2">
-    <div class="flex gap-2">
+<div class="container mt-4 mb-2">
+    <div class="d-flex gap-2">
         <a href="{{ route('favorites.index') }}"
-            class="px-5 py-2.5 rounded-xl text-sm font-semibold transition {{ request()->routeIs('favorites.index') ? 'bg-leaf-600 text-white' : 'bg-cream-50 text-earth-700 hover:bg-cream-200 border border-cream-300' }}">
-            🛒 Sản phẩm
+           class="btn btn-sm rounded-pill px-4 py-2 fw-semibold {{ request()->routeIs('favorites.index') ? 'btn-success shadow-sm' : 'btn-light border' }}">
+            <i class="bi bi-cart3 me-1"></i> Sản phẩm yêu thích
         </a>
         <a href="{{ route('favorites.videos') }}"
-            class="px-5 py-2.5 rounded-xl text-sm font-semibold transition {{ request()->routeIs('favorites.videos') ? 'bg-leaf-600 text-white' : 'bg-cream-50 text-earth-700 hover:bg-cream-200 border border-cream-300' }}">
-            ▶ Video
+           class="btn btn-sm rounded-pill px-4 py-2 fw-semibold {{ request()->routeIs('favorites.videos') ? 'btn-success shadow-sm' : 'btn-light border' }}">
+            <i class="bi bi-play-circle me-1"></i> Video &amp; Công thức
         </a>
     </div>
 </div>

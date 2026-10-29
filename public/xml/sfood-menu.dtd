@@ -1,0 +1,19 @@
+<!ELEMENT breakfast_menu (restaurant, food+)>
+<!ELEMENT restaurant (name, phone, address, website)>
+<!ELEMENT phone (#PCDATA)>
+<!ELEMENT address (#PCDATA)>
+<!ELEMENT website (#PCDATA)>
+<!ELEMENT food (name, price, unit, calories, description, origin, preparation_time, image)>
+<!ATTLIST food
+    id ID #REQUIRED
+    category (mon_an_sang|rau_cu|thit_tuoi|hai_san|trai_cay) #REQUIRED
+    status (available|out_of_stock) "available"
+>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT price (#PCDATA)>
+<!ELEMENT unit (#PCDATA)>
+<!ELEMENT calories (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT origin (#PCDATA)>
+<!ELEMENT preparation_time (#PCDATA)>
+<!ELEMENT image (#PCDATA)>

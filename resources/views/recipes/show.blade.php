@@ -1,100 +1,136 @@
 @extends('layouts.app')
-@section('title', $recipe->title.' - SFood')
+
+@section('title', $recipe->title . ' - SFood')
+
 @section('content')
-<div class="max-w-7xl mx-auto px-4 py-8">
-    <nav class="text-sm text-earth-500 mb-6">
-        <a href="{{ route('recipes.index') }}" class="hover:text-leaf-700">← Quay lại công thức</a>
-    </nav>
+<div class="bg-body-tertiary py-4 min-vh-100">
+    <div class="container py-2">
 
-    <div class="grid lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <h1 class="text-3xl font-bold text-earth-800">{{ $recipe->title }}</h1>
-                @if ($recipe->video_url)
-                    <button type="button"
-                        class="favorite-btn flex-shrink-0 p-3 rounded-xl border transition {{ $isFavorited ? 'bg-red-50 border-red-300 text-red-500' : 'border-cream-300 bg-cream-50 hover:bg-cream-200 text-earth-700' }}"
-                        data-url="{{ route('recipes.favorite', $recipe) }}"
-                        data-favorited="{{ $isFavorited ? 'true' : 'false' }}"
-                        data-login-url="{{ route('login') }}"
-                        data-authenticated="{{ auth()->check() ? 'true' : 'false' }}"
-                        @guest title="Đăng nhập để yêu thích" @endguest>
-                        <span class="favorite-icon text-xl">{{ $isFavorited ? '❤️' : '🤍' }}</span>
-                    </button>
-                @endif
-            </div>
+        {{-- Breadcrumb --}}
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-white p-3 rounded-3 shadow-sm border mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>{{ __('app.home_title') }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('recipes.index') }}" class="text-decoration-none text-success">Công thức món ngon</a></li>
+                <li class="breadcrumb-item active text-truncate fw-semibold" aria-current="page" style="max-width: 320px;">{{ $recipe->title }}</li>
+            </ol>
+        </nav>
 
-            @if ($recipe->video_url)
-                <div class="card aspect-video mb-6">
-                    @if (str_contains($recipe->video_url, 'youtube.com') || str_contains($recipe->video_url, 'youtu.be'))
-                        @php
-                            preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $recipe->video_url, $m);
-                            $ytId = $m[1] ?? '';
-                        @endphp
-                        <iframe class="w-full h-full rounded-2xl" src="https://www.youtube.com/embed/{{ $ytId }}" allowfullscreen></iframe>
-                    @else
-                        <video controls class="w-full h-full rounded-2xl" poster="{{ $recipe->thumbnail ? asset('storage/'.$recipe->thumbnail) : '' }}">
-                            <source src="{{ $recipe->video_url }}">
-                        </video>
+        <div class="row g-4 align-items-start">
+            {{-- Main Column: Video / Image / Instructions --}}
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 p-md-5 mb-4">
+                    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                        <h1 class="fw-bold text-dark fs-2 lh-sm mb-0">{{ $recipe->title }}</h1>
+                        @if ($recipe->video_url)
+                            <button type="button"
+                                class="btn {{ $isFavorited ? 'btn-danger' : 'btn-outline-danger' }} rounded-pill px-3 py-2 favorite-btn flex-shrink-0"
+                                data-url="{{ route('recipes.favorite', $recipe) }}"
+                                data-favorited="{{ $isFavorited ? 'true' : 'false' }}"
+                                data-login-url="{{ route('login') }}"
+                                data-authenticated="{{ auth()->check() ? 'true' : 'false' }}"
+                                @guest title="Đăng nhập để yêu thích" @endguest>
+                                <span class="favorite-icon"><i class="bi {{ $isFavorited ? 'bi-heart-fill' : 'bi-heart' }}"></i></span>
+                            </button>
+                        @endif
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 text-muted small mb-4 pb-3 border-bottom">
+                        <span><i class="bi bi-stopwatch text-warning me-1"></i>{{ $recipe->cook_time }} phút</span>
+                        <span>•</span>
+                        <span><i class="bi bi-eye text-primary me-1"></i>{{ number_format($recipe->view_count) }} lượt xem</span>
+                        <span>•</span>
+                        <span><i class="bi bi-shield-check text-success me-1"></i>Công thức chuẩn bếp SFood</span>
+                    </div>
+
+                    {{-- MEDIA: VIDEO OR THUMBNAIL --}}
+                    @if ($recipe->video_url)
+                        <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm mb-4 bg-dark">
+                            @if (str_contains($recipe->video_url, 'youtube.com') || str_contains($recipe->video_url, 'youtu.be'))
+                                @php
+                                    preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $recipe->video_url, $m);
+                                    $ytId = $m[1] ?? '';
+                                @endphp
+                                <iframe src="https://www.youtube.com/embed/{{ $ytId }}" allowfullscreen class="w-100 h-100 border-0"></iframe>
+                            @else
+                                <video controls class="w-100 h-100 object-fit-cover" poster="{{ $recipe->thumbnail ? asset('storage/'.$recipe->thumbnail) : '' }}">
+                                    <source src="{{ $recipe->video_url }}">
+                                </video>
+                            @endif
+                        </div>
+                    @elseif ($recipe->thumbnail)
+                        <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm mb-4">
+                            <img src="{{ asset('storage/'.$recipe->thumbnail) }}" class="w-100 h-100 object-fit-cover" alt="{{ $recipe->title }}">
+                        </div>
                     @endif
-                </div>
-            @elseif ($recipe->thumbnail)
-                <img src="{{ asset('storage/'.$recipe->thumbnail) }}" class="w-full rounded-2xl shadow mb-6" alt="">
-            @endif
 
-            <div class="card p-6">
-                <h2 class="font-bold text-xl text-earth-800 mb-3">Hướng dẫn nấu</h2>
-                <p class="text-earth-600 whitespace-pre-line leading-relaxed">{{ $recipe->description }}</p>
-                <p class="text-earth-500 text-sm mt-4 flex items-center gap-2">
-                    <span class="badge bg-earth-100 text-earth-700">⏱ {{ $recipe->cook_time }} phút</span>
-                    <span class="badge bg-leaf-100 text-leaf-800">👁 {{ number_format($recipe->view_count) }} lượt xem</span>
-                </p>
+                    {{-- INSTRUCTIONS --}}
+                    <h3 class="fw-bold text-dark fs-4 mb-3">
+                        <i class="bi bi-journal-text text-success me-2"></i>Hướng dẫn thực hiện
+                    </h3>
+                    <div class="lh-lg text-secondary fst-normal" style="white-space: pre-line;">
+                        {{ $recipe->description }}
+                    </div>
+                </div>
+            </div>
+
+            {{-- Sidebar Column: Ingredients & Quick Buy --}}
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 position-sticky" style="top: 90px;">
+                    <h4 class="fw-bold text-dark fs-5 mb-3 d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-basket3-fill text-success me-2"></i>Nguyên liệu cần chuẩn bị</span>
+                        <span class="badge bg-success-subtle text-success rounded-pill">{{ $recipe->ingredients->count() }} món</span>
+                    </h4>
+
+                    @php $totalPrice = 0; @endphp
+                    <div class="list-group list-group-flush mb-4">
+                        @foreach ($recipe->ingredients as $ingredient)
+                            @php 
+                                $v = $ingredient->productVariant; 
+                                $qty = max(1, (int) ceil($ingredient->quantity));
+                                $itemPrice = $v ? ($v->effectivePrice() * $qty) : 0;
+                                $totalPrice += $itemPrice;
+                            @endphp
+                            @if($v && $v->product)
+                                <div class="list-group-item px-0 py-3 d-flex align-items-center justify-content-between border-bottom">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0 fs-6">{{ $v->product->name }}</h6>
+                                        <small class="text-muted">{{ $ingredient->quantity_label }} ({{ $v->name }})</small>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold text-danger small">{{ number_format($itemPrice) }}đ</span>
+                                        <form method="POST" action="{{ route('products.add-to-cart', $v->product->slug) }}">
+                                            @csrf
+                                            <input type="hidden" name="variant_id" value="{{ $v->id }}">
+                                            <input type="hidden" name="quantity" value="{{ $qty }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2 py-1" title="Thêm vào giỏ">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    {{-- TOTAL & QUICK BUY --}}
+                    <div class="p-3 bg-light rounded-3 mb-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="fw-bold text-dark">Tổng tiền nguyên liệu:</span>
+                            <span class="fs-4 fw-bold text-danger">{{ number_format($totalPrice) }}đ</span>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ route('recipes.quick-buy', $recipe) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                            <span>Mua nhanh tất cả nguyên liệu</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div>
-            <div class="card p-6 sticky top-28">
-                <h2 class="font-bold text-xl text-earth-800 mb-4">🧺 Nguyên liệu</h2>
-                @php $totalPrice = 0; @endphp
-                <ul class="space-y-3 mb-6">
-                    @foreach ($recipe->ingredients as $ingredient)
-                        @php 
-                            $v = $ingredient->productVariant; 
-                            $qty = max(1, (int) ceil($ingredient->quantity));
-                            $totalPrice += $qty * $v->effectivePrice();
-                        @endphp
-                        <li class="flex justify-between items-center text-sm border-b border-cream-300 pb-3">
-                                <div>
-                                    <p class="font-medium text-earth-800">{{ $v->product->name }}</p>
-                                    <p class="text-earth-500">{{ $ingredient->quantity_label }} ({{ $v->name }})</p>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="text-leaf-700 font-semibold">{{ number_format($v->effectivePrice() * $qty) }}đ</span>
-
-                                    <form method="POST" action="{{ route('products.add-to-cart', $v->product->slug) }}">
-                                        @csrf
-                                        <input type="hidden" name="variant_id" value="{{ $v->id }}">
-                                        <input type="hidden" name="quantity" value="{{ $qty }}">
-                                        <button type="submit" class="px-3 py-1 rounded-lg bg-leaf-600 text-white text-sm hover:bg-leaf-700 transition">Thêm</button>
-                                    </form>
-                                </div>
-                            </li>
-                    @endforeach
-                </ul>
-
-                <div class="flex justify-between items-center mb-4 pt-2 border-t border-cream-300">
-                    <span class="font-bold text-earth-800 text-lg">Tổng tiền:</span>
-                    <span class="font-bold text-leaf-700 text-2xl">{{ number_format($totalPrice) }}đ</span>
-                </div>
-
-                <form method="POST" action="{{ route('recipes.quick-buy', $recipe) }}">
-                    @csrf
-                    <button type="submit" class="w-full bg-earth-600 hover:bg-earth-700 text-cream-50 py-3.5 rounded-xl font-bold text-lg transition shadow">
-                        ⚡ Mua nhanh tất cả nguyên liệu
-                    </button>
-                </form>
-
-            </div>
-        </div>
     </div>
 </div>
 @endsection

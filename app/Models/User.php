@@ -90,11 +90,6 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Order::class);
     }
 
-    public function aiSearchLogs(): HasMany
-    {
-        return $this->hasMany(AiSearchLog::class);
-    }
-
     public function favorites(): HasMany
     {
         return $this->hasMany(Favorite::class);

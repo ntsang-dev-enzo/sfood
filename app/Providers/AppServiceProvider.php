@@ -25,7 +25,13 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Login::class, MergeGuestCart::class);
 
         View::composer('layouts.app', function ($view) {
-            $view->with('cartCount', app(CartService::class)->count());
+            $view->with([
+                'cartCount' => app(CartService::class)->count(),
+                'allNavCategories' => \App\Models\Category::where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->withCount('products')
+                    ->get(),
+            ]);
         });
     }
 }

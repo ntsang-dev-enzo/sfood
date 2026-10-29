@@ -15,8 +15,6 @@ class RecipeController extends Controller
         $minTime = $request->get('min_time');
         $maxTime = $request->get('max_time');
         $sort = $request->get('sort', 'newest'); // newest, shortest
-        
-        $aiResults = session('ai_results');
 
         $query = Recipe::where('is_published', true)
             ->when($search, fn ($q) => $q->where('title', 'like', "%{$search}%"))
@@ -50,20 +48,7 @@ class RecipeController extends Controller
         $user = $request->user();
         $collectedIds = $user ? $user->collectedCoupons()->pluck('coupons.id')->toArray() : [];
 
-        return view('recipes.index', compact('recipes', 'search', 'aiResults', 'categories', 'categorySlug', 'minTime', 'maxTime', 'sort', 'coupons', 'collectedIds'));
-    }
-
-    public function aiSearch(\Illuminate\Http\Request $request, \App\Services\AiSearchService $aiSearch)
-    {
-        $request->validate([
-            'ai_image' => 'required|image|max:5120',
-        ]);
-
-        $results = $aiSearch->searchRecipeByImage($request->file('ai_image'));
-
-        return redirect()
-            ->route('recipes.index', $request->only(['search']))
-            ->with('ai_results', $results);
+        return view('recipes.index', compact('recipes', 'search', 'categories', 'categorySlug', 'minTime', 'maxTime', 'sort', 'coupons', 'collectedIds'));
     }
 
     public function show(Recipe $recipe)

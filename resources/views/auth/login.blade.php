@@ -1,51 +1,91 @@
 @extends('layouts.app')
-@section('title', 'Đăng nhập - SFood')
+@section('title', 'Đăng Nhập - SFood')
+
 @section('content')
-<div class="min-h-[70vh] flex items-center justify-center px-4 py-12">
-    <div class="card w-full max-w-md p-8">
-        <div class="text-center mb-8">
-            <img src="{{ asset('/logo.png') }}" alt="SFood Logo" class="h-16 mx-auto object-contain mb-4">
-            <h1 class="text-2xl font-bold text-earth-800">Đăng nhập</h1>
-            <p class="text-earth-500 text-sm mt-1">Chào mừng trở lại SFood</p>
-        </div>
-
-        @if ($errors->any())
-            <div class="bg-red-50 text-red-700 p-3 rounded-xl mb-4 text-sm">{{ $errors->first() }}</div>
-        @endif
-
-        <form method="POST" action="{{ route('login') }}" class="space-y-4">
-            @csrf
-            <div>
-                <label class="text-sm font-medium text-earth-700">Email</label>
-                <input type="email" name="email" value="{{ old('email') }}" required class="input-field mt-1">
-            </div>
-            <div>
-                <div class="flex justify-between items-center">
-                    <label class="text-sm font-medium text-earth-700">Mật khẩu</label>
-                    <a href="{{ route('password.request') }}" class="text-xs text-leaf-700 hover:underline">Quên mật khẩu?</a>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <div class="text-center mb-4">
+                    <img src="{{ asset('/logo.png') }}" alt="SFood Logo" style="height: 56px; width: auto;" class="rounded bg-white p-1 mb-2">
+                    <h3 class="fw-bold text-dark mb-1">Đăng Nhập SFood</h3>
+                    <p class="text-muted small">Chào mừng bạn quay trở lại với thực phẩm tươi sống!</p>
                 </div>
-                <input type="password" name="password" required class="input-field mt-1">
+
+                @if ($errors->has('email') && str_contains($errors->first('email'), 'chưa tồn tại'))
+                    <div class="alert alert-warning py-3 px-3 small mb-4 rounded-3 border-warning" role="alert">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                            <strong class="text-dark">Chưa có tài khoản SFood!</strong>
+                        </div>
+                        <p class="mb-2 text-dark">{{ $errors->first('email') }}</p>
+                        <a href="{{ route('register') }}" class="btn btn-success btn-sm fw-bold rounded-pill px-3">
+                            <i class="bi bi-person-plus me-1"></i> Đăng ký tài khoản ngay
+                        </a>
+                    </div>
+                @elseif ($errors->any())
+                    <div class="alert alert-danger py-2 small mb-4" role="alert">
+                        <i class="bi bi-exclamation-circle-fill me-1"></i> {{ $errors->first() }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}" id="login-form" novalidate>
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Địa chỉ Email <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="email" value="{{ old('email') }}" required 
+                                   class="form-control border-start-0 shadow-none @error('email') is-invalid @enderror" 
+                                   placeholder="email@example.com">
+                        </div>
+                        <div class="invalid-feedback">Vui lòng nhập địa chỉ email hợp lệ.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold text-dark mb-0">Mật khẩu <span class="text-danger">*</span></label>
+                            <a href="{{ route('password.request') }}" class="small text-success text-decoration-none">Quên mật khẩu?</a>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" required 
+                                   class="form-control border-start-0 shadow-none @error('password') is-invalid @enderror" 
+                                   placeholder="••••••••">
+                        </div>
+                        <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự.</div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="remember" id="remember" checked>
+                        <label class="form-check-label small text-muted cursor-pointer" for="remember">
+                            Ghi nhớ đăng nhập
+                        </label>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-success fw-bold py-2.5 shadow-sm rounded-pill">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+                        </button>
+                    </div>
+                </form>
+
+                <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1">
+                    <span class="px-3 small text-muted">hoặc</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <a href="{{ route('auth.google') }}" class="btn btn-outline-secondary w-100 py-2 d-flex align-items-center justify-center gap-2 rounded-pill small">
+                    <img src="https://www.google.com/favicon.ico" style="width: 18px; height: 18px;" alt="">
+                    Đăng nhập bằng tài khoản Google
+                </a>
+
+                <p class="text-center small text-muted mt-4 mb-0">
+                    Chưa có tài khoản? <a href="{{ route('register') }}" class="text-success fw-bold text-decoration-none">Đăng ký ngay</a>
+                </p>
             </div>
-            <label class="flex items-center gap-2 text-sm text-earth-600">
-                <input type="checkbox" name="remember" class="accent-leaf-600"> Ghi nhớ đăng nhập
-            </label>
-            <button type="submit" class="btn-primary w-full">Đăng nhập</button>
-        </form>
-
-        <div class="my-6 flex items-center gap-3">
-            <div class="flex-1 h-px bg-cream-300"></div>
-            <span class="text-earth-400 text-sm">hoặc</span>
-            <div class="flex-1 h-px bg-cream-300"></div>
         </div>
-
-        <a href="{{ route('auth.google') }}" class="flex items-center justify-center gap-2 w-full border-2 border-cream-300 py-3 rounded-xl font-medium hover:bg-cream-100 transition text-earth-700">
-            <img src="https://www.google.com/favicon.ico" class="w-5 h-5" alt="">
-            Đăng nhập bằng Google
-        </a>
-
-        <p class="text-center text-sm mt-6 text-earth-500">
-            Chưa có tài khoản? <a href="{{ route('register') }}" class="text-leaf-700 font-semibold hover:underline">Đăng ký</a>
-        </p>
     </div>
 </div>
 @endsection

@@ -1,31 +1,38 @@
 @extends('layouts.app')
 @section('title', 'Đặt lại mật khẩu - SFood')
-@section('content')
-<div class="min-h-[70vh] flex items-center justify-center px-4 py-12">
-    <div class="card w-full max-w-md p-8">
-        <div class="text-center mb-8">
-            <img src="{{ asset('/logo.png') }}" alt="SFood Logo" class="h-16 mx-auto object-contain mb-4">
-            <h1 class="text-2xl font-bold text-earth-800">Đặt mật khẩu mới</h1>
-        </div>
-        <p class="text-earth-500 text-sm text-center mb-6">Nhập mật khẩu mới cho tài khoản của bạn</p>
 
-        <form method="POST" action="{{ route('password.store') }}" class="space-y-4">
-            @csrf
-            <input type="hidden" name="token" value="{{ $token }}">
-            <div>
-                <label class="text-sm font-medium text-earth-700">Email</label>
-                <input type="email" name="email" value="{{ old('email', $email) }}" required class="input-field mt-1" readonly>
+@section('content')
+<div class="bg-body-tertiary py-5 min-vh-75 d-flex align-items-center">
+    <div class="container" style="max-width: 440px;">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+            <div class="text-center mb-4">
+                <img src="{{ asset('/logo.png') }}" alt="SFood Logo" class="mb-3" style="max-height: 52px; width: auto;">
+                <h4 class="fw-bold text-dark mb-1">Đặt mật khẩu mới</h4>
+                <p class="text-muted small">Nhập mật khẩu mới cho tài khoản của bạn</p>
             </div>
-            <div>
-                <label class="text-sm font-medium text-earth-700">Mật khẩu mới</label>
-                <input type="password" name="password" required class="input-field mt-1">
-            </div>
-            <div>
-                <label class="text-sm font-medium text-earth-700">Xác nhận mật khẩu</label>
-                <input type="password" name="password_confirmation" required class="input-field mt-1">
-            </div>
-            <button type="submit" class="btn-primary w-full">Cập nhật mật khẩu</button>
-        </form>
+
+            <form method="POST" action="{{ route('password.store') }}">
+                @csrf
+                <input type="hidden" name="token" value="{{ $token }}">
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-dark">Email</label>
+                    <input type="email" name="email" value="{{ old('email', $email) }}" required class="form-control bg-light" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-dark">Mật khẩu mới <span class="text-danger">*</span></label>
+                    <input type="password" name="password" required class="form-control" placeholder="••••••••">
+                    @error('password') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold text-dark">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                    <input type="password" name="password_confirmation" required class="form-control" placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-success w-100 py-2.5 rounded-pill fw-bold shadow-sm">
+                    Cập nhật mật khẩu
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

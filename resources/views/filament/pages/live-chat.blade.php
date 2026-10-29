@@ -49,9 +49,9 @@
                     <div>
                         <div class="font-bold text-lg text-gray-900 dark:text-gray-100">{{ $selectedUser->name }}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                            <span>📧 {{ $selectedUser->email }}</span>
+                            <span>Email: {{ $selectedUser->email }}</span>
                             @if($selectedUser->phone)
-                                <span>• 📞 {{ $selectedUser->phone }}</span>
+                                <span>• SĐT: {{ $selectedUser->phone }}</span>
                             @endif
                         </div>
                     </div>

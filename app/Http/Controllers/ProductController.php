@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Services\AiSearchService;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 
@@ -67,16 +66,35 @@ class ProductController extends Controller
 
         $products = $productsQuery->paginate(12)->withQueryString();
 
+        // Lấy danh sách sản phẩm đã xem gần nhất từ session
+        $recentIds = session()->get('recently_viewed', []);
+        $recentlyViewed = collect();
+        if (!empty($recentIds)) {
+            $recentlyViewed = Product::with(['variants', 'images', 'category'])
+                ->whereIn('id', $recentIds)
+                ->where('is_active', true)
+                ->get()
+                ->sortBy(fn($p) => array_search($p->id, $recentIds));
+        }
+
+        // Nếu session chưa có, gợi ý các sản phẩm xem nhiều nhất
+        if ($recentlyViewed->isEmpty()) {
+            $recentlyViewed = Product::with(['variants', 'images', 'category'])
+                ->where('is_active', true)
+                ->orderByDesc('view_count')
+                ->take(4)
+                ->get();
+        }
+
         return view('products.index', [
             'products' => $products,
             'categories' => Category::where('is_active', true)->orderBy('sort_order')->get(),
+            'recentlyViewed' => $recentlyViewed,
             'search' => $search,
             'categorySlug' => $categorySlug,
             'minPrice' => $minPrice,
             'maxPrice' => $maxPrice,
             'sort' => $sort,
-            'aiResults' => session('ai_results'),
-
         ]);
     }
 
@@ -84,6 +102,13 @@ class ProductController extends Controller
     {
         $product->load(['category', 'variants', 'images']);
         $product->increment('view_count');
+
+        // Lưu sản phẩm đã xem vào session
+        $recentIds = session()->get('recently_viewed', []);
+        $recentIds = array_diff($recentIds, [$product->id]);
+        array_unshift($recentIds, $product->id);
+        $recentIds = array_slice($recentIds, 0, 8);
+        session()->put('recently_viewed', $recentIds);
 
         $suggestions = Product::with('reviews')
             ->where('category_id', $product->category_id)
@@ -117,7 +142,7 @@ class ProductController extends Controller
 
         $html = '';
         foreach ($rows as $s) {
-            $html .= '<div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-cream-200 dark:border-gray-700 hover:shadow-md transition">';
+            $html .= '<div class="col">';
             $html .= view('partials.product-card', ['product' => $s])->render();
             $html .= '</div>';
         }
@@ -126,20 +151,6 @@ class ProductController extends Controller
             'html' => $html,
             'count' => $rows->count()
         ]);
-    }
-
-    public function aiSearch(\Illuminate\Http\Request $request, \App\Services\AiSearchService $aiSearch)
-    {
-        $request->validate([
-            'ai_image' => 'required|image|max:5120',
-        ]);
-
-        $results = $aiSearch->searchByImage($request->file('ai_image'));
-        \Illuminate\Support\Facades\Log::info('AI_RESULTS_DUMP_PRODUCT', ['products' => $results['products']]);
-
-        return redirect()
-            ->route('products.index', $request->only(['search', 'category', 'min_price', 'max_price', 'sort']))
-            ->with('ai_results', $results['products']);
     }
 
     public function addToCart(\Illuminate\Http\Request $request, \App\Services\CartService $cart)

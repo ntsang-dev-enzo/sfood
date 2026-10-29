@@ -1,63 +1,103 @@
 @extends('layouts.app')
 @section('title', 'Liên hệ - SFood')
-@section('content')
-<div class="bg-earth-800 text-cream-50 py-16">
-    <div class="max-w-7xl mx-auto px-4 text-center">
-        <h1 class="text-4xl font-bold mb-4">Liên hệ</h1>
-        <p class="text-cream-300">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
-    </div>
-</div>
 
-<div class="max-w-7xl mx-auto px-4 py-14">
-    <div class="grid lg:grid-cols-2 gap-10">
-        <div>
-            <h2 class="section-title mb-6">Thông tin liên hệ</h2>
-            <div class="space-y-5">
-                @foreach ([
-                    ['📍', 'Địa chỉ', '123 Đường Xanh, Phường Bến Nghé, Q.1, TP.HCM'],
-                    ['📞', 'Hotline', '1900 1234 (7:00 - 22:00)'],
-                    ['✉️', 'Email', 'support@sfood.vn'],
-                    ['💬', 'Zalo / Facebook', '@sfood.vn'],
-                ] as $info)
-                    <div class="flex gap-4 p-4 bg-cream-50 rounded-xl border border-cream-300">
-                        <span class="text-2xl">{{ $info[0] }}</span>
-                        <div>
-                            <p class="font-semibold text-earth-800">{{ $info[1] }}</p>
-                            <p class="text-earth-600 text-sm">{{ $info[2] }}</p>
+@section('content')
+<div class="bg-body-tertiary py-4 min-vh-100">
+    <div class="container py-2">
+        {{-- Breadcrumb --}}
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-white p-3 rounded-3 shadow-sm border mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none text-success"><i class="bi bi-house-door me-1"></i>{{ __('app.home_title') }}</a></li>
+                <li class="breadcrumb-item active fw-semibold" aria-current="page">Liên hệ với chúng tôi</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4">
+            {{-- Contact Information --}}
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white h-100">
+                    <h4 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+                        <i class="bi bi-geo-alt-fill text-danger me-2"></i>Thông Tin Liên Hệ
+                    </h4>
+                    
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <i class="bi bi-building fs-4 text-success"></i>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Trụ sở chính</h6>
+                                <p class="small text-secondary mb-0">123 Đường 30 Tháng 4, Phường Hưng Lợi, Quận Ninh Kiều, TP. Cần Thơ</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <i class="bi bi-telephone fs-4 text-primary"></i>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Hotline CSKH</h6>
+                                <p class="small text-secondary mb-0">1900 1234 (Hỗ trợ 7:00 - 22:00 tất cả các ngày)</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <i class="bi bi-envelope fs-4 text-warning"></i>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Email hỗ trợ</h6>
+                                <p class="small text-secondary mb-0">contact@sfood.vn / hotro@sfood.vn</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <i class="bi bi-chat-dots fs-4 text-info"></i>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Hỗ trợ trực tuyến</h6>
+                                <p class="small text-secondary mb-0">LiveChat trực tiếp tại góc phải màn hình 24/7</p>
+                            </div>
                         </div>
                     </div>
-                @endforeach
+                </div>
             </div>
-        </div>
 
-        <div class="card p-8">
-            <h2 class="font-bold text-xl text-earth-800 mb-6">Gửi tin nhắn</h2>
-            <form method="POST" action="{{ route('contact.send') }}" class="space-y-4">
-                @csrf
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-earth-700 mb-1 block">Họ tên *</label>
-                        <input name="name" value="{{ old('name') }}" required class="input-field">
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-earth-700 mb-1 block">Email *</label>
-                        <input type="email" name="email" value="{{ old('email') }}" required class="input-field">
-                    </div>
+            {{-- Contact Form --}}
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                    <h4 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+                        <i class="bi bi-envelope-paper text-success me-2"></i>Gửi Tin Nhắn Cho SFood
+                    </h4>
+
+                    @if(session('success'))
+                        <div class="alert alert-success border-0 rounded-3 mb-4">
+                            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('contact.send') }}">
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-dark">Họ và tên <span class="text-danger">*</span></label>
+                                <input name="name" value="{{ old('name') }}" required class="form-control" placeholder="Nguyễn Văn A">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-dark">Địa chỉ Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" value="{{ old('email') }}" required class="form-control" placeholder="email@example.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-dark">Số điện thoại</label>
+                                <input name="phone" value="{{ old('phone') }}" class="form-control" placeholder="0912345678">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-dark">Chủ đề <span class="text-danger">*</span></label>
+                                <input name="subject" value="{{ old('subject') }}" required class="form-control" placeholder="Ví dụ: Hợp tác nông trại...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold text-dark">Nội dung tin nhắn <span class="text-danger">*</span></label>
+                                <textarea name="message" rows="5" required class="form-control" placeholder="Hãy cho chúng tôi biết bạn cần hỗ trợ điều gì...">{{ old('message') }}</textarea>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-success rounded-pill px-5 py-2.5 fw-semibold shadow-sm">
+                                    <i class="bi bi-send me-1"></i> Gửi liên hệ
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div>
-                    <label class="text-sm font-medium text-earth-700 mb-1 block">Số điện thoại</label>
-                    <input name="phone" value="{{ old('phone') }}" class="input-field">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-earth-700 mb-1 block">Chủ đề *</label>
-                    <input name="subject" value="{{ old('subject') }}" required class="input-field">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-earth-700 mb-1 block">Nội dung *</label>
-                    <textarea name="message" rows="5" required class="input-field">{{ old('message') }}</textarea>
-                </div>
-                <button type="submit" class="btn-primary w-full">Gửi liên hệ</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>

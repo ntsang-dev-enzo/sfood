@@ -1,20 +1,25 @@
 @extends('layouts.app')
-@section('title', 'Không có quyền truy cập')
+@section('title', 'Không có quyền truy cập - SFood')
+
 @section('content')
-<div class="min-h-[60vh] flex items-center justify-center px-4 py-12">
-    <div class="text-center max-w-lg">
-        <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-        </div>
-        <h1 class="text-3xl font-bold text-earth-800 mb-4">Không có quyền truy cập!</h1>
-        <p class="text-earth-600 mb-8 leading-relaxed">
-            Xin lỗi, tài khoản của bạn không được cấp quyền để truy cập vào trang Quản trị hệ thống. Nếu bạn tin rằng đây là lỗi, vui lòng liên hệ bộ phận hỗ trợ.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ route('home') }}" class="btn-primary">Về Trang Chủ</a>
-            <a href="{{ route('contact') }}" class="btn-secondary">Liên hệ Hỗ trợ</a>
+<div class="bg-body-tertiary py-5 min-vh-75 d-flex align-items-center">
+    <div class="container text-center" style="max-width: 580px;">
+        <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+            <div class="rounded-circle bg-danger-subtle text-danger mx-auto d-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                <i class="bi bi-shield-x fs-1"></i>
+            </div>
+            <h3 class="fw-bold text-dark mb-2">Không có quyền truy cập!</h3>
+            <p class="text-secondary small lh-lg mb-4">
+                Xin lỗi, tài khoản của bạn không được cấp quyền để truy cập vào phân hệ này. Nếu bạn tin rằng đây là lỗi, vui lòng liên hệ bộ phận hỗ trợ kỹ thuật SFood.
+            </p>
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                <a href="{{ route('home') }}" class="btn btn-success rounded-pill px-4 py-2 fw-semibold">
+                    <i class="bi bi-house-door me-1"></i> Về Trang Chủ
+                </a>
+                <a href="{{ route('contact') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold">
+                    <i class="bi bi-headset me-1"></i> Liên hệ Hỗ trợ
+                </a>
+            </div>
         </div>
     </div>
 </div>

@@ -1,483 +1,455 @@
 @extends('layouts.app')
-@section('title', 'SFood - Thực phẩm tươi sống')
-
-@push('scripts')
-    <style>
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            50% {
-                transform: translateY(-20px) rotate(2deg);
-            }
-        }
-
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .animate-float-delayed {
-            animation: float 6s ease-in-out 3s infinite;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .dark .glass-card {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-    </style>
-@endpush
+@section('title', 'SFood - Nông Sản & Thực Phẩm Tươi Sống Chuẩn VietGAP')
 
 @section('content')
-    {{-- Hero --}}
-    <section
-        class="relative bg-gradient-to-br from-leaf-800 via-leaf-600 to-earth-800 text-cream-50 overflow-hidden min-h-[80vh] flex items-center">
-        <!-- Animated Background Orbs -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-leaf-400/20 blur-[100px] animate-pulse"></div>
-            <div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-earth-500/20 blur-[120px] animate-pulse"
-                style="animation-delay: 2s;"></div>
-            <div class="absolute top-1/2 left-1/2 w-64 h-64 rounded-full bg-cream-100/10 blur-[80px] animate-pulse"
-                style="animation-delay: 4s;"></div>
-        </div>
+<style>
+    /* Hero Carousel & Banner Dimensions - Đồng bộ kích thước chuẩn 100% */
+    .hero-carousel-container {
+        border-radius: 1.25rem;
+        overflow: hidden;
+    }
+    #homeCarousel, 
+    #homeCarousel .carousel-inner, 
+    #homeCarousel .carousel-item {
+        height: 440px;
+    }
+    @media (max-width: 991px) {
+        #homeCarousel, 
+        #homeCarousel .carousel-inner, 
+        #homeCarousel .carousel-item {
+            height: 340px;
+        }
+    }
+    @media (max-width: 575px) {
+        #homeCarousel, 
+        #homeCarousel .carousel-inner, 
+        #homeCarousel .carousel-item {
+            height: 220px;
+        }
+    }
+    #homeCarousel img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    .promo-card-side {
+        height: calc(220px - 0.5rem);
+        border-radius: 1.25rem;
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .promo-card-side:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+    }
+    .hover-lift {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(45, 106, 79, 0.12) !important;
+    }
+    .cat-circle-card {
+        transition: all 0.25s ease;
+    }
+    .cat-circle-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        border-color: #2d6a4f !important;
+    }
+    .cat-circle-card:hover .cat-icon-wrap {
+        transform: scale(1.1);
+        background-color: #2d6a4f !important;
+        color: #ffffff !important;
+    }
+    .cat-icon-wrap {
+        transition: all 0.3s ease;
+    }
+</style>
 
-        <div class="max-w-7xl mx-auto px-4 py-20 relative z-10 w-full">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                <div class="space-y-8 animate-fade-in-up">
-                    <div
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-sm font-medium text-cream-100 shadow-lg border-white/20">
-                        <span class="relative flex h-3 w-3">
-                            <span
-                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                        </span>
-                        {{ __('app.home_badge') ?? 'Tươi mới mỗi ngày · Giao hàng trong 2h' }}
+{{-- 1. HERO SECTION: Carousel Đồng Bộ + Bento Promo Cards Bên Cạnh --}}
+<div class="container py-3">
+    <div class="row g-3">
+        {{-- Carousel Chính (Col 8 trên desktop, Col 12 trên mobile) --}}
+        <div class="col-lg-8">
+            <div id="homeCarousel" class="carousel slide hero-carousel-container shadow-sm position-relative" data-bs-ride="carousel" data-bs-interval="4500">
+                @if(isset($banners) && $banners->count() > 0)
+                    <div class="carousel-indicators">
+                        @foreach($banners as $index => $banner)
+                            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}" aria-label="Slide {{ $index + 1 }}"></button>
+                        @endforeach
                     </div>
-
-                    <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight">
-                        {!! __('app.home_heading_1') ?? 'Thực phẩm sạch<br>' !!}
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cream-100 to-leaf-200">
-                            {{ __('app.home_heading_2') ?? 'cho gia đình Việt' }}
-                        </span>
-                    </h1>
-
-                    <p class="text-cream-100/80 text-lg md:text-xl max-w-lg leading-relaxed font-medium">
-                        {{ __('app.home_description') ?? 'Khám phá trải nghiệm mua sắm thông minh với AI. Nhận diện nguyên liệu bằng hình ảnh, nấu ăn qua video trực quan.' }}
-                    </p>
-
-                    <div class="flex flex-wrap gap-4 pt-4">
-                        <a href="{{ route('products.index') }}"
-                            class="inline-flex items-center justify-center gap-2 bg-cream-50 text-leaf-800 hover:bg-white hover:scale-105 hover:shadow-xl hover:shadow-cream-50/20 font-bold px-8 py-4 rounded-2xl transition-all duration-300">
-                            🛒 {{ __('app.explore_now') ?? 'Khám phá ngay' }}
-                        </a>
-                        <a href="{{ route('recipes.index') }}"
-                            class="inline-flex items-center justify-center gap-2 glass-card hover:bg-white/10 text-cream-50 font-semibold px-8 py-4 rounded-2xl transition-all duration-300 hover:scale-105">
-                            👩‍🍳 {{ __('app.view_recipes') ?? 'Xem công thức' }}
-                        </a>
+                    <div class="carousel-inner">
+                        @foreach($banners as $index => $banner)
+                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }} position-relative bg-dark">
+                                <a href="{{ $banner->link ?: route('products.index') }}" class="d-block w-100 h-100">
+                                    <img src="{{ asset('storage/' . $banner->image_path) }}" 
+                                         class="d-block w-100 h-100 object-fit-cover" 
+                                         alt="{{ $banner->title ?: 'SFood Banner' }}">
+                                    @if($banner->title)
+                                        <div class="carousel-caption d-none d-md-block text-start p-3 p-lg-4 rounded-4" 
+                                             style="background: rgba(27, 38, 30, 0.75); backdrop-filter: blur(8px); max-width: 55%; bottom: 2rem; left: 2.5rem; border: 1px solid rgba(255,255,255,0.15);">
+                                            <h3 class="fw-bold text-white mb-2">{{ $banner->title }}</h3>
+                                            <span class="btn btn-sm btn-warning fw-bold rounded-pill px-3 text-dark shadow-sm">
+                                                Khám phá ngay <i class="bi bi-arrow-right ms-1"></i>
+                                            </span>
+                                        </div>
+                                    @endif
+                                </a>
+                            </div>
+                        @endforeach
                     </div>
-                </div>
-
-                <div class="hidden lg:flex justify-center items-center relative">
-                    <!-- Floating visual elements -->
-                    <div class="relative w-full max-w-md animate-float">
-                        <div
-                            class="glass-card rounded-[2.5rem] p-8 shadow-2xl border-white/20 backdrop-blur-md relative z-10">
-                            @include('partials.search-box', ['size' => 'lg', 'placeholder' => __('app.search_placeholder') ?? 'Hôm nay bạn muốn ăn gì?'])
-
-                            <div class="mt-8 grid grid-cols-3 gap-6 text-center">
-                                <div class="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition cursor-default">
-                                    <p class="text-3xl font-bold text-cream-50 mb-1">500+</p>
-                                    <p class="text-sm text-cream-200 font-medium">{{ __('app.products') }}</p>
-                                </div>
-                                <div class="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition cursor-default">
-                                    <p class="text-3xl font-bold text-cream-50 mb-1">50+</p>
-                                    <p class="text-sm text-cream-200 font-medium">{{ __('app.recipes') ?? 'Công thức' }}</p>
-                                </div>
-                                <div class="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition cursor-default">
-                                    <p class="text-3xl font-bold text-cream-50 mb-1">2h</p>
-                                    <p class="text-sm text-cream-200 font-medium">{{ __('app.delivery') ?? 'Giao hàng' }}
-                                    </p>
+                @else
+                    <div class="carousel-indicators">
+                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                        <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    </div>
+                    <div class="carousel-inner">
+                        {{-- Slide 1: Rau Củ Tươi Sạch --}}
+                        <div class="carousel-item active" style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 60%, #40916c 100%);">
+                            <div class="container h-100 d-flex align-items-center">
+                                <div class="row align-items-center w-100 g-3">
+                                    <div class="col-md-8 text-white px-4 px-md-5">
+                                        <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2 d-inline-flex align-items-center">
+                                            <i class="bi bi-patch-check-fill me-1"></i> 100% Tươi Sạch &amp; Hữu Cơ
+                                        </span>
+                                        <h2 class="display-6 fw-black text-white mb-2 lh-sm">Nông Sản Sạch Cho Gia Đình</h2>
+                                        <p class="lead fs-6 text-white-50 mb-3 pe-lg-3 d-none d-md-block">
+                                            Thu hoạch từ nông trại trong lành mỗi sáng. Giao hàng tươi trong 2 giờ tại Cần Thơ, TP.HCM &amp; Hà Nội.
+                                        </p>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a href="{{ route('products.index') }}" class="btn btn-warning fw-bold rounded-pill px-4 text-dark shadow-sm">
+                                                <i class="bi bi-cart3 me-1"></i> Mua sắm ngay
+                                            </a>
+                                            <a href="{{ route('recipes.index') }}" class="btn btn-outline-light fw-bold rounded-pill px-4 shadow-sm">
+                                                <i class="bi bi-journal-bookmark me-1"></i> Xem công thức
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-center d-none d-md-block">
+                                        <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-20 text-white backdrop-blur">
+                                            <i class="bi bi-basket2-fill text-warning display-4"></i>
+                                            <h6 class="fw-bold mt-2 mb-1">Giao Tươi Mỗi Sáng</h6>
+                                            <small class="text-white-50">Đóng thùng giữ lạnh chuyên dụng</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Floating badges behind -->
-                        <div
-                            class="absolute -top-10 -right-10 bg-earth-500 text-white p-4 rounded-2xl shadow-xl rotate-12 animate-float-delayed z-0 border-4 border-leaf-800">
-                            <span class="text-3xl">🥩</span>
+                        {{-- Slide 2: Công thức món ngon --}}
+                        <div class="carousel-item" style="background: linear-gradient(135deg, #2b2d42 0%, #3d2c1e 60%, #5c4033 100%);">
+                            <div class="container h-100 d-flex align-items-center">
+                                <div class="row align-items-center w-100 g-3">
+                                    <div class="col-md-8 text-white px-4 px-md-5">
+                                        <span class="badge bg-danger px-3 py-1.5 rounded-pill fw-bold mb-2 d-inline-flex align-items-center">
+                                            <i class="bi bi-fire me-1"></i> Món Ngon Mỗi Ngày
+                                        </span>
+                                        <h2 class="display-6 fw-black text-white mb-2 lh-sm">Hôm Nay Bạn Muốn Ăn Gì?</h2>
+                                        <p class="lead fs-6 text-white-50 mb-3 pe-lg-3 d-none d-md-block">
+                                            Khám phá hàng chục video công thức chuẩn bếp gia đình. Mua trọn gói nguyên liệu cần thiết chỉ với 1 click!
+                                        </p>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a href="{{ route('recipes.index') }}" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm">
+                                                <i class="bi bi-journal-bookmark me-1"></i> Xem công thức
+                                            </a>
+                                            <a href="{{ route('vouchers.index') }}" class="btn btn-outline-light fw-bold rounded-pill px-4 shadow-sm">
+                                                <i class="bi bi-ticket-perforated me-1"></i> Săn voucher
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-center d-none d-md-block">
+                                        <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-20 text-white backdrop-blur">
+                                            <i class="bi bi-egg-fried text-danger display-4"></i>
+                                            <h6 class="fw-bold mt-2 mb-1">Chuẩn Vị Đầu Bếp</h6>
+                                            <small class="text-white-50">Dinh dưỡng &amp; Lành mạnh</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div
-                            class="absolute -bottom-10 -left-10 bg-leaf-500 text-white p-4 rounded-2xl shadow-xl -rotate-12 animate-float z-20 border-4 border-leaf-800">
-                            <span class="text-3xl">🥬</span>
+
+                        {{-- Slide 3: Thực Đơn Bữa Sáng Dinh Dưỡng --}}
+                        <div class="carousel-item" style="background: linear-gradient(135deg, #0d3b66 0%, #1d3557 60%, #457b9d 100%);">
+                            <div class="container h-100 d-flex align-items-center">
+                                <div class="row align-items-center w-100 g-3">
+                                    <div class="col-md-8 text-white px-4 px-md-5">
+                                        <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2 d-inline-flex align-items-center">
+                                            <i class="bi bi-cup-hot-fill me-1"></i> Khởi Đầu Ngày Mới Tràn Đầy Năng Lượng
+                                        </span>
+                                        <h2 class="display-6 fw-black text-white mb-2 lh-sm">Thực Đơn Bữa Sáng Tươi Ngon</h2>
+                                        <p class="lead fs-6 text-white-50 mb-3 pe-lg-3 d-none d-md-block">
+                                            Thưởng thức bánh mì nướng thơm giòn, phở bò tươi sạch cùng các loại rau củ hữu cơ tươi ngon dinh dưỡng cho cả gia đình.
+                                        </p>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a href="{{ route('products.index', ['category' => 'mon_an_sang']) }}" class="btn btn-warning fw-bold rounded-pill px-4 text-dark shadow-sm">
+                                                <i class="bi bi-cart3 me-1"></i> Khám Phá Món Ngon
+                                            </a>
+                                            <a href="{{ route('products.index') }}" class="btn btn-outline-light fw-bold rounded-pill px-4 shadow-sm">
+                                                <i class="bi bi-cart-check me-1"></i> Đặt Hàng Ngay
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-center d-none d-md-block">
+                                        <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-20 text-white backdrop-blur">
+                                            <i class="bi bi-egg-fried text-warning display-4"></i>
+                                            <h6 class="fw-bold mt-2 mb-1">Ngon &amp; Tiện Lợi</h6>
+                                            <small class="text-white-50">Giao tươi ngon tận nơi trong 2H</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                @endif
+
+                <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Trước</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Tiếp</span>
+                </button>
+            </div>
+        </div>
+
+        {{-- Bento Promo Cards Bên Cạnh (Col 4 - Tạo bố cục E-commerce chuyên nghiệp) --}}
+        <div class="col-lg-4 d-flex flex-column justify-content-between gap-3">
+            {{-- Card 1 --}}
+            <div class="promo-card-side p-4 text-white d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" 
+                 style="background: linear-gradient(135deg, #1b4332 0%, #40916c 100%);">
+                <div class="position-absolute end-0 bottom-0 opacity-25 pe-3 pb-2 text-white">
+                    <i class="bi bi-flower1" style="font-size: 6rem; line-height: 1;"></i>
+                </div>
+                <div class="position-relative z-1">
+                    <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold small mb-2">Ưu Đãi Hôm Nay</span>
+                    <h5 class="fw-bold text-white mb-1">Rau Củ Hữu Cơ Đà Lạt</h5>
+                    <p class="small text-white-50 mb-0">Giảm thêm 20% cho đơn hàng đầu tiên trong tuần</p>
+                </div>
+                <div class="position-relative z-1 pt-2">
+                    <a href="{{ route('products.index') }}" class="btn btn-sm btn-light fw-bold text-success rounded-pill px-3 shadow-sm">
+                        Xem ngay <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            {{-- Card 2 --}}
+            <div class="promo-card-side p-4 text-white d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" 
+                 style="background: linear-gradient(135deg, #8b1e0f 0%, #e63946 100%);">
+                <div class="position-absolute end-0 bottom-0 opacity-25 pe-3 pb-2 text-white">
+                    <i class="bi bi-fire" style="font-size: 6rem; line-height: 1;"></i>
+                </div>
+                <div class="position-relative z-1">
+                    <span class="badge bg-white text-danger px-2.5 py-1 rounded-pill fw-bold small mb-2">Tươi Sống Mỗi Ngày</span>
+                    <h5 class="fw-bold text-white mb-1">Thịt &amp; Thủy Hải Sản Tươi</h5>
+                    <p class="small text-white-50 mb-0">Nhập tươi trong ngày, chứng nhận kiểm dịch an toàn</p>
+                </div>
+                <div class="position-relative z-1 pt-2">
+                    <a href="{{ route('products.index') }}" class="btn btn-sm btn-light fw-bold text-danger rounded-pill px-3 shadow-sm">
+                        Đặt giao ngay <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- 2. CAM KẾT & CHẤT LƯỢNG (Bootstrap 5 Grid 12 cột) --}}
+<div class="container py-3">
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-white hover-lift">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success-subtle text-success p-3 fs-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Giao nhanh 2h</h6>
+                        <small class="text-muted">Nội thành trong ngày</small>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Bottom wave -->
-        <div class="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none">
-            <svg class="relative block w-[calc(100%+1.3px)] h-[50px] lg:h-[100px]" data-name="Layer 1"
-                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path
-                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,119.29,200.9,105.9Z"
-                    class="fill-cream-50 dark:fill-[#18181b]"></path>
-            </svg>
-        </div>
-    </section>
-
-    {{-- Trust badges --}}
-    <section class="bg-cream-50 dark:bg-[#121212] relative z-20 border-b border-cream-200 dark:border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 py-10 -mt-10 relative z-30 grid grid-cols-2 md:grid-cols-4 gap-4">
-            @foreach ([['🚚', 'Giao nhanh 2h', 'Nội thành TP.HCM'], ['🌱', 'Nguồn gốc rõ', '100% truy xuất'], ['💳', 'Thanh toán an toàn', 'VNPay · MoMo · COD'], ['🤖', 'AI thông minh', 'Tìm ảnh & giọng nói']] as $badge)
-                <div
-                    class="bg-cream-50 dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-cream-200 dark:border-gray-700 hover:shadow-md hover:-translate-y-1 transition duration-300 flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4 group">
-                    <div
-                        class="w-12 h-12 rounded-xl bg-leaf-100 text-leaf-700 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-leaf-200 transition duration-300 flex-shrink-0">
-                        {{ $badge[0] }}
+        <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-white hover-lift">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning-subtle text-warning p-3 fs-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                        <i class="bi bi-patch-check-fill"></i>
                     </div>
                     <div>
-                        <p class="font-bold text-earth-800">{{ $badge[1] }}</p>
-                        <p class="text-xs text-earth-500 mt-1">{{ $badge[2] }}</p>
+                        <h6 class="fw-bold mb-0 text-dark">Chuẩn VietGAP</h6>
+                        <small class="text-muted">100% Nguồn gốc rõ ràng</small>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-white hover-lift">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary-subtle text-primary p-3 fs-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Thanh toán an toàn</h6>
+                        <small class="text-muted">PayOS, COD tận nơi</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-white hover-lift">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-danger-subtle text-danger p-3 fs-4 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Đổi trả 24h</h6>
+                        <small class="text-muted">Hoàn tiền nếu không tươi</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- 3. FLASH SALE GIỜ VÀNG (E-commerce Flashsale Banner) --}}
+@if(!empty($flashSales) && $flashSales->count())
+    <div class="container py-4">
+        <div class="p-4 rounded-4 text-white mb-4 shadow-sm position-relative overflow-hidden" 
+             style="background: linear-gradient(90deg, #d90429 0%, #ef233c 60%, #f72585 100%);">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 position-relative z-1">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-lightning-charge-fill text-warning fs-1"></i>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="fw-black mb-0 text-white tracking-wider">FLASHSALE GIỜ VÀNG</h3>
+                            <span class="badge bg-warning text-dark fw-bold">GIẢM ĐẾN 50%</span>
+                        </div>
+                        <small class="text-white-50">Số lượng có hạn, ưu đãi kết thúc khi hết hàng</small>
+                    </div>
+                </div>
+                <a href="{{ route('products.index') }}" class="btn btn-light text-danger fw-bold rounded-pill px-4 shadow-sm">
+                    Xem tất cả deal sốc <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        {{-- 3 Sản phẩm 1 hàng trên điện thoại (row-cols-3) --}}
+        <div class="row row-cols-3 row-cols-md-3 row-cols-lg-6 g-2 g-md-3">
+            @foreach($flashSales as $p)
+                <div class="col">
+                    @include('partials.product-card', ['product' => $p])
                 </div>
             @endforeach
         </div>
-    </section>
+    </div>
+@endif
 
-    {{-- Banners Bento Grid --}}
-    @if(isset($banners) && $banners->count() > 0)
-        <section class="bg-cream-50 dark:bg-gray-900 py-8 border-b border-cream-200 dark:border-gray-800">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[200px]">
-                    @foreach($banners->take(4) as $index => $banner)
-                        @php
-                            // Bento logic
-                            $colSpan = 'col-span-1 md:col-span-2';
-                            $rowSpan = 'row-span-1';
+{{-- 4. DANH MỤC NỔI BẬT (Interactive Category Circles - 3 cột trên mobile) --}}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <span class="badge bg-success-subtle text-success fw-bold uppercase">Nhóm Nông Sản</span>
+            <h3 class="fw-bold text-dark mt-1 mb-0">Khám Phá Theo Danh Mục</h3>
+        </div>
+        <a href="{{ route('products.index') }}" class="text-success text-decoration-none fw-semibold small">
+            Tất cả danh mục <i class="bi bi-chevron-right"></i>
+        </a>
+    </div>
 
-                            if ($banners->count() == 1) {
-                                $colSpan = 'col-span-1 md:col-span-4';
-                                $rowSpan = 'row-span-2';
-                            } elseif ($banners->count() == 2) {
-                                $colSpan = 'col-span-1 md:col-span-2';
-                                $rowSpan = 'row-span-2';
-                            } elseif ($banners->count() == 3) {
-                                if ($index == 0) {
-                                    $colSpan = 'col-span-1 md:col-span-2';
-                                    $rowSpan = 'row-span-2';
-                                } else {
-                                    $colSpan = 'col-span-1 md:col-span-2';
-                                    $rowSpan = 'row-span-1';
-                                }
-                            } elseif ($banners->count() >= 4) {
-                                if ($index == 0) {
-                                    $colSpan = 'col-span-1 md:col-span-2';
-                                    $rowSpan = 'row-span-2';
-                                } else {
-                                    $colSpan = 'col-span-1 md:col-span-2';
-                                    $rowSpan = 'row-span-1';
-                                    if ($index == 3) {
-                                        $colSpan = 'col-span-1 md:col-span-4 lg:col-span-2';
-                                    }
-                                }
-                            }
-                        @endphp
-                        <a href="{{ $banner->link ?? '#' }}"
-                            class="{{ $colSpan }} {{ $rowSpan }} block relative group overflow-hidden rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 bg-earth-800">
-                            <img src="{{ asset('storage/' . $banner->image_path) }}" alt="{{ $banner->title }}"
-                                class="w-full h-full object-cover group-hover:scale-105 group-hover:opacity-90 transition-all duration-700">
-                            @if($banner->title)
-                                <div
-                                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8">
-                                    <h3
-                                        class="text-white text-xl md:text-2xl font-extrabold tracking-tight transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                                        {{ $banner->title }}
-                                    </h3>
-                                    <p
-                                        class="text-cream-200 text-sm mt-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-75">
-                                        Khám phá ngay →</p>
-                                </div>
-                            @endif
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-
-    {{-- Flash sale --}}
-    @if(!empty($flashSales) && $flashSales->count())
-        @php
-            $earliestEnd = null;
-            foreach ($flashSales as $p) {
-                foreach ($p->variants as $v) {
-                    if ($v->isFlashActive()) {
-                        if (!$earliestEnd || $v->flash_sale_ends_at < $earliestEnd) {
-                            $earliestEnd = $v->flash_sale_ends_at;
-                        }
-                    }
-                }
-            }
-        @endphp
-        <section
-            class="bg-cream-50 dark:bg-gray-900 py-12 relative overflow-hidden border-b border-cream-200 dark:border-gray-800">
-            <div class="max-w-7xl mx-auto px-4 relative z-10">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4 mb-6 bg-gradient-to-r from-red-500 to-orange-500 p-6 rounded-3xl text-white shadow-lg shadow-red-500/20"
-                    @if($earliestEnd) data-countdown="{{ $earliestEnd->toIso8601String() }}" @endif>
-                    <div>
-                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                            <span class="animate-pulse text-2xl">⚡</span>
-                            <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">Flash Sale</h2>
-                            @if($earliestEnd)
-                                <div
-                                    class="ml-0 sm:ml-2 flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-xl border border-white/10">
-                                    <span class="text-xs font-medium uppercase opacity-90">Kết thúc sau</span>
-                                    <span class="countdown-timer font-mono font-bold tracking-wider">00:00:00</span>
-                                </div>
-                            @endif
-                        </div>
-                        <p class="text-red-100 font-medium mt-1">Giá sốc trong thời gian có hạn — mua ngay kẻo lỡ!</p>
+    <div class="row row-cols-3 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2 g-md-3">
+        @foreach ($categories as $cat)
+            <div class="col">
+                <a href="{{ route('products.index', ['category' => $cat->slug]) }}" 
+                   class="card h-100 border shadow-sm text-center text-decoration-none text-dark p-2 p-md-3 rounded-4 cat-circle-card bg-white">
+                    <div class="rounded-circle bg-success-subtle text-success mx-auto d-flex align-items-center justify-content-center mb-2 cat-icon-wrap" 
+                         style="width: 52px; height: 52px; font-size: 1.5rem;">
+                        <i class="bi bi-basket2-fill"></i>
                     </div>
-                    <a href="{{ route('vouchers.index') }}"
-                        class="bg-white text-red-600 px-6 py-2.5 rounded-xl font-bold hover:bg-red-50 hover:scale-105 transition-all shadow-sm text-center inline-block">Nhận
-                        mã & phí ship →</a>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-                    @foreach($flashSales as $p)
-                        @include('partials.product-card', ['product' => $p])
-                    @endforeach
-                </div>
+                    <h6 class="fw-bold mb-1 text-dark text-truncate small">{{ $cat->name }}</h6>
+                    <small class="text-muted d-none d-sm-block">Nông sản sạch</small>
+                </a>
             </div>
-        </section>
-    @endif
+        @endforeach
+    </div>
+</div>
 
-    {{-- Categories --}}
-    <section class="bg-cream-50 dark:bg-[#121212] py-16 border-b border-cream-200 dark:border-gray-800">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-earth-800 tracking-tight">Danh mục nổi bật</h2>
-                <p class="text-earth-500 mt-3 font-medium text-lg">Hôm nay bạn cần gì? Chúng tôi đều có tươi mới.</p>
+{{-- 5. SẢN PHẨM BÁN CHẠY NHẤT (3 sản phẩm 1 hàng trên điện thoại, 6 sản phẩm trên desktop) --}}
+@if(isset($bestSellers) && $bestSellers->count() > 0)
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <div>
+                <span class="badge bg-danger-subtle text-danger fw-bold uppercase">Ưa chuộng nhất</span>
+                <h3 class="fw-bold text-dark mt-1 mb-0">Top Sản Phẩm Bán Chạy Trong Tuần</h3>
             </div>
-            <div class="flex gap-6 overflow-x-auto justify-center scrollbar-hide pb-4">
-                @foreach ($categories as $cat)
-                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
-                        class="flex-shrink-0 w-40 group bg-cream-50 dark:bg-gray-800 rounded-[2rem] p-6 text-center border border-cream-200 dark:border-gray-700 shadow-sm hover:border-leaf-400 hover:shadow-xl hover:shadow-leaf-100 hover:-translate-y-2 transition-all duration-300">
-                        <div
-                            class="w-20 h-20 mx-auto rounded-[1.5rem] bg-gradient-to-br from-leaf-100 to-cream-200 group-hover:from-leaf-200 group-hover:to-leaf-300 flex items-center justify-center text-4xl group-hover:scale-110 transition duration-500 shadow-inner mb-4">
-                            {{ $cat->icon ?? '🍱' }}
-                        </div>
-                        <p class="font-bold text-earth-800 text-base group-hover:text-leaf-700 transition">{{ $cat->name }}</p>
+            <a href="{{ route('products.index') }}" class="text-success text-decoration-none fw-semibold">
+                Xem tất cả <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        <div class="row row-cols-3 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2 g-md-2.5 g-lg-3">
+            @foreach ($bestSellers->take($bestSellers->count() >= 12 ? 12 : 6) as $product)
+                <div class="col">
+                    @include('partials.product-card', ['product' => $product])
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
+
+
+
+{{-- 7. CÔNG THỨC MÓN NGON & MUA NHANH NGUYÊN LIỆU --}}
+@if(!empty($recipes) && $recipes->count())
+    <div class="container py-4 mb-3">
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <div>
+                <span class="badge bg-warning-subtle text-warning fw-bold uppercase">Món Ngon Gia Đình</span>
+                <h3 class="fw-bold text-dark mt-1 mb-0">Hôm Nay Bạn Muốn Nấu Gì?</h3>
+            </div>
+            <a href="{{ route('recipes.index') }}" class="text-success text-decoration-none fw-semibold">
+                Xem tất cả công thức <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 g-md-4">
+            @foreach ($recipes->take(6) as $recipe)
+                <div class="col">
+                    @include('partials.recipe-card', ['recipe' => $recipe])
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
+
+{{-- 8. NEWSLETTER / NHẬN VOUCHER (Khuyến khích đăng ký thành viên) --}}
+<div class="container py-4 mb-4">
+    <div class="card border-0 rounded-4 text-white p-4 p-md-5 shadow-sm" style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2"><i class="bi bi-gift-fill me-1"></i> Quà tặng thành viên mới</span>
+                <h3 class="fw-bold text-white mb-2">Nhận Ngay Voucher Giảm 50.000đ</h3>
+                <p class="text-white-50 mb-0">Đăng ký thành viên hoặc để lại email để nhận thông báo khuyến mãi và công thức nấu ăn mới nhất mỗi tuần.</p>
+            </div>
+            <div class="col-lg-5 text-lg-end">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    @guest
+                        <a href="{{ route('register') }}" class="btn btn-warning fw-bold rounded-pill px-4 py-2.5 text-dark shadow-sm">
+                            <i class="bi bi-person-plus-fill me-1"></i> Đăng Ký Tài Khoản
+                        </a>
+                    @else
+                        <a href="{{ route('vouchers.index') }}" class="btn btn-warning fw-bold rounded-pill px-4 py-2.5 text-dark shadow-sm">
+                            <i class="bi bi-ticket-perforated me-1"></i> Săn Thêm Voucher
+                        </a>
+                    @endguest
+                    <a href="{{ route('products.index') }}" class="btn btn-outline-light fw-bold rounded-pill px-4 py-2.5 shadow-sm">
+                        Mua Sắm Ngay
                     </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- Gợi ý dành riêng cho bạn --}}
-    @if(isset($suggestedProductsHabits) && $suggestedProductsHabits->count() > 0)
-        <section class="bg-cream-100 dark:bg-[#121212] py-16 border-b border-cream-200 dark:border-gray-800">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between items-end mb-8">
-                    <div>
-                        <h2 class="text-3xl font-extrabold text-earth-800 tracking-tight">Gợi ý dành riêng cho bạn</h2>
-                        <p class="text-earth-500 mt-2 font-medium">Lựa chọn hàng đầu dựa trên sở thích của bạn</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    @foreach ($suggestedProductsHabits as $product)
-                        @include('partials.product-card', ['product' => $product])
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- Best sellers --}}
-    @if(isset($bestSellers) && $bestSellers->count() > 0)
-        <section class="bg-white dark:bg-[#121212] py-16 border-b border-cream-200 dark:border-gray-800">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between items-end mb-8">
-                    <div>
-                        <h2 class="text-3xl font-extrabold text-earth-800 tracking-tight">Sản phẩm bán chạy nhất</h2>
-                        <p class="text-earth-500 mt-2 font-medium">Những mặt hàng được yêu thích nhất bởi khách hàng</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    @foreach ($bestSellers as $product)
-                        @include('partials.product-card', ['product' => $product])
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- Nổi bật --}}
-    <section class="bg-cream-50 dark:bg-[#121212] py-16 relative overflow-hidden">
-        <!-- Background decorative blur -->
-        <div
-            class="absolute top-0 right-0 w-96 h-96 bg-leaf-200/40 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none">
-        </div>
-
-        <div class="max-w-7xl mx-auto px-4 relative z-10">
-            <div class="mt-8 text-center sm:hidden">
-                <a href="{{ route('products.index') }}" class="btn-outline w-full rounded-full">Xem tất cả sản phẩm</a>
-            </div>
-        </div>
-    </section>
-
-    {{-- Gợi ý món ăn --}}
-    <section class="bg-cream-100 dark:bg-[#121212] py-20 border-y border-cream-200 dark:border-gray-800">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
-                <div class="max-w-2xl">
-                    <span class="text-leaf-600 font-bold tracking-wider text-sm uppercase mb-2 block">Thực đơn mỗi
-                        ngày</span>
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-earth-800 tracking-tight mb-3">Hôm nay ăn gì?</h2>
-                    <p class="text-earth-500 font-medium text-lg">Khám phá các công thức nấu ăn ngon, nguyên liệu có sẵn.
-                        Mua đầy đủ gia vị chỉ với 1 thao tác.</p>
-                </div>
-                <a href="{{ route('recipes.index') }}"
-                    class="btn-primary rounded-full !px-6 whitespace-nowrap hidden md:inline-flex shadow-leaf-500/30">
-                    Khám phá bếp SFood →
-                </a>
-            </div>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @foreach ($suggestedRecipes as $recipe)
-                    @include('partials.recipe-card', ['recipe' => $recipe])
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- Video nấu ăn --}}
-    <section class="bg-earth-900 py-20 relative overflow-hidden">
-        <div
-            class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay">
-        </div>
-        <div class="absolute top-1/2 left-0 w-64 h-64 bg-leaf-600/30 rounded-full blur-[100px] -translate-y-1/2"></div>
-
-        <div class="max-w-7xl mx-auto px-4 relative z-10">
-            <div class="flex justify-between items-end mb-10">
-                <div>
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-cream-50 tracking-tight mb-2">Video Hướng Dẫn</h2>
-                    <p class="text-cream-300 font-medium text-lg">Học mẹo vặt và nấu ăn trực quan từ chuyên gia</p>
-                </div>
-                <a href="{{ route('recipes.index') }}"
-                    class="text-leaf-400 font-bold hover:text-leaf-300 transition-all hidden sm:inline-flex items-center gap-2 hover:gap-3 bg-white/5 px-5 py-2.5 rounded-full backdrop-blur">
-                    Xem toàn bộ <span>→</span>
-                </a>
-            </div>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach ($recipes as $recipe)
-                    @include('partials.recipe-card', ['recipe' => $recipe])
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- CTA --}}
-    <section class="bg-cream-50 dark:bg-gray-900 py-20">
-        <div class="max-w-5xl mx-auto px-4">
-            <div
-                class="bg-gradient-to-br from-leaf-600 via-leaf-700 to-earth-800 rounded-[3rem] p-10 md:p-16 text-center text-cream-50 relative overflow-hidden shadow-2xl shadow-leaf-900/20 group">
-                <!-- Hover animations -->
-                <div
-                    class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-10 group-hover:opacity-20 transition-opacity duration-700">
-                </div>
-                <div
-                    class="absolute top-0 right-0 w-64 h-64 bg-cream-50/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl group-hover:scale-150 transition-transform duration-1000">
-                </div>
-                <div
-                    class="absolute bottom-0 left-0 w-64 h-64 bg-leaf-400/20 rounded-full translate-y-1/2 -translate-x-1/3 blur-2xl group-hover:scale-150 transition-transform duration-1000 delay-100">
-                </div>
-
-                <div class="relative z-10">
-                    <span
-                        class="inline-block p-4 rounded-3xl bg-white/10 backdrop-blur border border-white/20 mb-6 group-hover:scale-110 group-hover:-translate-y-2 transition-transform duration-500 shadow-xl">
-                        <span class="text-4xl">🎁</span>
-                    </span>
-                    <h2 class="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight leading-tight">
-                        Trở thành thành viên SFood<br>
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cream-100 to-leaf-200">Nhận vô vàn
-                            ưu đãi</span>
-                    </h2>
-                    <p class="text-cream-100 mb-10 max-w-xl mx-auto font-medium text-lg">
-                        Đăng ký ngay hôm nay để nhận mã giảm giá 50K cho đơn hàng đầu tiên, miễn phí giao hàng và tích điểm
-                        không giới hạn!
-                    </p>
-                    <div class="flex flex-col sm:flex-row justify-center gap-4">
-                        <a href="{{ route('register') }}"
-                            class="inline-flex items-center justify-center gap-2 bg-white text-leaf-700 hover:bg-cream-50 hover:scale-105 hover:shadow-xl font-bold px-8 py-4 rounded-2xl transition-all duration-300">
-                            ✨ Đăng ký nhận quà
-                        </a>
-                        <a href="{{ route('about') }}"
-                            class="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white hover:bg-white/10 font-bold px-8 py-4 rounded-2xl transition-all duration-300">
-                            Tìm hiểu SFood
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
-    </section>
-
-    {{-- Mini Features Module --}}
-    <section class="max-w-7xl mx-auto px-4 -mt-8 relative z-20 mb-12">
-        <div
-            class="bg-white rounded-3xl p-6 shadow-xl border border-cream-200 grid grid-cols-4 md:grid-cols-7 gap-4 justify-center text-center">
-            <a href="{{ route('products.index') }}" class="group block space-y-2">
-                <div
-                    class="w-14 h-14 mx-auto bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-green-500 group-hover:text-white transition duration-300 shadow-sm">
-                    🛒</div>
-                <p class="text-xs font-bold text-earth-700">Chợ tươi</p>
-            </a>
-            <a href="{{ route('recipes.index') }}" class="group block space-y-2">
-                <div
-                    class="w-14 h-14 mx-auto bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-orange-500 group-hover:text-white transition duration-300 shadow-sm">
-                    👩‍🍳</div>
-                <p class="text-xs font-bold text-earth-700">Vào bếp</p>
-            </a>
-            <a href="{{ route('vouchers.index') }}" class="group block space-y-2">
-                <div
-                    class="w-14 h-14 mx-auto bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-red-500 group-hover:text-white transition duration-300 shadow-sm">
-                    🎫</div>
-                <p class="text-xs font-bold text-earth-700">Mã giảm giá</p>
-            </a>
-
-            <a href="{{ route('favorites.index') }}" class="group block space-y-2">
-                <div
-                    class="w-14 h-14 mx-auto bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-pink-500 group-hover:text-white transition duration-300 shadow-sm">
-                    ❤️</div>
-                <p class="text-xs font-bold text-earth-700">Yêu thích</p>
-            </a>
-            <a href="{{ route('orders.index') }}" class="group block space-y-2">
-                <div
-                    class="w-14 h-14 mx-auto bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition duration-300 shadow-sm">
-                    📦</div>
-                <p class="text-xs font-bold text-earth-700">Đơn hàng</p>
-            </a>
-            <a href="{{ route('faq') }}" class="group block space-y-2">
-                <div
-                    class="w-14 h-14 mx-auto bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-purple-500 group-hover:text-white transition duration-300 shadow-sm">
-                    ❓</div>
-                <p class="text-xs font-bold text-earth-700">Hỏi đáp</p>
-            </a>
-            <a href="{{ route('contact') }}" class="group block space-y-2">
-                <div
-                    class="w-14 h-14 mx-auto bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-teal-500 group-hover:text-white transition duration-300 shadow-sm">
-                    📞</div>
-                <p class="text-xs font-bold text-earth-700">Liên hệ</p>
-            </a>
-        </div>
-    </section>
+    </div>
+</div>
 @endsection

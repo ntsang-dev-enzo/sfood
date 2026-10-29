@@ -28,6 +28,11 @@ class MediaHelper
         return $placeholders[$index % count($placeholders)];
     }
 
+    public static function product(?string $thumbnail, int $index = 0): string
+    {
+        return self::productImage($thumbnail, $index);
+    }
+
     public static function recipeImage(?string $thumbnail, int $index = 0): string
     {
         if ($thumbnail) {

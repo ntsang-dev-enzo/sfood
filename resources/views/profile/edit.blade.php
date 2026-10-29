@@ -2,57 +2,99 @@
 @section('profile_content')
 @php use App\Support\MediaHelper; @endphp
 
-<div class="space-y-6">
+<div class="d-flex flex-column gap-4">
+    {{-- Personal Info Card --}}
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+            <i class="bi bi-person-circle text-success me-2"></i>Thông tin cá nhân
+        </h5>
+        
+        @if(session('status') === 'profile-updated' || session('success'))
+            <div class="alert alert-success border-0 shadow-sm rounded-3 mb-3">
+                <i class="bi bi-check-circle me-2"></i>Thông tin cá nhân đã được cập nhật thành công!
+            </div>
+        @endif
 
-    <div class="card p-6">
-        <h2 class="font-bold text-lg text-earth-800 mb-4">Thông tin cá nhân</h2>
-        <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-4">
+        <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
-            <div class="flex items-center gap-4">
-                <div class="flex flex-col items-center gap-2">
-                    <img src="{{ MediaHelper::avatar($user->avatar, $user->name) }}" class="w-20 h-20 rounded-2xl object-cover border-2 border-cream-300" alt="">
-                    <span class="text-xs font-bold text-leaf-600 bg-leaf-50 px-2 py-1 rounded-lg border border-leaf-200" title="Điểm tích lũy">Điểm: {{ number_format($user->reward_points) }}</span>
-                </div>
+            
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 mb-4">
+                <img src="{{ MediaHelper::avatar($user->avatar, $user->name) }}" 
+                     class="rounded-circle object-fit-cover border border-3 border-success-subtle shadow-sm" 
+                     style="width: 80px; height: 80px;" alt="{{ $user->name }}">
                 <div>
-                    <label class="text-sm font-medium text-earth-700">Ảnh đại diện</label>
-                    <input type="file" name="avatar" accept="image/*" class="text-sm mt-1 text-earth-600">
+                    <label class="form-label small fw-semibold text-dark mb-1">Ảnh đại diện mới</label>
+                    <input type="file" name="avatar" accept="image/*" class="form-control form-control-sm">
+                    <small class="text-muted">Định dạng JPG, PNG, WEBP tối đa 2MB.</small>
                 </div>
             </div>
-            <div>
-                <label class="text-sm font-medium text-earth-700">Họ tên</label>
-                <input name="name" value="{{ old('name', $user->name) }}" required class="input-field mt-1">
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-dark">Họ và tên <span class="text-danger">*</span></label>
+                    <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-dark">Email đăng nhập</label>
+                    <input type="email" value="{{ $user->email }}" disabled class="form-control bg-light">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-dark">Số điện thoại</label>
+                    <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="form-control" placeholder="Chưa cập nhật">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-dark">Điểm thưởng hiện có</label>
+                    <div class="form-control bg-light fw-bold text-success">
+                        <i class="bi bi-coin text-warning me-1"></i>{{ number_format($user->reward_points) }} điểm
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="text-sm font-medium text-earth-700">Email</label>
-                <input value="{{ $user->email }}" disabled class="input-field mt-1 bg-cream-100">
+
+            <div class="mt-4 pt-2">
+                <button type="submit" class="btn btn-success rounded-pill px-4 py-2 fw-semibold shadow-sm">
+                    <i class="bi bi-save me-1"></i> Lưu thay đổi
+                </button>
             </div>
-            <div>
-                <label class="text-sm font-medium text-earth-700">Số điện thoại</label>
-                <input name="phone" value="{{ old('phone', $user->phone) }}" class="input-field mt-1">
-            </div>
-            <button type="submit" class="btn-primary">Lưu thay đổi</button>
         </form>
     </div>
 
-    <div class="card p-6">
-        <h2 class="font-bold text-lg text-earth-800 mb-4">Đổi mật khẩu</h2>
-        <form method="POST" action="{{ route('profile.password') }}" class="space-y-4">
+    {{-- Change Password Card --}}
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom">
+            <i class="bi bi-shield-lock text-warning me-2"></i>Đổi mật khẩu
+        </h5>
+
+        @if(session('status') === 'password-updated')
+            <div class="alert alert-success border-0 shadow-sm rounded-3 mb-3">
+                <i class="bi bi-check-circle me-2"></i>Mật khẩu đã được thay đổi thành công!
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('profile.password') }}">
             @csrf
             @method('PUT')
-            <div>
-                <label class="text-sm font-medium text-earth-700">Mật khẩu hiện tại</label>
-                <input type="password" name="current_password" required class="input-field mt-1">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-dark">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                    <input type="password" name="current_password" required class="form-control">
+                    @error('current_password') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-dark">Mật khẩu mới <span class="text-danger">*</span></label>
+                    <input type="password" name="password" required class="form-control">
+                    @error('password') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-dark">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                    <input type="password" name="password_confirmation" required class="form-control">
+                </div>
             </div>
-            <div>
-                <label class="text-sm font-medium text-earth-700">Mật khẩu mới</label>
-                <input type="password" name="password" required class="input-field mt-1">
+            <div class="mt-4 pt-2">
+                <button type="submit" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold">
+                    <i class="bi bi-key me-1"></i> Cập nhật mật khẩu
+                </button>
             </div>
-            <div>
-                <label class="text-sm font-medium text-earth-700">Xác nhận mật khẩu mới</label>
-                <input type="password" name="password_confirmation" required class="input-field mt-1">
-            </div>
-            <button type="submit" class="btn-secondary">Đổi mật khẩu</button>
         </form>
     </div>
 </div>
