@@ -3,7 +3,7 @@
 
 @section('content')
 <style>
-    /* Hero Carousel & Banner Dimensions - Đồng bộ kích thước chuẩn 100% */
+    /* Hero Carousel & Banner Dimensions - Chuẩn hóa tỷ lệ & Responsive */
     .hero-carousel-container {
         border-radius: 1.25rem;
         overflow: hidden;
@@ -13,21 +13,21 @@
     #homeCarousel .carousel-item {
         height: 440px;
     }
-    @media (max-width: 991px) {
+    @media (max-width: 991px) and (min-width: 768px) {
         #homeCarousel, 
         #homeCarousel .carousel-inner, 
         #homeCarousel .carousel-item {
             height: 340px;
         }
     }
-    @media (max-width: 575px) {
+    @media (max-width: 767px) {
         .hero-carousel-container {
             border-radius: 0.85rem;
         }
         #homeCarousel, 
         #homeCarousel .carousel-inner, 
         #homeCarousel .carousel-item {
-            height: 170px;
+            height: 220px;
         }
     }
     #homeCarousel img {
@@ -37,15 +37,83 @@
         object-position: center;
     }
     .promo-card-side {
-        height: calc(220px - 0.5rem);
         border-radius: 1.25rem;
-        background-size: cover;
-        background-position: center;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .promo-card-side:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+    }
+    @media (min-width: 992px) {
+        .promo-side-wrapper {
+            height: 440px;
+        }
+        .promo-card-side {
+            height: calc((440px - 1rem) / 2);
+        }
+    }
+    @media (max-width: 991px) and (min-width: 768px) {
+        .promo-card-side {
+            min-height: 185px;
+        }
+    }
+    @media (max-width: 767px) {
+        .promo-card-side {
+            min-height: 160px;
+            border-radius: 0.85rem;
+        }
+    }
+
+    /* Carousel Controls & Indicators */
+    .hero-carousel-container .carousel-control-prev,
+    .hero-carousel-container .carousel-control-next {
+        width: 38px;
+        height: 38px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        border-radius: 50%;
+        opacity: 0;
+        transition: all 0.25s ease-in-out;
+        margin: 0 14px;
+        border: none;
+        z-index: 10;
+    }
+    .hero-carousel-container:hover .carousel-control-prev,
+    .hero-carousel-container:hover .carousel-control-next {
+        opacity: 0.95;
+    }
+    .hero-carousel-container .carousel-control-prev:hover,
+    .hero-carousel-container .carousel-control-next:hover {
+        background: #ffffff;
+        opacity: 1;
+        transform: translateY(-50%) scale(1.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .hero-carousel-container .carousel-control-prev-icon,
+    .hero-carousel-container .carousel-control-next-icon {
+        width: 16px;
+        height: 16px;
+        filter: invert(1) grayscale(100);
+    }
+    .hero-carousel-container .carousel-indicators {
+        margin-bottom: 0.85rem;
+        z-index: 10;
+    }
+    .hero-carousel-container .carousel-indicators [data-bs-target] {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin: 0 4px;
+        background-color: rgba(255, 255, 255, 0.5);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .hero-carousel-container .carousel-indicators .active {
+        width: 24px;
+        border-radius: 12px;
+        background-color: #ffffff;
     }
     .hover-lift {
         transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -74,10 +142,10 @@
 
 {{-- 1. HERO SECTION: Carousel Đồng Bộ + Bento Promo Cards Bên Cạnh --}}
 <div class="container py-3">
-    <div class="row g-3">
-        {{-- Carousel Chính (Col 8 trên desktop, Col 12 trên mobile) --}}
-        <div class="col-lg-8">
-            <div id="homeCarousel" class="carousel slide hero-carousel-container shadow-sm position-relative" data-bs-ride="carousel" data-bs-interval="4500">
+    <div class="row g-3 align-items-stretch">
+        {{-- Carousel Chính (Col 8 trên desktop, Col 12 trên tablet/mobile) --}}
+        <div class="col-12 col-lg-8">
+            <div id="homeCarousel" class="carousel slide hero-carousel-container shadow-sm position-relative h-100" data-bs-ride="carousel" data-bs-interval="4500">
                 @if(isset($banners) && $banners->count() > 0)
                     <div class="carousel-indicators">
                         @foreach($banners as $index => $banner)
@@ -87,15 +155,23 @@
                     <div class="carousel-inner">
                         @foreach($banners as $index => $banner)
                             <div class="carousel-item {{ $index === 0 ? 'active' : '' }} position-relative bg-dark">
-                                <a href="{{ $banner->link ?: route('products.index') }}" class="d-block w-100 h-100">
-                                    <img src="{{ asset('storage/' . $banner->image_path) }}" 
+                                <a href="{{ $banner->link ?: route('products.index') }}" class="d-block w-100 h-100 position-relative text-decoration-none">
+                                    <img src="{{ \App\Support\MediaHelper::bannerImage($banner->image_path, $index) }}" 
                                          class="d-block w-100 h-100 object-fit-cover" 
                                          alt="{{ $banner->title ?: 'SFood Banner' }}">
+                                    
+                                    {{-- Lớp phủ gradient nhẹ nhàng để chữ đọc rõ mà không che mất ảnh --}}
+                                    <div class="position-absolute top-0 start-0 w-100 h-100 pe-none"
+                                         style="background: linear-gradient(to top, rgba(15, 23, 18, 0.75) 0%, rgba(15, 23, 18, 0.2) 45%, transparent 100%);"></div>
+
                                     @if($banner->title)
-                                        <div class="carousel-caption d-none d-md-block text-start p-3 p-lg-4 rounded-4" 
-                                             style="background: rgba(27, 38, 30, 0.75); backdrop-filter: blur(8px); max-width: 55%; bottom: 2rem; left: 2.5rem; border: 1px solid rgba(255,255,255,0.15);">
-                                            <h3 class="fw-bold text-white mb-2">{{ $banner->title }}</h3>
-                                            <span class="btn btn-sm btn-warning fw-bold rounded-pill px-3 text-dark shadow-sm">
+                                        <div class="carousel-caption text-start p-3 p-md-4" 
+                                             style="bottom: 1.25rem; left: 1.5rem; right: auto; max-width: min(520px, 85%); z-index: 5;">
+                                            <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold small mb-2 d-inline-flex align-items-center">
+                                                <i class="bi bi-patch-check-fill me-1"></i> Ưu Đãi Nổi Bật
+                                            </span>
+                                            <h3 class="fw-bold text-white mb-2 fs-5 fs-md-4 fs-lg-3 lh-sm">{{ $banner->title }}</h3>
+                                            <span class="btn btn-sm btn-warning fw-bold rounded-pill px-3 py-1.5 text-dark shadow-sm">
                                                 Khám phá ngay <i class="bi bi-arrow-right ms-1"></i>
                                             </span>
                                         </div>
@@ -112,22 +188,22 @@
                     </div>
                     <div class="carousel-inner">
                         {{-- Slide 1: Rau Củ Tươi Sạch --}}
-                        <div class="carousel-item active" style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 60%, #40916c 100%);">
+                        <div class="carousel-item active position-relative" style="background: linear-gradient(135deg, rgba(27, 67, 50, 0.9) 0%, rgba(45, 106, 79, 0.82) 100%), url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80') center/cover no-repeat;">
                             <div class="container h-100 d-flex align-items-center">
                                 <div class="row align-items-center w-100 g-3">
-                                    <div class="col-md-8 text-white px-4 px-md-5">
+                                    <div class="col-md-8 text-white px-3 px-md-5">
                                         <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2 d-inline-flex align-items-center">
                                             <i class="bi bi-patch-check-fill me-1"></i> 100% Tươi Sạch &amp; Hữu Cơ
                                         </span>
-                                        <h2 class="display-6 fw-black text-white mb-2 lh-sm">Nông Sản Sạch Cho Gia Đình</h2>
+                                        <h2 class="display-6 fw-bold text-white mb-2 lh-sm fs-4 fs-md-3 fs-lg-2">Nông Sản Sạch Cho Gia Đình</h2>
                                         <p class="lead fs-6 text-white-50 mb-3 pe-lg-3 d-none d-md-block">
                                             Thu hoạch từ nông trại trong lành mỗi sáng. Giao hàng tươi trong 2 giờ tại Cần Thơ, TP.HCM &amp; Hà Nội.
                                         </p>
                                         <div class="d-flex flex-wrap gap-2">
-                                            <a href="{{ route('products.index') }}" class="btn btn-warning fw-bold rounded-pill px-4 text-dark shadow-sm">
+                                            <a href="{{ route('products.index') }}" class="btn btn-sm btn-warning fw-bold rounded-pill px-3 px-md-4 text-dark shadow-sm">
                                                 <i class="bi bi-cart3 me-1"></i> Mua sắm ngay
                                             </a>
-                                            <a href="{{ route('recipes.index') }}" class="btn btn-outline-light fw-bold rounded-pill px-4 shadow-sm">
+                                            <a href="{{ route('recipes.index') }}" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 px-md-4 shadow-sm">
                                                 <i class="bi bi-journal-bookmark me-1"></i> Xem công thức
                                             </a>
                                         </div>
@@ -144,22 +220,22 @@
                         </div>
 
                         {{-- Slide 2: Công thức món ngon --}}
-                        <div class="carousel-item" style="background: linear-gradient(135deg, #2b2d42 0%, #3d2c1e 60%, #5c4033 100%);">
+                        <div class="carousel-item position-relative" style="background: linear-gradient(135deg, rgba(43, 45, 66, 0.9) 0%, rgba(61, 44, 30, 0.85) 100%), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80') center/cover no-repeat;">
                             <div class="container h-100 d-flex align-items-center">
                                 <div class="row align-items-center w-100 g-3">
-                                    <div class="col-md-8 text-white px-4 px-md-5">
+                                    <div class="col-md-8 text-white px-3 px-md-5">
                                         <span class="badge bg-danger px-3 py-1.5 rounded-pill fw-bold mb-2 d-inline-flex align-items-center">
                                             <i class="bi bi-fire me-1"></i> Món Ngon Mỗi Ngày
                                         </span>
-                                        <h2 class="display-6 fw-black text-white mb-2 lh-sm">Hôm Nay Bạn Muốn Ăn Gì?</h2>
+                                        <h2 class="display-6 fw-bold text-white mb-2 lh-sm fs-4 fs-md-3 fs-lg-2">Hôm Nay Bạn Muốn Ăn Gì?</h2>
                                         <p class="lead fs-6 text-white-50 mb-3 pe-lg-3 d-none d-md-block">
                                             Khám phá hàng chục video công thức chuẩn bếp gia đình. Mua trọn gói nguyên liệu cần thiết chỉ với 1 click!
                                         </p>
                                         <div class="d-flex flex-wrap gap-2">
-                                            <a href="{{ route('recipes.index') }}" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm">
+                                            <a href="{{ route('recipes.index') }}" class="btn btn-sm btn-danger fw-bold rounded-pill px-3 px-md-4 shadow-sm">
                                                 <i class="bi bi-journal-bookmark me-1"></i> Xem công thức
                                             </a>
-                                            <a href="{{ route('vouchers.index') }}" class="btn btn-outline-light fw-bold rounded-pill px-4 shadow-sm">
+                                            <a href="{{ route('vouchers.index') }}" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 px-md-4 shadow-sm">
                                                 <i class="bi bi-ticket-perforated me-1"></i> Săn voucher
                                             </a>
                                         </div>
@@ -176,22 +252,22 @@
                         </div>
 
                         {{-- Slide 3: Thực Đơn Bữa Sáng Dinh Dưỡng --}}
-                        <div class="carousel-item" style="background: linear-gradient(135deg, #0d3b66 0%, #1d3557 60%, #457b9d 100%);">
+                        <div class="carousel-item position-relative" style="background: linear-gradient(135deg, rgba(13, 59, 102, 0.9) 0%, rgba(29, 53, 87, 0.85) 100%), url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1600&q=80') center/cover no-repeat;">
                             <div class="container h-100 d-flex align-items-center">
                                 <div class="row align-items-center w-100 g-3">
-                                    <div class="col-md-8 text-white px-4 px-md-5">
+                                    <div class="col-md-8 text-white px-3 px-md-5">
                                         <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2 d-inline-flex align-items-center">
-                                            <i class="bi bi-cup-hot-fill me-1"></i> Khởi Đầu Ngày Mới Tràn Đầy Năng Lượng
+                                            <i class="bi bi-cup-hot-fill me-1"></i> Bữa Sáng Dinh Dưỡng
                                         </span>
-                                        <h2 class="display-6 fw-black text-white mb-2 lh-sm">Thực Đơn Bữa Sáng Tươi Ngon</h2>
+                                        <h2 class="display-6 fw-bold text-white mb-2 lh-sm fs-4 fs-md-3 fs-lg-2">Thực Đơn Bữa Sáng Tươi Ngon</h2>
                                         <p class="lead fs-6 text-white-50 mb-3 pe-lg-3 d-none d-md-block">
-                                            Thưởng thức bánh mì nướng thơm giòn, phở bò tươi sạch cùng các loại rau củ hữu cơ tươi ngon dinh dưỡng cho cả gia đình.
+                                            Thưởng thức bánh mì nướng thơm giòn, phở bò tươi sạch cùng các loại rau củ hữu cơ dinh dưỡng cho cả gia đình.
                                         </p>
                                         <div class="d-flex flex-wrap gap-2">
-                                            <a href="{{ route('products.index', ['category' => 'mon_an_sang']) }}" class="btn btn-warning fw-bold rounded-pill px-4 text-dark shadow-sm">
+                                            <a href="{{ route('products.index', ['category' => 'mon_an_sang']) }}" class="btn btn-sm btn-warning fw-bold rounded-pill px-3 px-md-4 text-dark shadow-sm">
                                                 <i class="bi bi-cart3 me-1"></i> Khám Phá Món Ngon
                                             </a>
-                                            <a href="{{ route('products.index') }}" class="btn btn-outline-light fw-bold rounded-pill px-4 shadow-sm">
+                                            <a href="{{ route('products.index') }}" class="btn btn-sm btn-outline-light fw-bold rounded-pill px-3 px-md-4 shadow-sm">
                                                 <i class="bi bi-cart-check me-1"></i> Đặt Hàng Ngay
                                             </a>
                                         </div>
@@ -220,41 +296,43 @@
             </div>
         </div>
 
-        {{-- Bento Promo Cards Bên Cạnh (Col 4 - Chỉ hiển thị trên Desktop d-none d-lg-flex) --}}
-        <div class="col-lg-4 d-none d-lg-flex flex-column justify-content-between gap-3">
-            {{-- Card 1 --}}
-            <div class="promo-card-side p-4 text-white d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" 
-                 style="background: linear-gradient(135deg, #1b4332 0%, #40916c 100%);">
-                <div class="position-absolute end-0 bottom-0 opacity-25 pe-3 pb-2 text-white">
-                    <i class="bi bi-flower1" style="font-size: 6rem; line-height: 1;"></i>
+        {{-- Bento Promo Cards Bên Cạnh (Col 4 trên Desktop, 2 Cột trên Tablet, Xếp Dọc trên Mobile) --}}
+        <div class="col-12 col-lg-4">
+            <div class="d-flex flex-column flex-md-row flex-lg-column gap-3 h-100 promo-side-wrapper">
+                {{-- Card 1: Rau Củ Hữu Cơ Đà Lạt --}}
+                <div class="promo-card-side flex-fill p-3 p-md-4 text-white d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" 
+                     style="background: linear-gradient(135deg, rgba(27, 67, 50, 0.92) 0%, rgba(45, 106, 79, 0.88) 100%), url('https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80') center/cover no-repeat;">
+                    <div class="position-absolute end-0 bottom-0 opacity-15 pe-3 pb-2 text-white pe-none">
+                        <i class="bi bi-flower1" style="font-size: 5rem; line-height: 1;"></i>
+                    </div>
+                    <div class="position-relative z-1">
+                        <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold small mb-2 d-inline-block">Ưu Đãi Hôm Nay</span>
+                        <h5 class="fw-bold text-white mb-1 fs-6 fs-md-5">Rau Củ Hữu Cơ Đà Lạt</h5>
+                        <p class="small text-white-50 mb-0">Giảm thêm 20% cho đơn hàng đầu tiên trong tuần</p>
+                    </div>
+                    <div class="position-relative z-1 pt-2">
+                        <a href="{{ route('products.index') }}" class="btn btn-sm btn-light fw-bold text-success rounded-pill px-3 shadow-sm">
+                            Xem ngay <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="position-relative z-1">
-                    <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill fw-bold small mb-2">Ưu Đãi Hôm Nay</span>
-                    <h5 class="fw-bold text-white mb-1">Rau Củ Hữu Cơ Đà Lạt</h5>
-                    <p class="small text-white-50 mb-0">Giảm thêm 20% cho đơn hàng đầu tiên trong tuần</p>
-                </div>
-                <div class="position-relative z-1 pt-2">
-                    <a href="{{ route('products.index') }}" class="btn btn-sm btn-light fw-bold text-success rounded-pill px-3 shadow-sm">
-                        Xem ngay <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
 
-            {{-- Card 2 --}}
-            <div class="promo-card-side p-4 text-white d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" 
-                 style="background: linear-gradient(135deg, #8b1e0f 0%, #e63946 100%);">
-                <div class="position-absolute end-0 bottom-0 opacity-25 pe-3 pb-2 text-white">
-                    <i class="bi bi-fire" style="font-size: 6rem; line-height: 1;"></i>
-                </div>
-                <div class="position-relative z-1">
-                    <span class="badge bg-white text-danger px-2.5 py-1 rounded-pill fw-bold small mb-2">Tươi Sống Mỗi Ngày</span>
-                    <h5 class="fw-bold text-white mb-1">Thịt &amp; Thủy Hải Sản Tươi</h5>
-                    <p class="small text-white-50 mb-0">Nhập tươi trong ngày, chứng nhận kiểm dịch an toàn</p>
-                </div>
-                <div class="position-relative z-1 pt-2">
-                    <a href="{{ route('products.index') }}" class="btn btn-sm btn-light fw-bold text-danger rounded-pill px-3 shadow-sm">
-                        Đặt giao ngay <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+                {{-- Card 2: Thịt & Thủy Hải Sản Tươi --}}
+                <div class="promo-card-side flex-fill p-3 p-md-4 text-white d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" 
+                     style="background: linear-gradient(135deg, rgba(139, 30, 15, 0.92) 0%, rgba(193, 18, 31, 0.88) 100%), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80') center/cover no-repeat;">
+                    <div class="position-absolute end-0 bottom-0 opacity-15 pe-3 pb-2 text-white pe-none">
+                        <i class="bi bi-fire" style="font-size: 5rem; line-height: 1;"></i>
+                    </div>
+                    <div class="position-relative z-1">
+                        <span class="badge bg-white text-danger px-2.5 py-1 rounded-pill fw-bold small mb-2 d-inline-block">Tươi Sống Mỗi Ngày</span>
+                        <h5 class="fw-bold text-white mb-1 fs-6 fs-md-5">Thịt &amp; Thủy Hải Sản Tươi</h5>
+                        <p class="small text-white-50 mb-0">Nhập tươi trong ngày, chứng nhận kiểm dịch an toàn</p>
+                    </div>
+                    <div class="position-relative z-1 pt-2">
+                        <a href="{{ route('products.index') }}" class="btn btn-sm btn-light fw-bold text-danger rounded-pill px-3 shadow-sm">
+                            Đặt giao ngay <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

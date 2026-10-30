@@ -35,4 +35,6 @@
     </form>
     @endif
     <div class="suggest-dropdown shadow-sm rounded-3 border bg-white" data-suggest-dropdown></div>
+    <div class="product-preview-box shadow-lg rounded-4 border bg-white" data-product-preview></div>
+    <div class="product-preview-backdrop d-none" data-preview-backdrop></div>
 </div>

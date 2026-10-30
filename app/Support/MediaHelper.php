@@ -11,7 +11,9 @@ class MediaHelper
                 return $thumbnail;
             }
 
-            return asset('storage/'.$thumbnail);
+            if (file_exists(public_path('storage/' . $thumbnail))) {
+                return asset('storage/' . $thumbnail);
+            }
         }
 
         $placeholders = [
@@ -40,7 +42,9 @@ class MediaHelper
                 return $thumbnail;
             }
 
-            return asset('storage/'.$thumbnail);
+            if (file_exists(public_path('storage/' . $thumbnail))) {
+                return asset('storage/' . $thumbnail);
+            }
         }
 
         $placeholders = [
@@ -53,6 +57,27 @@ class MediaHelper
         return $placeholders[$index % count($placeholders)];
     }
 
+    public static function bannerImage(?string $path, int $index = 0): string
+    {
+        if ($path) {
+            if (str_starts_with($path, 'http')) {
+                return $path;
+            }
+
+            if (file_exists(public_path('storage/' . $path))) {
+                return asset('storage/' . $path);
+            }
+        }
+
+        $placeholders = [
+            'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80',
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80',
+            'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1600&q=80',
+        ];
+
+        return $placeholders[$index % count($placeholders)];
+    }
+
     public static function avatar(?string $avatar, string $name = 'U'): string
     {
         if ($avatar) {
@@ -60,7 +85,9 @@ class MediaHelper
                 return $avatar;
             }
 
-            return asset('storage/'.$avatar);
+            if (file_exists(public_path('storage/' . $avatar))) {
+                return asset('storage/' . $avatar);
+            }
         }
 
         return 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=2d6a4f&color=fff&size=128';

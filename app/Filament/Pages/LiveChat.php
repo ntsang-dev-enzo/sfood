@@ -66,6 +66,21 @@ class LiveChat extends Page
         $this->messageText = '';
     }
 
+    public function clearConversation()
+    {
+        if (!$this->selectedUser) {
+            return;
+        }
+
+        ChatMessage::where('user_id', $this->selectedUser->id)->delete();
+        $this->selectedUser = null;
+
+        \Filament\Notifications\Notification::make()
+            ->title('Đã xóa toàn bộ tin nhắn với khách hàng này')
+            ->success()
+            ->send();
+    }
+
     public function getConversationsProperty()
     {
         // Get users who have messages, sorted by latest message

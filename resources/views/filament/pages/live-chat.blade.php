@@ -42,19 +42,29 @@
         <div class="flex-1 flex flex-col bg-[#f0f2f5] dark:bg-gray-900 relative">
             @if($selectedUser)
                 <!-- Header -->
-                <div class="p-4 bg-white dark:bg-gray-800 flex items-center gap-4 shadow-sm z-10 sticky top-0">
-                    <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-lg">
-                        {{ mb_substr($selectedUser->name, 0, 1) }}
-                    </div>
-                    <div>
-                        <div class="font-bold text-lg text-gray-900 dark:text-gray-100">{{ $selectedUser->name }}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                            <span>Email: {{ $selectedUser->email }}</span>
-                            @if($selectedUser->phone)
-                                <span>• SĐT: {{ $selectedUser->phone }}</span>
-                            @endif
+                <div class="p-4 bg-white dark:bg-gray-800 flex items-center justify-between gap-4 shadow-sm z-10 sticky top-0">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-lg">
+                            {{ mb_substr($selectedUser->name, 0, 1) }}
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg text-gray-900 dark:text-gray-100">{{ $selectedUser->name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                <span>Email: {{ $selectedUser->email }}</span>
+                                @if($selectedUser->phone)
+                                    <span>• SĐT: {{ $selectedUser->phone }}</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
+                    <button type="button"
+                            wire:click="clearConversation"
+                            wire:confirm="Bạn có chắc chắn muốn xóa toàn bộ tin nhắn của khách hàng này không?"
+                            class="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/40 transition flex items-center gap-1.5"
+                            title="Xóa toàn bộ tin nhắn">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <span>Xóa trò chuyện</span>
+                    </button>
                 </div>
 
                 <!-- Messages -->

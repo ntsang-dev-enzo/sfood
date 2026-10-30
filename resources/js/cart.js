@@ -17,7 +17,7 @@ function updateHeaderBadge(count) {
     const badge = document.querySelector('[data-cart-count]');
     if (!badge) return;
     badge.textContent = count;
-    badge.classList.toggle('hidden', count <= 0);
+    badge.classList.toggle('d-none', count <= 0);
 }
 
 function formatMoney(n) {

@@ -175,14 +175,118 @@
             top: 100%;
             left: 0;
             right: 0;
-            z-index: 1050;
-            max-height: 320px;
+            z-index: 1060;
+            max-height: 380px;
             overflow-y: auto;
             display: none;
+            margin-top: 6px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+            scrollbar-width: thin;
         }
 
         .suggest-dropdown.active {
             display: block;
+        }
+
+        .suggest-item-link {
+            text-decoration: none !important;
+            color: #2b2d42 !important;
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        .suggest-item-link:last-child {
+            border-bottom: none !important;
+        }
+
+        .suggest-item-link:hover,
+        .suggest-item-link.is-hovered {
+            background-color: #f0fdf4 !important;
+        }
+
+        .suggest-item-link:hover .suggest-item-name,
+        .suggest-item-link.is-hovered .suggest-item-name {
+            color: var(--sfood-primary) !important;
+        }
+
+        /* Product Preview Box (Live Search Floating Preview) */
+        .product-preview-box {
+            position: absolute;
+            z-index: 1045;
+            width: 330px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            background: #ffffff;
+            border-radius: 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16) !important;
+            display: none;
+            pointer-events: auto;
+            animation: previewFadeIn 0.18s ease-out;
+            scrollbar-width: thin;
+        }
+
+        .product-preview-box.is-active {
+            display: block;
+        }
+
+        /* Invisible bridge so mouse moving from dropdown to preview doesn't drop hover */
+        .product-preview-box.align-right::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: -14px;
+            width: 14px;
+        }
+
+        .product-preview-box.align-left::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: -14px;
+            width: 14px;
+        }
+
+        @keyframes previewFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile preview popup modal/sheet */
+        @media (max-width: 767.98px) {
+            .product-preview-box {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: min(92vw, 360px) !important;
+                max-height: 85vh;
+                overflow-y: auto;
+                z-index: 1090;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
+            }
+
+            .product-preview-backdrop.is-active {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.45);
+                backdrop-filter: blur(2px);
+                z-index: 1085;
+                display: block !important;
+            }
         }
 
         /* Mini cart offcanvas/dropdown */
