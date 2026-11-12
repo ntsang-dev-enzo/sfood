@@ -4,7 +4,8 @@
     </IfModule>
 
     RewriteEngine On
-
+# Serve Laravel public assets
+RewriteRule ^(css|js|build|fonts|images|storage)/(.*)$ public/$1/$2 [L]
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
