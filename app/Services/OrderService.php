@@ -115,7 +115,11 @@ class OrderService
                 'status' => 'pending',
             ]);
 
-            $this->cartService->clearSelected();
+            // Chỉ xóa giỏ hàng khi đặt COD (đơn hàng thành công ngay).
+            // Với PayOS / Online QR, giỏ hàng giữ nguyên cho đến khi thanh toán thành công hoặc đổi sang COD
+            if (($data['payment_gateway'] ?? 'cod') === 'cod') {
+                $this->cartService->clearSelected();
+            }
 
             // Gửi thông báo cho người dùng
             $order->user->notify(new OrderUpdated([

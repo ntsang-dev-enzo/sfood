@@ -407,10 +407,15 @@
                                     <span class="text-muted small">Tạm tính (đã chọn):</span>
                                     <h6 class="fw-bold text-danger mb-0" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}₫</h6>
                                 </div>
-                                <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" 
-                                   class="btn btn-success w-100 fw-bold py-2 shadow-sm {{ $miniCartSelectedSubtotal > 0 ? '' : 'disabled' }}">
-                                    Tiến hành thanh toán <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('cart.index') }}" class="btn btn-outline-success w-50 fw-semibold py-2 shadow-xs small text-center text-nowrap">
+                                        Xem giỏ hàng
+                                    </a>
+                                    <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" 
+                                       class="btn btn-success w-50 fw-bold py-2 shadow-sm small text-center text-nowrap {{ $miniCartSelectedSubtotal > 0 ? '' : 'disabled' }}">
+                                        Thanh toán <i class="bi bi-arrow-right ms-0.5"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

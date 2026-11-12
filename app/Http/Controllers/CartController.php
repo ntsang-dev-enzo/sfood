@@ -9,11 +9,12 @@ class CartController extends Controller
 {
     public function index(CartService $cart)
     {
-        if ($cart->items()->isEmpty()) {
-            return redirect()->route('products.index')->with('info', 'Giỏ hàng của bạn đang trống.');
-        }
-
-        return redirect()->route('checkout.index');
+        return view('cart.index', [
+            'items' => $cart->items(),
+            'subtotal' => $cart->subtotal(),
+            'selectedSubtotal' => $cart->selectedSubtotal(),
+            'count' => $cart->count(),
+        ]);
     }
 
     public function update(Request $request, CartService $cart)

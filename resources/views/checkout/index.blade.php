@@ -231,27 +231,20 @@
                                 <i class="bi bi-credit-card-2-front text-primary"></i> Phương thức thanh toán
                             </label>
                             <div class="d-flex flex-column gap-2">
-                                <div class="form-check p-3 border rounded-3 bg-light">
+                                <div class="form-check p-2.5 border rounded-3 bg-light">
                                     <input class="form-check-input ms-0 me-2" type="radio" name="payment_gateway" id="pg-cod" value="cod"
                                            @checked(old('payment_gateway', 'cod') === 'cod')>
-                                    <label class="form-check-label ps-2 cursor-pointer w-100" for="pg-cod">
-                                        <div class="small fw-semibold text-dark d-flex align-items-center gap-1.5">
-                                            <i class="bi bi-cash-stack text-success"></i>
-                                            <span>COD — Thanh toán tiền mặt khi nhận hàng</span>
-                                        </div>
-                                        <div class="small text-muted mt-0.5" style="font-size: 0.78rem;">Nhận hàng kiểm tra và thanh toán trực tiếp cho shipper.</div>
+                                    <label class="form-check-label ps-2 cursor-pointer w-100 small fw-semibold text-dark d-flex align-items-center gap-1.5" for="pg-cod">
+                                        <i class="bi bi-cash-stack text-success"></i>
+                                        <span>Tiền mặt (COD)</span>
                                     </label>
                                 </div>
-                                <div class="form-check p-3 border rounded-3 bg-light">
+                                <div class="form-check p-2.5 border rounded-3 bg-light">
                                     <input class="form-check-input ms-0 me-2" type="radio" name="payment_gateway" id="pg-payos" value="payos"
                                            @checked(old('payment_gateway') === 'payos')>
-                                    <label class="form-check-label ps-2 cursor-pointer w-100" for="pg-payos">
-                                        <div class="small fw-semibold text-dark d-flex align-items-center gap-1.5">
-                                            <i class="bi bi-qr-code text-primary"></i>
-                                            <span>PayOS — Chuyển khoản QR Ngân hàng tức thì</span>
-                                            <span class="badge bg-primary-subtle text-primary small ms-1">Tự động</span>
-                                        </div>
-                                        <div class="small text-muted mt-0.5" style="font-size: 0.78rem;">Quét mã QR VietQR bằng app ngân hàng bất kỳ. Có thể tiếp tục hoặc đổi sang COD bất cứ lúc nào.</div>
+                                    <label class="form-check-label ps-2 cursor-pointer w-100 small fw-semibold text-dark d-flex align-items-center gap-1.5" for="pg-payos">
+                                        <i class="bi bi-qr-code text-primary"></i>
+                                        <span>Chuyển khoản QR (PayOS)</span>
                                     </label>
                                 </div>
                             </div>

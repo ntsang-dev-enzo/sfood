@@ -58,10 +58,11 @@ class CartQuickAddTest extends TestCase
         $this->assertNotEmpty($response->json('items_html'));
     }
 
-    public function test_cart_index_redirects_to_products_when_empty(): void
+    public function test_cart_index_renders_view_with_empty_state_when_empty(): void
     {
         $response = $this->get(route('cart.index'));
-        $response->assertRedirect(route('products.index'));
+        $response->assertStatus(200);
+        $response->assertSee('Giỏ hàng của bạn đang trống');
     }
 
     public function test_checkout_page_renders_without_route_error(): void
@@ -245,6 +246,124 @@ class CartQuickAddTest extends TestCase
         $order->refresh();
         $this->assertEquals('cod', $order->payment->gateway);
         $this->assertEquals('pending', $order->payment_status);
+    }
+
+    public function test_user_can_reorder_delivered_order(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $category = Category::create([
+            'name' => 'Trái Cây Mới',
+            'slug' => 'trai-cay-moi',
+            'is_active' => true,
+        ]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Táo Envy',
+            'slug' => 'tao-envy',
+            'is_active' => true,
+        ]);
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'name' => '1kg',
+            'sku' => 'TE-1',
+            'price' => 120000,
+            'stock' => 20,
+            'is_active' => true,
+        ]);
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-DELIVERED1',
+            'user_id' => $user->id,
+            'subtotal' => 120000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 120000,
+            'order_status' => 'delivered',
+            'payment_status' => 'paid',
+            'shipping_address' => [
+                'recipient_name' => 'Nguyễn Mua Lại',
+                'phone' => '0912345678',
+                'address' => 'Cần Thơ',
+            ],
+        ]);
+
+        $order->items()->create([
+            'product_variant_id' => $variant->id,
+            'product_name' => $product->name,
+            'variant_name' => $variant->name,
+            'unit_price' => 120000,
+            'quantity' => 2,
+            'subtotal' => 240000,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('orders.reorder', $order));
+        $response->assertRedirect(route('cart.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('cart_items', [
+            'user_id' => $user->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+    }
+
+    public function test_payos_checkout_preserves_cart_until_switched_to_cod(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $category = Category::create([
+            'name' => 'Rau Ăn Lá',
+            'slug' => 'rau-an-la',
+            'is_active' => true,
+        ]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Cải Bó Xôi',
+            'slug' => 'cai-bo-xoi',
+            'is_active' => true,
+        ]);
+        $variant = ProductVariant::create([
+            'product_id' => $product->id,
+            'name' => '500g',
+            'sku' => 'CBX-1',
+            'price' => 35000,
+            'stock' => 10,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->post(route('products.add-to-cart', $product), [
+            'variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        // Đặt hàng chọn PayOS
+        $response = $this->actingAs($user)->post(route('checkout.store'), [
+            'shipping_address_id' => '',
+            'recipient_name' => 'Nguyễn Văn QR',
+            'phone' => '0911223344',
+            'address_line' => '123 Đường 30/4',
+            'city' => 'TP Cần Thơ',
+            'payment_gateway' => 'payos',
+        ]);
+
+        // Giỏ hàng vẫn giữ nguyên
+        $this->assertDatabaseHas('cart_items', [
+            'user_id' => $user->id,
+            'product_variant_id' => $variant->id,
+        ]);
+
+        $order = \App\Models\Order::where('user_id', $user->id)->first();
+        $this->assertNotNull($order);
+
+        // Khi người dùng bấm đổi sang COD
+        $this->actingAs($user)->post(route('orders.switch-cod', $order));
+
+        // Giỏ hàng sau khi đổi sang COD thành công thì mới xóa
+        $this->assertDatabaseMissing('cart_items', [
+            'user_id' => $user->id,
+            'product_variant_id' => $variant->id,
+        ]);
     }
 }
 

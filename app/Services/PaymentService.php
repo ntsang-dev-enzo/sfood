@@ -92,6 +92,11 @@ class PaymentService
             'payment_status' => $success ? 'paid' : 'failed',
             'order_status' => $success ? 'confirmed' : 'pending',
         ]);
+
+        // Khi thanh toán thành công -> Xóa các sản phẩm đã mua khỏi giỏ hàng
+        if ($success && $payment->order && $payment->order->user) {
+            $payment->order->user->cartItems()->where('is_selected', true)->delete();
+        }
     }
 
     protected function buildVnPayUrl(Order $order, Payment $payment): string

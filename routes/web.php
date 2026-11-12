@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/don-hang/{order}/tiep-tuc-thanh-toan-qr', [OrderController::class, 'repayQr'])->name('orders.repay-qr');
     Route::post('/don-hang/{order}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/don-hang/{order}/hoan-tien', [OrderController::class, 'refund'])->name('orders.refund');
+    Route::post('/don-hang/{order}/mua-lai', [OrderController::class, 'reorder'])->name('orders.reorder');
 
     Route::get('/thong-bao', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/thong-bao/read-all', [App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.read-all');

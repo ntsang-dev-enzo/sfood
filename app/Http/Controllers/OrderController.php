@@ -106,6 +106,11 @@ class OrderController extends Controller
             'payment_status' => 'pending',
         ]);
 
+        // Đơn hàng đã chuyển sang COD thành công -> xóa sản phẩm khỏi giỏ hàng
+        if (Auth::check()) {
+            Auth::user()->cartItems()->where('is_selected', true)->delete();
+        }
+
         return redirect()
             ->route('orders.index')
             ->with('success', 'Đã chuyển đơn hàng #' . $order->order_code . ' sang phương thức thanh toán khi nhận hàng (COD) thành công!');
@@ -219,6 +224,47 @@ class OrderController extends Controller
             $order->update(['order_status' => 'cancelled']);
         }
 
+        // Hoàn lại tồn kho khi hủy đơn chưa thanh toán hoặc chưa giao
+        foreach ($order->items as $item) {
+            if ($item->productVariant) {
+                $item->productVariant->increment('stock', $item->quantity);
+            }
+        }
+
         return back()->with('success', 'Đơn hàng đã được hủy thành công.');
+    }
+
+    public function reorder(Order $order, \App\Services\CartService $cart)
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        $addedCount = 0;
+        $outOfStockCount = 0;
+
+        foreach ($order->items as $item) {
+            $variant = $item->productVariant;
+            if ($variant && $variant->is_active && $variant->inStock()) {
+                $qty = min($item->quantity, $variant->stock);
+                try {
+                    $cart->add($variant->id, $qty);
+                    $addedCount++;
+                } catch (\Throwable $e) {
+                    $outOfStockCount++;
+                }
+            } else {
+                $outOfStockCount++;
+            }
+        }
+
+        if ($addedCount === 0) {
+            return redirect()->route('cart.index')->with('error', 'Các sản phẩm trong đơn hàng này hiện đã hết hàng hoặc ngừng kinh doanh.');
+        }
+
+        $msg = 'Đã thêm ' . $addedCount . ' sản phẩm từ đơn hàng #' . $order->order_code . ' vào giỏ hàng!';
+        if ($outOfStockCount > 0) {
+            $msg .= ' (Có ' . $outOfStockCount . ' sản phẩm đã hết hàng).';
+        }
+
+        return redirect()->route('cart.index')->with('success', $msg);
     }
 }

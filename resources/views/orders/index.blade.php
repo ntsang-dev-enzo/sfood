@@ -153,6 +153,16 @@
                 <small class="text-muted"><i class="bi bi-geo-alt me-1 text-danger"></i>Giao đến: {{ $order->shipping_address['address'] ?? '' }}</small>
 
                 <div class="d-flex flex-wrap align-items-center gap-2">
+                    @if($order->order_status === 'delivered')
+                        <form action="{{ route('orders.reorder', $order) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span>Mua lại</span>
+                            </button>
+                        </form>
+                    @endif
+
                     @if($isPendingCod)
                         <a href="{{ route('orders.repay-qr', $order) }}" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1" title="Chuyển sang thanh toán QR">
                             <i class="bi bi-qr-code"></i>
