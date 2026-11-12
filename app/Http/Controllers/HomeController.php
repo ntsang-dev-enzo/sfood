@@ -43,15 +43,18 @@ class HomeController extends Controller
             'suggestedProductsHabits' => $suggestedProductsHabits,
             'categories' => Category::where('is_active', true)->orderBy('sort_order')->limit(6)->get(),
             'products' => Product::with('variants')->where('is_active', true)->orderByDesc('view_count')->limit(8)->get(),
-            'bestSellers' => Product::with('variants')
-                ->where('products.is_active', true)
-                ->join('product_variants', 'products.id', '=', 'product_variants.product_id')
-                ->join('order_items', 'product_variants.id', '=', 'order_items.product_variant_id')
-                ->select('products.*', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as total_sold'))
-                ->groupBy('products.id')
-                ->orderByDesc('total_sold')
-                ->limit(12)
-                ->get(),
+           'bestSellers' => Product::with('variants')
+    ->select('products.*')
+    ->selectSub(function ($query) {
+        $query->from('order_items')
+            ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
+            ->whereColumn('product_variants.product_id', 'products.id')
+            ->selectRaw('COALESCE(SUM(order_items.quantity), 0)');
+    }, 'total_sold')
+    ->where('products.is_active', true)
+    ->orderByDesc('total_sold')
+    ->limit(12)
+    ->get(),
             'flashSales' => Product::whereHas('variants', function ($q) {
                 $q->whereNotNull('flash_sale_price')
                   ->where('flash_sale_starts_at', '<=', now())

@@ -21,11 +21,11 @@ class PayOSService
             return null;
         }
 
-        $orderCode = (int) ($order->id.time() % 100000);
+        $orderCode = (int) ($order->id . (time() % 100000));
         $amount = (int) $order->total_amount;
-        $description = 'Thanh toan '.$order->order_code;
+        $description = substr('Thanh toan ' . $order->order_code, 0, 25);
         $returnUrl = route('payment.callback', 'payos');
-        $cancelUrl = route('checkout.index');
+        $cancelUrl = route('orders.payment-cancel', $order);
 
         $data = [
             'orderCode' => $orderCode,

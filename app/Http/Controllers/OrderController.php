@@ -14,7 +14,7 @@ class OrderController extends Controller
     {
         $status = $request->get('status');
 
-        $orders = Order::with(['items', 'reviews'])
+        $orders = Order::with(['items', 'reviews', 'payment'])
             ->where('user_id', Auth::id())
             ->when($status, function ($query, $status) {
                 return $query->where('order_status', $status);
@@ -29,9 +29,117 @@ class OrderController extends Controller
     {
         abort_unless($order->user_id === Auth::id(), 403);
 
+        $msg = 'Đặt hàng #'.$order->order_code.' thành công!';
+        if ($order->payment?->gateway === 'payos' && $order->payment_status !== 'paid') {
+            $msg .= ' Đơn hàng đang chờ thanh toán QR. Bạn có thể bấm "Tiếp tục thanh toán QR" hoặc "Đổi sang COD".';
+        }
+
+        return redirect()
+            ->route('orders.index', ['repay' => $order->id])
+            ->with('success', $msg);
+    }
+
+    public function paymentCancel(Request $request, Order $order)
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        if ($order->payment && $order->payment_status === 'pending') {
+            $order->payment->update([
+                'status' => 'pending',
+                'gateway_response' => array_merge((array) ($order->payment->gateway_response ?? []), $request->all()),
+            ]);
+        }
+
+        return redirect()
+            ->route('orders.index', ['repay' => $order->id])
+            ->with('info', 'Bạn đã tạm dừng thanh toán QR cho đơn hàng #' . $order->order_code . '. Bạn có thể bấm "Tiếp tục thanh toán QR" để quét lại mã hoặc đổi sang "Thanh toán khi nhận hàng (COD)".');
+    }
+
+    public function switchToCod(Order $order)
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        if ($order->payment_status === 'paid') {
+            return back()->with('error', 'Đơn hàng này đã được thanh toán, không thể chuyển đổi phương thức.');
+        }
+
+        if (! in_array($order->order_status, ['pending', 'confirmed'])) {
+            return back()->with('error', 'Đơn hàng không thể đổi phương thức ở trạng thái hiện tại.');
+        }
+
+        $payment = $order->payment;
+        if ($payment && $payment->gateway === 'payos') {
+            $clientId = config('services.payos.client_id');
+            $apiKey = config('services.payos.api_key');
+            $orderCode = $payment->gateway_response['orderCode'] ?? null;
+
+            if ($orderCode && $clientId && $apiKey) {
+                try {
+                    Http::withHeaders([
+                        'x-client-id' => $clientId,
+                        'x-api-key' => $apiKey,
+                    ])->post("https://api-merchant.payos.vn/v2/payment-requests/{$orderCode}/cancel", [
+                        'cancellationReason' => 'Khách hàng đổi sang thanh toán COD',
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::warning('PayOS cancel when switching to COD: ' . $e->getMessage());
+                }
+            }
+        }
+
+        if ($payment) {
+            $payment->update([
+                'gateway' => 'cod',
+                'status' => 'pending',
+                'transaction_id' => 'COD_' . $order->order_code,
+            ]);
+        } else {
+            $order->payment()->create([
+                'gateway' => 'cod',
+                'status' => 'pending',
+                'amount' => $order->total_amount,
+                'transaction_id' => 'COD_' . $order->order_code,
+            ]);
+        }
+
+        $order->update([
+            'payment_status' => 'pending',
+        ]);
+
         return redirect()
             ->route('orders.index')
-            ->with('success', 'Đặt hàng #'.$order->order_code.' thành công!');
+            ->with('success', 'Đã chuyển đơn hàng #' . $order->order_code . ' sang phương thức thanh toán khi nhận hàng (COD) thành công!');
+    }
+
+    public function repayQr(Order $order, \App\Services\PaymentService $paymentService)
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('orders.index')->with('info', 'Đơn hàng này đã được thanh toán thành công.');
+        }
+
+        if ($order->order_status === 'cancelled') {
+            return redirect()->route('orders.index')->with('error', 'Đơn hàng này đã bị hủy, không thể tiếp tục thanh toán.');
+        }
+
+        if ($order->payment) {
+            $order->payment->update(['gateway' => 'payos']);
+        }
+
+        try {
+            $url = $paymentService->initiateOnlinePayment($order, 'payos');
+
+            if ($url && filter_var($url, FILTER_VALIDATE_URL) && ! str_contains($url, '/don-hang')) {
+                return redirect()->away($url);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Repay QR PayOS error: ' . $e->getMessage());
+        }
+
+        return redirect()
+            ->route('orders.index', ['repay' => $order->id])
+            ->with('error', 'Chưa thể tạo liên kết thanh toán QR lúc này. Bạn có thể chọn "Đổi sang COD" hoặc thử lại sau ít phút.');
     }
 
     public function refund(Order $order)

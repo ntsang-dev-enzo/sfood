@@ -18,6 +18,12 @@
             <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
         </div>
     @endif
+    @if(session('info'))
+        <div class="alert alert-info rounded-3 border-0 shadow-sm mb-3 d-flex align-items-center">
+            <i class="bi bi-info-circle-fill me-2 fs-5 text-info"></i>
+            <div>{{ session('info') }}</div>
+        </div>
+    @endif
     @if(session('error'))
         <div class="alert alert-danger rounded-3 border-0 shadow-sm mb-3">
             <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
@@ -26,7 +32,14 @@
 
     {{-- Order List --}}
     @forelse ($orders as $order)
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        @php
+            $isRepayHighlight = request('repay') == $order->id;
+            $gateway = $order->payment?->gateway ?? 'cod';
+            $isPaid = $order->payment_status === 'paid';
+            $isPendingQr = ($gateway === 'payos' && ! $isPaid && in_array($order->order_status, ['pending', 'confirmed']));
+            $isPendingCod = ($gateway === 'cod' && ! $isPaid && in_array($order->order_status, ['pending']));
+        @endphp
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white {{ $isRepayHighlight ? 'border border-2 border-warning shadow' : '' }}" id="order-card-{{ $order->id }}">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3 pb-3 border-bottom">
                 <div>
                     <h5 class="fw-bold text-dark mb-1">Đơn hàng #{{ $order->order_code }}</h5>
@@ -56,10 +69,48 @@
                         <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2 py-1 ms-1"><i class="bi bi-hourglass-split me-1"></i>Chờ hoàn tiền</span>
                     @elseif($order->payment_status === 'refunded')
                         <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-2 py-1 ms-1"><i class="bi bi-check-circle-fill me-1"></i>Đã hoàn tiền</span>
+                    @elseif($isPaid)
+                        <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 ms-1"><i class="bi bi-check2-circle me-1"></i>Đã thanh toán ({{ strtoupper($gateway) }})</span>
+                    @elseif($isPendingQr)
+                        <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 ms-1 fw-bold"><i class="bi bi-qr-code me-1"></i>Chờ thanh toán QR</span>
+                    @elseif($gateway === 'cod')
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1 ms-1"><i class="bi bi-cash me-1"></i>COD</span>
                     @endif
                     <div class="fs-5 fw-bold text-danger mt-1">{{ number_format($order->total_amount) }}đ</div>
                 </div>
             </div>
+
+            {{-- Pending QR Notice & Action Buttons (Tiếp tục thanh toán QR / Thoát ra chọn COD) --}}
+            @if($isPendingQr)
+                <div class="alert alert-warning border border-warning-subtle rounded-3 p-3 mb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <div class="rounded-circle bg-warning text-dark p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                            <i class="bi bi-qr-code-scan fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Đơn hàng đang chờ thanh toán qua mã QR (PayOS)</div>
+                            <div class="small text-secondary">Bạn có thể tiếp tục thanh toán ngay bằng QR hoặc thoát ra chuyển sang thanh toán khi nhận hàng (COD).</div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 flex-shrink-0">
+                        {{-- Nút TIẾP TỤC quay lại thanh toán QR --}}
+                        <a href="{{ route('orders.repay-qr', $order) }}" class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-3 py-1.5 shadow-sm d-inline-flex align-items-center gap-1.5">
+                            <i class="bi bi-qr-code"></i>
+                            <span>Tiếp tục thanh toán QR</span>
+                        </a>
+
+                        {{-- Nút THOÁT RA CHỌN THANH TOÁN COD --}}
+                        <form action="{{ route('orders.switch-cod', $order) }}" method="POST" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5"
+                                    onclick="return confirm('Bạn có chắc chắn muốn đổi sang hình thức thanh toán tiền mặt khi nhận hàng (COD)?');">
+                                <i class="bi bi-cash-stack text-success"></i>
+                                <span>Đổi sang COD</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
 
             {{-- Items --}}
             <div class="bg-light rounded-3 p-3 mb-3">
@@ -101,16 +152,25 @@
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 pt-2">
                 <small class="text-muted"><i class="bi bi-geo-alt me-1 text-danger"></i>Giao đến: {{ $order->shipping_address['address'] ?? '' }}</small>
 
-                @if(in_array($order->order_status, ['pending', 'confirmed']))
-                    <form action="{{ $order->payment_status === 'paid' ? route('orders.refund', $order) : route('orders.cancel', $order) }}" method="POST">
-                        @csrf
-                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 btn-cancel-order" data-is-paid="{{ $order->payment_status === 'paid' ? 'true' : 'false' }}">
-                            {{ $order->payment_status === 'paid' ? 'Hủy đơn & Hoàn tiền' : 'Hủy đơn hàng' }}
-                        </button>
-                    </form>
-                @elseif($order->order_status === 'shipping' && $order->payment_status === 'paid')
-                    <span class="small text-muted fst-italic"><i class="bi bi-exclamation-circle text-warning me-1"></i>Đơn hàng đang được giao, không thể yêu cầu hủy</span>
-                @endif
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    @if($isPendingCod)
+                        <a href="{{ route('orders.repay-qr', $order) }}" class="btn btn-sm btn-outline-warning text-dark rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1" title="Chuyển sang thanh toán QR">
+                            <i class="bi bi-qr-code"></i>
+                            <span>Thanh toán bằng QR</span>
+                        </a>
+                    @endif
+
+                    @if(in_array($order->order_status, ['pending', 'confirmed']))
+                        <form action="{{ $order->payment_status === 'paid' ? route('orders.refund', $order) : route('orders.cancel', $order) }}" method="POST">
+                            @csrf
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 btn-cancel-order" data-is-paid="{{ $order->payment_status === 'paid' ? 'true' : 'false' }}">
+                                {{ $order->payment_status === 'paid' ? 'Hủy đơn & Hoàn tiền' : 'Hủy đơn hàng' }}
+                            </button>
+                        </form>
+                    @elseif($order->order_status === 'shipping' && $order->payment_status === 'paid')
+                        <span class="small text-muted fst-italic"><i class="bi bi-exclamation-circle text-warning me-1"></i>Đơn hàng đang được giao, không thể yêu cầu hủy</span>
+                    @endif
+                </div>
             </div>
         </div>
     @empty
@@ -273,6 +333,16 @@
                 });
             });
         });
+
+        // Tự động cuộn đến đơn hàng cần thanh toán nếu có param repay
+        const urlParams = new URLSearchParams(window.location.search);
+        const repayId = urlParams.get('repay');
+        if (repayId) {
+            const targetEl = document.getElementById('order-card-' + repayId);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
     });
 </script>
 @endpush

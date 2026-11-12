@@ -15,16 +15,26 @@ class PaymentService
     public function initiateOnlinePayment(Order $order, string $gateway): string
     {
         $payment = $order->payment;
-        $payment->update([
-            'gateway' => $gateway,
-            'transaction_id' => strtoupper($gateway).'_'.Str::random(12),
-        ]);
+        if (! $payment) {
+            $payment = Payment::create([
+                'order_id' => $order->id,
+                'gateway' => $gateway,
+                'amount' => $order->total_amount,
+                'status' => 'pending',
+                'transaction_id' => strtoupper($gateway).'_'.Str::random(12),
+            ]);
+        } else {
+            $payment->update([
+                'gateway' => $gateway,
+                'transaction_id' => strtoupper($gateway).'_'.Str::random(12),
+            ]);
+        }
 
         return match ($gateway) {
-            'payos' => $this->payOS->createPaymentLink($order, $payment) ?? route('orders.show', $order),
+            'payos' => $this->payOS->createPaymentLink($order, $payment) ?? route('orders.index', ['repay' => $order->id]),
             'vnpay' => $this->buildVnPayUrl($order, $payment),
             'momo' => $this->buildMoMoUrl($order, $payment),
-            default => route('orders.show', $order),
+            default => route('orders.index', ['repay' => $order->id]),
         };
     }
 

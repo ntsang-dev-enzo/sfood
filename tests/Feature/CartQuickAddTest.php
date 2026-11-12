@@ -198,5 +198,53 @@ class CartQuickAddTest extends TestCase
         $this->assertEquals('0909123456', $order->shipping_address['phone']);
         $this->assertStringContainsString('789 Nguyễn Văn Cừ', $order->shipping_address['address']);
     }
+
+    public function test_user_can_cancel_qr_payment_and_switch_to_cod(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-TESTQR1',
+            'user_id' => $user->id,
+            'subtotal' => 100000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 100000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Nguyễn Văn Test',
+                'phone' => '0912345678',
+                'address' => '123 Đường 3/2, Ninh Kiều, Cần Thơ',
+            ],
+        ]);
+
+        $order->payment()->create([
+            'gateway' => 'payos',
+            'transaction_id' => 'PAYOS_12345',
+            'amount' => 100000,
+            'status' => 'pending',
+        ]);
+
+        // 1. Khi thoát PayOS về cancel URL
+        $cancelResponse = $this->actingAs($user)->get(route('orders.payment-cancel', $order));
+        $cancelResponse->assertRedirect(route('orders.index', ['repay' => $order->id]));
+        $cancelResponse->assertSessionHas('info');
+
+        // 2. Kiểm tra trang danh sách đơn hàng có nút Tiếp tục QR và Đổi sang COD
+        $indexResponse = $this->actingAs($user)->get(route('orders.index', ['repay' => $order->id]));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee(route('orders.repay-qr', $order));
+        $indexResponse->assertSee(route('orders.switch-cod', $order));
+
+        // 3. Người dùng bấm Đổi sang COD
+        $switchResponse = $this->actingAs($user)->post(route('orders.switch-cod', $order));
+        $switchResponse->assertRedirect(route('orders.index'));
+        $switchResponse->assertSessionHas('success');
+
+        $order->refresh();
+        $this->assertEquals('cod', $order->payment->gateway);
+        $this->assertEquals('pending', $order->payment_status);
+    }
 }
 
