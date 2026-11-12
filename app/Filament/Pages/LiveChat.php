@@ -59,7 +59,11 @@ class LiveChat extends Page
             'sender' => 'admin',
             'message' => $this->messageText,
             'is_read' => false, // changed to false because it's unread by user
+            'is_auto' => false,
         ]);
+
+        // Nhân viên đã tiếp nhận: tạm dừng tự động trả lời trong hội thoại này
+        app(\App\Services\ChatAutoReplyService::class)->pauseForHuman($this->selectedUser->id);
 
         $this->selectedUser->notify(new \App\Notifications\AdminRepliedChat($this->messageText));
 

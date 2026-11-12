@@ -53,7 +53,7 @@ return [
     'details' => 'Chi tiết &rarr;',
 
     // Product Show
-    'choose_variant' => 'Chọn biến thể',
+    'choose_variant' => 'Chọn định lượng',
     'quantity' => 'Số lượng',
     'add_to_cart' => ' Thêm vào giỏ',
     'buy_now' => ' Mua ngay',

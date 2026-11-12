@@ -205,5 +205,8 @@ class DatabaseSeeder extends Seeder
             'expires_at' => now()->addMonths(1),
             'is_active' => true,
         ]);
+
+        // Bộ câu hỏi - câu trả lời soạn sẵn cho chat CSKH tự động
+        $this->call(ChatAutoReplySeeder::class);
     }
 }

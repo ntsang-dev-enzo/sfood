@@ -72,6 +72,9 @@
                     @foreach($this->messages as $msg)
                         <div class="flex {{ $msg->sender === 'admin' ? 'justify-end' : 'justify-start' }}">
                             <div class="max-w-[70%] {{ $msg->sender === 'admin' ? 'bg-primary-600 text-white rounded-tr-none shadow-md shadow-primary-500/20' : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-none shadow-sm' }} px-4 py-3 rounded-2xl relative group">
+                                @if($msg->sender === 'bot')
+                                    <div class="text-[10px] font-semibold text-success-600 dark:text-success-400 mb-1">Trợ lý tự động</div>
+                                @endif
                                 <div class="text-sm leading-relaxed">{!! nl2br(e($msg->message)) !!}</div>
                                 <div class="text-[10px] mt-1.5 {{ $msg->sender === 'admin' ? 'text-primary-200' : 'text-gray-400 dark:text-gray-500' }} text-right font-medium">
                                     {{ $msg->created_at->format('H:i') }}

@@ -42,6 +42,7 @@ Route::get('/chinh-sach', [PageController::class, 'policy'])->name('policy');
 
 Route::middleware('auth')->group(function () {
     Route::get('/chat-truc-tuyen/messages', [\App\Http\Controllers\ClientChatController::class, 'fetchMessages'])->name('live-chat.fetch');
+    Route::get('/chat-truc-tuyen/goi-y', [\App\Http\Controllers\ClientChatController::class, 'suggestions'])->name('live-chat.suggestions');
     Route::post('/chat-truc-tuyen/send', [\App\Http\Controllers\ClientChatController::class, 'sendMessage'])->name('live-chat.send');
 });
 

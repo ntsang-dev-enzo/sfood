@@ -11,7 +11,16 @@ class ChatMessage extends Model
         'sender',
         'message',
         'is_read',
+        'is_auto',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_read' => 'boolean',
+            'is_auto' => 'boolean',
+        ];
+    }
 
     public function user()
     {

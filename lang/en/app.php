@@ -52,7 +52,7 @@ return [
     'details' => 'Details &rarr;',
 
     // Product Show
-    'choose_variant' => 'Choose Variant',
+    'choose_variant' => 'Choose Weight',
     'quantity' => 'Quantity',
     'add_to_cart' => ' Add to Cart',
     'buy_now' => ' Buy Now',

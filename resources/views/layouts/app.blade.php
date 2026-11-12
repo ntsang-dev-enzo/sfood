@@ -785,18 +785,24 @@
                     <i class="bi bi-headset fs-5"></i>
                     <div>
                         <h6 class="mb-0 fw-bold small">Hỗ trợ khách hàng</h6>
-                        <small class="text-white-50" style="font-size: 0.65rem;">Nhân viên SFood trực tuyến</small>
+                        <small class="text-white-50" style="font-size: 0.65rem;">Trợ lý tự động · Nhân viên 8:00 – 21:00</small>
                     </div>
                 </div>
                 <button type="button" id="close-live-chat-btn" class="btn-close btn-close-white small"></button>
             </div>
             <div id="live-chat-messages-container" class="card-body p-3 overflow-y-auto bg-light" style="height: 280px;">
-                <div class="text-center text-muted small my-3" id="live-chat-empty-msg">Chào bạn! Nhắn tin để gặp nhân viên hỗ trợ SFood.</div>
+                <div class="text-center text-muted small my-3" id="live-chat-empty-msg">Chào bạn! Bạn cần hỗ trợ gì, chọn câu hỏi gợi ý bên dưới hoặc nhắn trực tiếp nhé.</div>
             </div>
             <div class="card-footer bg-white p-2">
+                <div id="live-chat-suggestions" class="d-flex flex-wrap gap-1 mb-2"></div>
                 <div class="input-group input-group-sm">
                     <input type="text" id="live-chat-input-field" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off">
                     <button class="btn btn-success" type="button" id="send-live-chat-btn"><i class="bi bi-send-fill"></i></button>
+                </div>
+                <div class="text-center mt-1">
+                    <button type="button" id="live-chat-human-btn" class="btn btn-link btn-sm p-0 text-decoration-none text-secondary" style="font-size: 0.72rem;">
+                        <i class="bi bi-person-badge me-1"></i>Gặp nhân viên tư vấn
+                    </button>
                 </div>
             </div>
         </div>
@@ -1163,7 +1169,7 @@
                 }
             });
 
-            // Live Chat with Support Staff (No AI)
+            // Live Chat: trợ lý tự động trả lời + chuyển nhân viên
             const toggleChatBtn = document.getElementById('toggle-live-chat-btn');
             const closeChatBtn = document.getElementById('close-live-chat-btn');
             const chatWindow = document.getElementById('live-chat-window');
@@ -1171,6 +1177,8 @@
             const chatInputField = document.getElementById('live-chat-input-field');
             const sendChatBtn = document.getElementById('send-live-chat-btn');
             const liveChatBadge = document.getElementById('live-chat-badge');
+            const chatSuggestions = document.getElementById('live-chat-suggestions');
+            const chatHumanBtn = document.getElementById('live-chat-human-btn');
             let liveChatInterval = null;
 
             if (toggleChatBtn && chatWindow) {
@@ -1180,6 +1188,7 @@
                         chatWindow.classList.remove('d-none');
                         if (liveChatBadge) liveChatBadge.style.display = 'none';
                         fetchLiveMessages();
+                        loadChatSuggestions();
                         liveChatInterval = setInterval(fetchLiveMessages, 5000);
                     } else {
                         chatWindow.classList.add('d-none');
@@ -1194,11 +1203,25 @@
                     const emptyMsg = document.getElementById('live-chat-empty-msg');
                     if (emptyMsg) emptyMsg.style.display = 'none';
 
-                    const div = document.createElement('div');
                     const isUser = msg.sender === 'user';
-                    div.className = `p-2 mb-2 rounded-3 small ${isUser ? 'bg-success text-white ms-auto text-end' : 'bg-white border text-dark me-auto text-start'}`;
+                    const isBot = msg.sender === 'bot';
+                    const div = document.createElement('div');
+                    div.className = `p-2 mb-2 rounded-3 small ${isUser ? 'bg-success text-white ms-auto text-end' : (isBot ? 'bg-white border border-success-subtle text-dark me-auto text-start' : 'bg-white border text-dark me-auto text-start')}`;
                     div.style.maxWidth = '85%';
-                    div.textContent = msg.message;
+
+                    if (isBot) {
+                        const label = document.createElement('div');
+                        label.className = 'fw-semibold text-success mb-1';
+                        label.style.fontSize = '0.68rem';
+                        label.innerHTML = '<i class="bi bi-robot me-1"></i>Trợ lý SFood';
+                        div.appendChild(label);
+                    }
+
+                    const body = document.createElement('div');
+                    body.style.whiteSpace = 'pre-line';
+                    body.textContent = msg.message;
+                    div.appendChild(body);
+
                     chatMessagesContainer.appendChild(div);
                     chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
                 };
@@ -1214,14 +1237,33 @@
                     } catch (e) {}
                 };
 
-                const sendLiveMessage = async () => {
-                    const text = chatInputField.value.trim();
+                const loadChatSuggestions = async () => {
+                    if (!chatSuggestions) return;
+                    try {
+                        const res = await fetch('{{ route('live-chat.suggestions') }}');
+                        const items = await res.json();
+                        chatSuggestions.innerHTML = '';
+                        items.forEach(item => {
+                            const chip = document.createElement('button');
+                            chip.type = 'button';
+                            chip.className = 'btn btn-outline-success btn-sm rounded-pill';
+                            chip.style.fontSize = '0.68rem';
+                            chip.style.padding = '0.1rem 0.55rem';
+                            chip.textContent = item.question;
+                            chip.addEventListener('click', () => sendLiveMessage(item.question));
+                            chatSuggestions.appendChild(chip);
+                        });
+                    } catch (e) {}
+                };
+
+                const sendLiveMessage = async (presetText) => {
+                    const text = (typeof presetText === 'string' ? presetText : chatInputField.value).trim();
                     if (!text) return;
                     chatInputField.value = '';
                     appendLiveMessage({ sender: 'user', message: text });
 
                     try {
-                        await fetch('{{ route('live-chat.send') }}', {
+                        const res = await fetch('{{ route('live-chat.send') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1229,13 +1271,18 @@
                             },
                             body: JSON.stringify({ message: text })
                         });
+                        const data = await res.json();
+                        if (data && data.bot_message) {
+                            appendLiveMessage(data.bot_message);
+                        }
                     } catch (e) {}
                 };
 
-                if (sendChatBtn) sendChatBtn.addEventListener('click', sendLiveMessage);
+                if (sendChatBtn) sendChatBtn.addEventListener('click', () => sendLiveMessage());
                 if (chatInputField) chatInputField.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') sendLiveMessage();
                 });
+                if (chatHumanBtn) chatHumanBtn.addEventListener('click', () => sendLiveMessage('Tôi muốn gặp nhân viên tư vấn'));
             }
 
             // Mega Menu Dropdown Hover cho Desktop (Chỉ mở khi hover đúng vào nút Sản phẩm)
