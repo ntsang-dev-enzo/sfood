@@ -116,10 +116,24 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        if ($request->filled('phone')) {
+            $cleanPhone = preg_replace('/[^0-9]/', '', (string) $request->input('phone'));
+            $request->merge(['phone' => $cleanPhone]);
+        }
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'phone' => [
+                'nullable',
+                'string',
+                'regex:/^0[0-9]{9}$/',
+                \Illuminate\Validation\Rule::unique('users', 'phone')->ignore($user->id),
+            ],
             'avatar' => 'nullable|image|max:2048',
+        ], [
+            'name.required' => 'Vui lòng nhập họ và tên.',
+            'phone.regex' => 'Số điện thoại không hợp lệ (gồm 10 chữ số, bắt đầu bằng số 0).',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng bởi tài khoản khác. Mỗi số điện thoại chỉ được dùng cho 1 tài khoản.',
         ]);
 
         if ($request->hasFile('avatar')) {

@@ -12,13 +12,18 @@
                     <p class="text-muted small">Chào mừng bạn quay trở lại với thực phẩm tươi sống!</p>
                 </div>
 
-                @if ($errors->has('email') && str_contains($errors->first('email'), 'chưa tồn tại'))
+                @php
+                    $notFoundError = ($errors->has('email') && str_contains($errors->first('email'), 'chưa tồn tại')) 
+                        || ($errors->has('login') && str_contains($errors->first('login'), 'chưa tồn tại'));
+                @endphp
+
+                @if ($notFoundError)
                     <div class="alert alert-warning py-3 px-3 small mb-4 rounded-3 border-warning" role="alert">
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
                             <strong class="text-dark">Chưa có tài khoản SFood!</strong>
                         </div>
-                        <p class="mb-2 text-dark">{{ $errors->first('email') }}</p>
+                        <p class="mb-2 text-dark">{{ $errors->first('email') ?: $errors->first('login') }}</p>
                         <a href="{{ route('register') }}" class="btn btn-success btn-sm fw-bold rounded-pill px-3">
                             <i class="bi bi-person-plus me-1"></i> Đăng ký tài khoản ngay
                         </a>
@@ -32,14 +37,14 @@
                 <form method="POST" action="{{ route('login') }}" id="login-form" novalidate>
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-dark">Địa chỉ Email <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold text-dark">Email hoặc Số điện thoại <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
-                            <input type="email" name="email" value="{{ old('email') }}" required 
-                                   class="form-control border-start-0 shadow-none @error('email') is-invalid @enderror" 
-                                   placeholder="email@example.com">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                            <input type="text" name="email" value="{{ old('email', old('login')) }}" required 
+                                   class="form-control border-start-0 shadow-none @error('email') is-invalid @enderror @error('login') is-invalid @enderror" 
+                                   placeholder="Nhập email hoặc số điện thoại (vd: 0912345678)...">
                         </div>
-                        <div class="invalid-feedback">Vui lòng nhập địa chỉ email hợp lệ.</div>
+                        <div class="invalid-feedback">Vui lòng nhập địa chỉ email hoặc số điện thoại hợp lệ.</div>
                     </div>
 
                     <div class="mb-3">

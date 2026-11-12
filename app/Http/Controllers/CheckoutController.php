@@ -152,6 +152,17 @@ class CheckoutController extends Controller
         $isNinhKieu = (bool) preg_match('/ninh\s*kieu|ninh-kieu/', $districtNorm);
         $isCaiRang = (bool) preg_match('/cai\s*rang|cai-rang/', $districtNorm);
 
+        $addressLineNorm = Str::ascii(mb_strtolower((string) ($data['address_line'] ?? '')));
+        if (! $isCanTho && str_contains($addressLineNorm, 'can tho')) {
+            $isCanTho = true;
+        }
+        if (! $isNinhKieu && (bool) preg_match('/ninh\s*kieu|ninh-kieu/', $addressLineNorm)) {
+            $isNinhKieu = true;
+        }
+        if (! $isCaiRang && (bool) preg_match('/cai\s*rang|cai-rang/', $addressLineNorm)) {
+            $isCaiRang = true;
+        }
+
         if ($isCanTho && ($isNinhKieu || $isCaiRang)) {
             $shipping = 0;
         }

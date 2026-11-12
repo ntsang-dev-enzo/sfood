@@ -106,4 +106,32 @@ class Order extends Model
             }
         });
     }
+
+    /**
+     * Kiểm tra xem đơn hàng có thể cập nhật địa chỉ giao hàng hay không.
+     * Chỉ cho phép 1 lần duy nhất khi đơn hàng ở trạng thái 'pending'.
+     */
+    public function canUpdateAddress(): bool
+    {
+        if ($this->order_status !== 'pending') {
+            return false;
+        }
+
+        $address = (array) ($this->shipping_address ?? []);
+        return empty($address['address_updated']);
+    }
+
+    /**
+     * Kiểm tra xem đơn hàng có thể đổi phương thức thanh toán hay không.
+     * Chỉ cho phép 1 lần duy nhất khi đơn hàng chưa thanh toán và ở trạng thái 'pending' hoặc 'confirmed'.
+     */
+    public function canSwitchPayment(): bool
+    {
+        if ($this->payment_status === 'paid' || !in_array($this->order_status, ['pending', 'confirmed'])) {
+            return false;
+        }
+
+        $address = (array) ($this->shipping_address ?? []);
+        return empty($address['payment_switched']);
+    }
 }

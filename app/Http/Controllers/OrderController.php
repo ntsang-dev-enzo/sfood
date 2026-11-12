@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -22,7 +23,9 @@ class OrderController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('orders.index', compact('orders', 'status'));
+        $addresses = Auth::user() ? Auth::user()->shippingAddresses()->get() : collect();
+
+        return view('orders.index', compact('orders', 'status', 'addresses'));
     }
 
     public function show(Order $order)
@@ -58,6 +61,10 @@ class OrderController extends Controller
     public function switchToCod(Order $order)
     {
         abort_unless($order->user_id === Auth::id(), 403);
+
+        if (! $order->canSwitchPayment()) {
+            return back()->with('error', 'Đơn hàng này không thể đổi phương thức thanh toán hoặc đã đổi trước đó.');
+        }
 
         if ($order->payment_status === 'paid') {
             return back()->with('error', 'Đơn hàng này đã được thanh toán, không thể chuyển đổi phương thức.');
@@ -102,8 +109,13 @@ class OrderController extends Controller
             ]);
         }
 
+        $shipping = (array) ($order->shipping_address ?? []);
+        $shipping['payment_switched'] = true;
+        $shipping['payment_switched_at'] = now()->toDateTimeString();
+
         $order->update([
             'payment_status' => 'pending',
+            'shipping_address' => $shipping,
         ]);
 
         // Đơn hàng đã chuyển sang COD thành công -> xóa sản phẩm khỏi giỏ hàng
@@ -113,7 +125,159 @@ class OrderController extends Controller
 
         return redirect()
             ->route('orders.index')
-            ->with('success', 'Đã chuyển đơn hàng #' . $order->order_code . ' sang phương thức thanh toán khi nhận hàng (COD) thành công!');
+            ->with('payment_switched_popup', [
+                'order_code' => $order->order_code,
+            ])
+            ->with('success', 'Đã chuyển đơn hàng #' . $order->order_code . ' sang COD thành công!');
+    }
+
+    public function updateAddress(Request $request, Order $order)
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+
+        if (! $order->canUpdateAddress()) {
+            return back()->with('error', 'Đơn hàng này không thể cập nhật địa chỉ giao hàng hoặc đã được cập nhật trước đó.');
+        }
+
+        $shippingAddressId = $request->input('shipping_address_id');
+        $city = '';
+        $district = '';
+
+        if (!empty($shippingAddressId)) {
+            $saved = \App\Models\ShippingAddress::where('user_id', Auth::id())
+                ->findOrFail($shippingAddressId);
+
+            $recipientName = $saved->recipient_name;
+            $phone = $saved->phone;
+            $fullAddress = $saved->fullAddress();
+            $city = (string) $saved->city;
+            $district = (string) $saved->district;
+        } else {
+            $validated = $request->validate([
+                'recipient_name' => 'required|string|max:100',
+                'phone' => 'required|string|max:20',
+                'address_line' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:100',
+                'district' => 'nullable|string|max:100',
+                'ward' => 'nullable|string|max:100',
+                'address' => 'nullable|string|max:255',
+            ], [
+                'recipient_name.required' => 'Vui lòng nhập họ tên người nhận.',
+                'phone.required' => 'Vui lòng nhập số điện thoại người nhận.',
+            ]);
+
+            $recipientName = trim($validated['recipient_name']);
+            $phone = trim($validated['phone']);
+            $city = trim((string) ($validated['city'] ?? ''));
+            $district = trim((string) ($validated['district'] ?? ''));
+
+            if (!empty($validated['city']) || !empty($validated['address_line'])) {
+                $fullAddress = collect([
+                    $validated['address_line'] ?? '',
+                    $validated['ward'] ?? '',
+                    $validated['district'] ?? '',
+                    $validated['city'] ?? '',
+                ])->filter()->implode(', ');
+            } else {
+                $fullAddress = trim($validated['address'] ?? '');
+            }
+
+            if (empty($fullAddress)) {
+                return back()->with('error', 'Vui lòng nhập địa chỉ giao hàng chi tiết.');
+            }
+        }
+
+        // Kiểm tra xem địa chỉ có thuộc nội thành Cần Thơ (Quận Ninh Kiều hoặc Quận Cái Răng) hay không
+        $isInnerCanTho = $this->isInnerCanTho($city, $district, $fullAddress);
+
+        // Miễn phí vận chuyển nếu đơn hàng từ 1.000.000đ hoặc thuộc Quận Ninh Kiều / Quận Cái Răng
+        $subtotal = (float) $order->subtotal;
+        $isFreeShip = ($subtotal >= 1000000) || $isInnerCanTho;
+        $newShippingFee = $isFreeShip ? 0.0 : 30000.0;
+
+        $oldShippingFee = (float) $order->shipping_fee;
+        $shippingFeeChanged = ($oldShippingFee !== $newShippingFee);
+
+        $discount = (float) ($order->discount_amount ?? 0);
+        $pointsDiscount = (float) ($order->points_discount ?? 0);
+        $newTotal = max(0, $subtotal - $discount - $pointsDiscount + $newShippingFee);
+
+        $shipping = (array) ($order->shipping_address ?? []);
+        $shipping['recipient_name'] = $recipientName;
+        $shipping['phone'] = $phone;
+        $shipping['address'] = $fullAddress;
+        if (!empty($city)) {
+            $shipping['city'] = $city;
+        }
+        if (!empty($district)) {
+            $shipping['district'] = $district;
+        }
+        $shipping['address_updated'] = true;
+        $shipping['address_updated_at'] = now()->toDateTimeString();
+
+        $order->update([
+            'shipping_address' => $shipping,
+            'shipping_fee' => $newShippingFee,
+            'total_amount' => $newTotal,
+        ]);
+
+        if ($order->payment) {
+            $order->payment->update([
+                'amount' => $newTotal,
+            ]);
+        }
+
+        $popupData = [
+            'order_code' => $order->order_code,
+            'recipient_name' => $shipping['recipient_name'],
+            'phone' => $shipping['phone'],
+            'address' => $shipping['address'],
+            'shipping_fee' => $newShippingFee,
+            'old_shipping_fee' => $oldShippingFee,
+            'shipping_fee_changed' => $shippingFeeChanged,
+            'total_amount' => $newTotal,
+        ];
+
+        $successMsg = 'Đã cập nhật địa chỉ giao hàng cho đơn hàng #' . $order->order_code . ' thành công!';
+        if ($shippingFeeChanged) {
+            if ($newShippingFee > 0) {
+                $successMsg .= ' Phí vận chuyển: +' . number_format($newShippingFee) . 'đ do địa chỉ nằm ngoài Quận Ninh Kiều / Cái Răng.';
+            } else {
+                $successMsg .= ' Đơn hàng được miễn phí vận chuyển (Quận Ninh Kiều / Cái Răng).';
+            }
+        }
+
+        return redirect()
+            ->route('orders.index')
+            ->with('address_updated_popup', $popupData)
+            ->with('success', $successMsg);
+    }
+
+    protected function isInnerCanTho(?string $city, ?string $district, ?string $fullAddress = null): bool
+    {
+        $cityNorm = Str::ascii(mb_strtolower((string) $city));
+        $districtNorm = Str::ascii(mb_strtolower((string) $district));
+
+        $cityNorm = trim(preg_replace('/\s+/', ' ', $cityNorm) ?? '');
+        $districtNorm = trim(preg_replace('/\s+/', ' ', $districtNorm) ?? '');
+
+        $isCanTho = str_contains($cityNorm, 'can tho');
+        $isNinhKieu = (bool) preg_match('/ninh\s*kieu|ninh-kieu/', $districtNorm);
+        $isCaiRang = (bool) preg_match('/cai\s*rang|cai-rang/', $districtNorm);
+
+        if ($isCanTho && ($isNinhKieu || $isCaiRang)) {
+            return true;
+        }
+
+        if (!empty($fullAddress)) {
+            $addrNorm = Str::ascii(mb_strtolower((string) $fullAddress));
+            $addrNorm = trim(preg_replace('/\s+/', ' ', $addrNorm) ?? '');
+            if (str_contains($addrNorm, 'can tho') && (preg_match('/ninh\s*kieu|ninh-kieu/', $addrNorm) || preg_match('/cai\s*rang|cai-rang/', $addrNorm))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function repayQr(Order $order, \App\Services\PaymentService $paymentService)

@@ -39,15 +39,18 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-dark">Số điện thoại</label>
+                        <label class="form-label small fw-semibold text-dark">Số điện thoại <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
-                            <input type="tel" name="phone" value="{{ old('phone') }}" 
+                            <input type="tel" name="phone" value="{{ old('phone') }}" required pattern="[0-9]{10}"
                                    class="form-control border-start-0 shadow-none @error('phone') is-invalid @enderror" 
-                                   placeholder="0912 345 678">
+                                   placeholder="0912 345 678 (10 chữ số)">
                         </div>
-                        <div class="invalid-feedback">Số điện thoại phải gồm 10 chữ số hợp lệ.</div>
-                        @error('phone') <small class="text-danger">{{ $message }}</small> @enderror
+                        <div class="form-text small text-muted">
+                            <i class="bi bi-shield-check text-success me-1"></i>Mỗi số điện thoại chỉ được đăng ký 01 tài khoản (dùng để đăng nhập và bảo mật).
+                        </div>
+                        <div class="invalid-feedback">Vui lòng nhập số điện thoại gồm 10 chữ số hợp lệ.</div>
+                        @error('phone') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="row g-2 mb-3">

@@ -56,8 +56,11 @@ class CartController extends Controller
             return response()->json([
                 'subtotal' => 0,
                 'subtotal_formatted' => '0đ',
+                'selected_subtotal' => 0,
+                'selected_subtotal_formatted' => '0đ',
                 'count' => 0,
                 'empty' => true,
+                'items_html' => view('partials.mini-cart-items', ['miniCartItems' => collect()])->render(),
             ]);
         }
 
@@ -104,6 +107,7 @@ class CartController extends Controller
             'selected_subtotal_formatted' => number_format($cart->selectedSubtotal()).'đ',
             'count' => $cart->count(),
             'empty' => $cart->items()->isEmpty(),
+            'items_html' => view('partials.mini-cart-items', ['miniCartItems' => $cart->items()])->render(),
         ];
 
         if ($itemId) {

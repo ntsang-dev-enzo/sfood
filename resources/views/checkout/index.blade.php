@@ -80,8 +80,8 @@
                                         <input name="recipient_name" value="{{ old('recipient_name', Auth::user()?->name) }}" placeholder="Ví dụ: Nguyễn Văn A" class="form-control" {{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? '' : 'required' }}>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label small fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
-                                        <input name="phone" value="{{ old('phone', Auth::user()?->phone) }}" placeholder="Ví dụ: 0912345678" class="form-control" {{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? '' : 'required' }}>
+                                        <label class="form-label small fw-semibold">Số điện thoại người nhận <span class="text-danger">*</span></label>
+                                        <input name="phone" value="{{ old('phone', Auth::user()?->phone) }}" placeholder="Số điện thoại nhận hàng (vd: 0912345678)" class="form-control" {{ ($addresses->count() > 0 && !empty($selectedAddrId)) ? '' : 'required' }}>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label small fw-semibold">Địa chỉ cụ thể (Số nhà, đường) <span class="text-danger">*</span></label>
@@ -152,7 +152,7 @@
                             </div>
                             @if ($subtotal < 1000000)
                                 <div class="small text-muted border-top pt-2 mt-2">
-                                    <i class="bi bi-info-circle me-1 text-success"></i>Miễn phí ship nội thành Cần Thơ hoặc đơn từ 1.000.000đ
+                                    <i class="bi bi-info-circle me-1 text-success"></i>Miễn phí ship Quận Ninh Kiều & Quận Cái Răng (Cần Thơ) hoặc đơn từ 1.000.000đ
                                 </div>
                             @endif
                             <div class="d-flex justify-content-between align-items-center fw-bold fs-5 text-dark border-top pt-3 mt-2">
@@ -227,25 +227,48 @@
 
                         {{-- PAYMENT GATEWAY --}}
                         <div class="mb-4">
-                            <label class="form-label small fw-bold text-dark d-flex align-items-center gap-1">
-                                <i class="bi bi-credit-card-2-front text-primary"></i> Phương thức thanh toán
-                            </label>
-                            <div class="d-flex flex-column gap-2">
-                                <div class="form-check p-2.5 border rounded-3 bg-light">
-                                    <input class="form-check-input ms-0 me-2" type="radio" name="payment_gateway" id="pg-cod" value="cod"
-                                           @checked(old('payment_gateway', 'cod') === 'cod')>
-                                    <label class="form-check-label ps-2 cursor-pointer w-100 small fw-semibold text-dark d-flex align-items-center gap-1.5" for="pg-cod">
-                                        <i class="bi bi-cash-stack text-success"></i>
-                                        <span>Tiền mặt (COD)</span>
-                                    </label>
+                            <div class="d-flex justify-content-between align-items-center mb-2.5">
+                                <label class="form-label small fw-bold text-dark d-flex align-items-center gap-1.5 mb-0">
+                                    <i class="bi bi-credit-card-2-front-fill text-success"></i> Phương thức thanh toán
+                                </label>
+                                <span class="badge bg-light text-muted border small fw-normal">An toàn & bảo mật</span>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2.5">
+                                @php $isCod = old('payment_gateway', 'cod') === 'cod'; @endphp
+                                <div class="form-check p-3 border rounded-3 transition payment-method-card cursor-pointer {{ $isCod ? 'border-success bg-white shadow-sm' : 'bg-light' }}">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <input class="form-check-input ms-0 me-0 flex-shrink-0 cursor-pointer" type="radio" name="payment_gateway" id="pg-cod" value="cod"
+                                               @checked($isCod)>
+                                        <div class="rounded-circle bg-success-subtle text-success p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-cash-stack fs-5"></i>
+                                        </div>
+                                        <label class="form-check-label ps-1 cursor-pointer w-100" for="pg-cod">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span class="fw-bold text-dark small">Tiền mặt (COD)</span>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle small">Phổ biến</span>
+                                            </div>
+                                            <div class="small text-muted" style="font-size: 0.78rem;">Thanh toán bằng tiền mặt cho shipper khi nhận hàng tận nơi</div>
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="form-check p-2.5 border rounded-3 bg-light">
-                                    <input class="form-check-input ms-0 me-2" type="radio" name="payment_gateway" id="pg-payos" value="payos"
-                                           @checked(old('payment_gateway') === 'payos')>
-                                    <label class="form-check-label ps-2 cursor-pointer w-100 small fw-semibold text-dark d-flex align-items-center gap-1.5" for="pg-payos">
-                                        <i class="bi bi-qr-code text-primary"></i>
-                                        <span>Chuyển khoản QR (PayOS)</span>
-                                    </label>
+
+                                @php $isPayos = old('payment_gateway') === 'payos'; @endphp
+                                <div class="form-check p-3 border rounded-3 transition payment-method-card cursor-pointer {{ $isPayos ? 'border-success bg-white shadow-sm' : 'bg-light' }}">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <input class="form-check-input ms-0 me-0 flex-shrink-0 cursor-pointer" type="radio" name="payment_gateway" id="pg-payos" value="payos"
+                                               @checked($isPayos)>
+                                        <div class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-qr-code-scan fs-5"></i>
+                                        </div>
+                                        <label class="form-check-label ps-1 cursor-pointer w-100" for="pg-payos">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span class="fw-bold text-dark small">Chuyển khoản QR (PayOS)</span>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">Tự động 24/7</span>
+                                            </div>
+                                            <div class="small text-muted" style="font-size: 0.78rem;">Quét mã VietQR qua app ngân hàng / ví điện tử, duyệt tức thì</div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -301,23 +324,35 @@
             const activeRadio = document.querySelector('input[name="shipping_address_id"]:checked');
             let province = '';
             let district = '';
+            let addressLine = '';
 
             if (activeRadio && activeRadio.value) {
                 province = activeRadio.dataset.city || '';
                 district = activeRadio.dataset.district || '';
+                addressLine = activeRadio.dataset.address || '';
             } else {
                 province = provinceSelect.selectedOptions[0]?.textContent || provinceSelect.value || '';
                 district = districtSelect.selectedOptions[0]?.textContent || districtSelect.value || '';
+                addressLine = document.querySelector('input[name="address_line"]')?.value || '';
             }
 
-            currentShipping = defaultShipping;
-
-            // Free ship nội thành Cần Thơ (Ninh Kiều / Cái Răng)
-            if (
-                province.toLowerCase().includes('cần thơ') &&
-                (district.toLowerCase().includes('ninh kiều') || district.toLowerCase().includes('cái răng'))
-            ) {
+            // Đơn hàng từ 1.000.000đ luôn được miễn phí vận chuyển
+            if (subtotal >= 1000000) {
                 currentShipping = 0;
+            } else {
+                const provNorm = (province || '').toLowerCase();
+                const distNorm = (district || '').toLowerCase();
+                const addrNorm = (addressLine || '').toLowerCase();
+
+                const isCanTho = provNorm.includes('cần thơ') || addrNorm.includes('cần thơ');
+                const isInner = distNorm.includes('ninh kiều') || distNorm.includes('cái răng') || 
+                                addrNorm.includes('ninh kiều') || addrNorm.includes('cái răng');
+
+                if (isCanTho && isInner) {
+                    currentShipping = 0;
+                } else {
+                    currentShipping = 30000;
+                }
             }
 
             shippingDisplay.textContent = currentShipping === 0 ? 'Miễn phí' : formatVnd(currentShipping);
@@ -501,6 +536,39 @@
                 setAddressRequired(true);
                 updateShippingFee();
             }
+        })();
+
+        // Payment Method Card Selection Logic
+        (function() {
+            const updatePaymentMethodMode = (radio) => {
+                document.querySelectorAll('.payment-method-card').forEach(card => {
+                    card.classList.remove('border-success', 'bg-white', 'shadow-sm');
+                    card.classList.add('bg-light');
+                });
+                const parentCard = radio.closest('.payment-method-card');
+                if (parentCard) {
+                    parentCard.classList.remove('bg-light');
+                    parentCard.classList.add('border-success', 'bg-white', 'shadow-sm');
+                }
+            };
+
+            document.querySelectorAll('input[name="payment_gateway"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updatePaymentMethodMode(this);
+                });
+            });
+
+            document.querySelectorAll('.payment-method-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'INPUT') {
+                        const radio = card.querySelector('input[name="payment_gateway"]');
+                        if (radio && !radio.checked) {
+                            radio.checked = true;
+                            radio.dispatchEvent(new Event('change'));
+                        }
+                    }
+                });
+            });
         })();
 
         // Coupon apply/remove logic

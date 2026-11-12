@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/don-hang/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::get('/don-hang/{order}/huy-thanh-toan-qr', [OrderController::class, 'paymentCancel'])->name('orders.payment-cancel');
     Route::post('/don-hang/{order}/doi-sang-cod', [OrderController::class, 'switchToCod'])->name('orders.switch-cod');
+    Route::post('/don-hang/{order}/cap-nhat-dia-chi', [OrderController::class, 'updateAddress'])->name('orders.update-address');
     Route::get('/don-hang/{order}/tiep-tuc-thanh-toan-qr', [OrderController::class, 'repayQr'])->name('orders.repay-qr');
     Route::post('/don-hang/{order}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/don-hang/{order}/hoan-tien', [OrderController::class, 'refund'])->name('orders.refund');

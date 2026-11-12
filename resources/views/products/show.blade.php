@@ -594,6 +594,48 @@
                 }
             });
         }
+
+        // AJAX Add to Cart for product details page
+        const cartForm = document.querySelector('form[action="{{ route('products.add-to-cart', $product) }}"]');
+        if (cartForm) {
+            cartForm.addEventListener('submit', async function (e) {
+                const submitter = e.submitter;
+                if (submitter && submitter.value === 'add') {
+                    e.preventDefault();
+                    const formData = new FormData(cartForm);
+                    formData.set('action', 'add');
+                    const btn = submitter;
+                    btn.disabled = true;
+                    const origHtml = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang thêm...';
+
+                    try {
+                        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const res = await fetch(cartForm.action, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': csrf || ''
+                            },
+                            body: formData
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            if (typeof window.updateMiniCartUI === 'function') window.updateMiniCartUI(data);
+                            if (typeof window.showCartToast === 'function') window.showCartToast(data.message || 'Đã thêm vào giỏ hàng!');
+                        } else if (data && data.message) {
+                            alert(data.message);
+                        }
+                    } catch (err) {
+                        cartForm.submit();
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
+                    }
+                }
+            });
+        }
     })();
 </script>
 @endsection

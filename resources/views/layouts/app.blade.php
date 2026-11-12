@@ -170,6 +170,22 @@
             transform: translateX(4px);
         }
 
+        /* Mini Cart Popup Styling */
+        .cart-popup-menu {
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.14) !important;
+        }
+        .mini-cart-scroll-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .mini-cart-scroll-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .mini-cart-scroll-area::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
         .suggest-dropdown {
             position: absolute;
             top: 100%;
@@ -384,13 +400,21 @@
                         {{-- Popup Giỏ hàng tại nút --}}
                         <div class="dropdown-menu dropdown-menu-end shadow-lg border rounded-4 mt-2 p-0 cart-popup-menu" 
                              aria-labelledby="cartDropdownBtn" 
-                             style="width: 380px; max-width: calc(100vw - 2rem); z-index: 1070;">
+                             style="width: 390px; max-width: calc(100vw - 2rem); z-index: 1070;">
                             <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top-4">
                                 <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-cart3 text-success fs-5"></i>
-                                    <h6 class="fw-bold mb-0 text-dark">Giỏ hàng của bạn</h6>
+                                    <div class="rounded-circle bg-success-subtle text-success p-1.5 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-cart3 fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark small">Giỏ hàng của bạn</h6>
+                                        <small class="text-muted" style="font-size: 0.72rem;">Nông sản sạch SFood</small>
+                                    </div>
                                 </div>
-                                <button type="button" id="mini-cart-clear-all" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;">Xóa tất cả</button>
+                                <button type="button" id="mini-cart-clear-all" class="btn btn-link text-danger p-0 text-decoration-none small d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                    <i class="bi bi-trash3"></i>
+                                    <span>Xóa tất cả</span>
+                                </button>
                             </div>
 
                             @php
@@ -398,22 +422,22 @@
                                 $miniCartSelectedSubtotal = app(\App\Services\CartService::class)->selectedSubtotal();
                             @endphp
 
-                            <div class="overflow-y-auto p-3" style="max-height: 350px;" id="mini-cart-items-container">
+                            <div class="overflow-y-auto px-3 py-2 mini-cart-scroll-area" style="max-height: 330px;" id="mini-cart-items-container">
                                 @include('partials.mini-cart-items', ['miniCartItems' => $miniCartItems])
                             </div>
 
                             <div class="p-3 border-top bg-light rounded-bottom-4" id="mini-cart-footer">
                                 <div class="d-flex justify-content-between align-items-center mb-2.5">
                                     <span class="text-muted small">Tạm tính (đã chọn):</span>
-                                    <h6 class="fw-bold text-danger mb-0" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}₫</h6>
+                                    <h6 class="fw-bold text-danger mb-0 fs-6" id="mini-cart-subtotal">{{ number_format($miniCartSelectedSubtotal) }}₫</h6>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('cart.index') }}" class="btn btn-outline-success w-50 fw-semibold py-2 shadow-xs small text-center text-nowrap">
-                                        Xem giỏ hàng
+                                    <a href="{{ route('cart.index') }}" class="btn btn-outline-success w-50 fw-semibold py-2 rounded-pill shadow-xs small text-center text-nowrap">
+                                        <i class="bi bi-cart2 me-1"></i>Xem giỏ hàng
                                     </a>
                                     <a href="{{ route('checkout.index') }}" id="mini-cart-checkout-btn" 
-                                       class="btn btn-success w-50 fw-bold py-2 shadow-sm small text-center text-nowrap {{ $miniCartSelectedSubtotal > 0 ? '' : 'disabled' }}">
-                                        Thanh toán <i class="bi bi-arrow-right ms-0.5"></i>
+                                       class="btn btn-success w-50 fw-bold py-2 rounded-pill shadow-sm small text-center text-nowrap {{ $miniCartSelectedSubtotal > 0 ? '' : 'disabled' }}">
+                                        <span>Thanh toán</span> <i class="bi bi-arrow-right ms-1"></i>
                                     </a>
                                 </div>
                             </div>
@@ -738,15 +762,15 @@
         </div>
     </div>
 
-    {{-- Toast Thông Báo Thêm Giỏ Hàng --}}
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
-        <div id="cartToast" class="toast align-items-center text-white bg-success border-0 shadow-lg rounded-3" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body d-flex align-items-center gap-2 py-2.5">
+    {{-- Toast Thông Báo Thêm Giỏ Hàng Ở Phía Trên --}}
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1099; margin-top: 10px;">
+        <div id="cartToast" class="toast align-items-center text-white bg-success border-0 shadow-lg rounded-pill px-3 py-1" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="toast-body d-flex align-items-center gap-2 py-1.5 px-1 text-white">
                     <i class="bi bi-check-circle-fill fs-5"></i>
-                    <span id="cartToastMessage" class="fw-semibold small">Đã thêm vào giỏ hàng!</span>
+                    <span id="cartToastMessage" class="fw-bold small">Đã thêm vào giỏ hàng!</span>
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     </div>
@@ -937,18 +961,20 @@
                     else countBadge.classList.add('d-none');
                 });
                 const subtotalEl = document.getElementById('mini-cart-subtotal');
-                if (subtotalEl && data.subtotal !== undefined) {
-                    subtotalEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.subtotal);
+                const selectedSub = (data.selected_subtotal !== undefined) ? data.selected_subtotal : (data.subtotal || 0);
+                if (subtotalEl) {
+                    subtotalEl.textContent = data.selected_subtotal_formatted || (new Intl.NumberFormat('vi-VN').format(selectedSub) + '₫');
                 }
                 const checkoutBtn = document.getElementById('mini-cart-checkout-btn');
                 if (checkoutBtn) {
-                    if (data.subtotal > 0) checkoutBtn.classList.remove('disabled');
+                    if (selectedSub > 0) checkoutBtn.classList.remove('disabled');
                     else checkoutBtn.classList.add('disabled');
                 }
                 if (data.items_html && miniCartContainer) {
                     miniCartContainer.innerHTML = data.items_html;
                 }
             };
+            window.updateMiniCartUI = updateMiniCartUI;
 
             if (miniCartContainer) {
                 miniCartContainer.addEventListener('click', async (e) => {
@@ -1036,6 +1062,7 @@
                 const toast = getCartToast();
                 if (toast) toast.show();
             };
+            window.showCartToast = showCartToast;
 
             // Global delegation for .btn-quick-cart
             document.addEventListener('click', async (e) => {
@@ -1327,7 +1354,9 @@
                 });
             }
 
-
+            @if(session('success') && str_contains(session('success'), 'giỏ hàng'))
+                showCartToast(@json(session('success')));
+            @endif
         });
     </script>
 

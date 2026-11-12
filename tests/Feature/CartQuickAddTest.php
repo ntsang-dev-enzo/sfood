@@ -365,5 +365,384 @@ class CartQuickAddTest extends TestCase
             'product_variant_id' => $variant->id,
         ]);
     }
+
+    public function test_user_can_update_order_shipping_address_only_once(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-ADDR-TEST',
+            'user_id' => $user->id,
+            'subtotal' => 100000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 100000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Nguyễn Văn A',
+                'phone' => '0912345678',
+                'address' => '123 Đường 30/4, Cần Thơ',
+            ],
+        ]);
+
+        $this->assertTrue($order->canUpdateAddress());
+
+        // Lần cập nhật đầu tiên -> thành công
+        $response = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'recipient_name' => 'Nguyễn Văn B',
+            'phone' => '0987654321',
+            'address' => '456 Đường 3/2, Cần Thơ',
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $response->assertSessionHas('address_updated_popup');
+
+        $order->refresh();
+        $this->assertEquals('Nguyễn Văn B', $order->shipping_address['recipient_name']);
+        $this->assertEquals('0987654321', $order->shipping_address['phone']);
+        $this->assertEquals('456 Đường 3/2, Cần Thơ', $order->shipping_address['address']);
+        $this->assertTrue($order->shipping_address['address_updated']);
+        $this->assertFalse($order->canUpdateAddress());
+
+        // Lần cập nhật thứ 2 -> bị từ chối
+        $response2 = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'recipient_name' => 'Nguyễn Văn C',
+            'phone' => '0999999999',
+            'address' => '789 Đường Hòa Bình, Cần Thơ',
+        ]);
+
+        $response2->assertSessionHas('error');
+        $order->refresh();
+        $this->assertEquals('Nguyễn Văn B', $order->shipping_address['recipient_name']);
+
+        // Kiểm tra trang đơn hàng hiển thị huy hiệu 'Đã cập nhật' và ẩn nút 'Đổi địa chỉ'
+        $indexResponse = $this->actingAs($user)->get(route('orders.index'));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('Đã cập nhật');
+        $indexResponse->assertDontSee('data-action-url="' . route('orders.update-address', $order) . '"', false);
+    }
+
+    public function test_user_can_update_order_shipping_address_with_saved_address(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $savedAddr = \App\Models\ShippingAddress::create([
+            'user_id' => $user->id,
+            'recipient_name' => 'Lê Thị Lưu Sẵn',
+            'phone' => '0911223344',
+            'address_line' => '789 Đường 30 Tháng 4',
+            'ward' => 'Phường Hưng Lợi',
+            'district' => 'Quận Ninh Kiều',
+            'city' => 'Cần Thơ',
+            'is_default' => true,
+        ]);
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-SAVED-ADDR',
+            'user_id' => $user->id,
+            'subtotal' => 100000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 100000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Người Cũ',
+                'phone' => '0900000000',
+                'address' => 'Địa chỉ cũ',
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'shipping_address_id' => $savedAddr->id,
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $order->refresh();
+        $this->assertEquals('Lê Thị Lưu Sẵn', $order->shipping_address['recipient_name']);
+        $this->assertEquals('0911223344', $order->shipping_address['phone']);
+        $this->assertStringContainsString('789 Đường 30 Tháng 4', $order->shipping_address['address']);
+        $this->assertTrue($order->shipping_address['address_updated']);
+    }
+
+    public function test_user_can_update_order_shipping_address_with_manual_city_district(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-MANUAL-ADDR',
+            'user_id' => $user->id,
+            'subtotal' => 100000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 100000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Người Cũ',
+                'phone' => '0900000000',
+                'address' => 'Địa chỉ cũ',
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'recipient_name' => 'Phạm Văn Mới',
+            'phone' => '0988112233',
+            'address_line' => 'Số 10 Lý Tự Trọng',
+            'ward' => 'Phường An Cư',
+            'district' => 'Quận Ninh Kiều',
+            'city' => 'Thành phố Cần Thơ',
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $order->refresh();
+        $this->assertEquals('Phạm Văn Mới', $order->shipping_address['recipient_name']);
+        $this->assertEquals('0988112233', $order->shipping_address['phone']);
+        $this->assertEquals('Số 10 Lý Tự Trọng, Phường An Cư, Quận Ninh Kiều, Thành phố Cần Thơ', $order->shipping_address['address']);
+        $this->assertTrue($order->shipping_address['address_updated']);
+    }
+
+    public function test_user_can_switch_payment_to_cod_only_once(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-SWITCH-TEST',
+            'user_id' => $user->id,
+            'subtotal' => 150000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 150000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Trần Thị C',
+                'phone' => '0901234567',
+                'address' => '100 Mậu Thân, Cần Thơ',
+            ],
+        ]);
+
+        $order->payment()->create([
+            'gateway' => 'payos',
+            'status' => 'pending',
+            'amount' => 150000,
+            'transaction_id' => 'PAYOS_' . $order->order_code,
+        ]);
+
+        $this->assertTrue($order->canSwitchPayment());
+
+        // Lần đổi sang COD đầu tiên -> thành công
+        $response = $this->actingAs($user)->post(route('orders.switch-cod', $order));
+        $response->assertRedirect(route('orders.index'));
+        $response->assertSessionHas('payment_switched_popup');
+
+        $order->refresh();
+        $this->assertEquals('cod', $order->payment->gateway);
+        $this->assertTrue($order->shipping_address['payment_switched']);
+        $this->assertFalse($order->canSwitchPayment());
+
+        // Lần đổi tiếp theo -> bị từ chối
+        $response2 = $this->actingAs($user)->post(route('orders.switch-cod', $order));
+        $response2->assertSessionHas('error');
+
+        // Kiểm tra view: nút đổi sang COD đã bị ẩn
+        $indexResponse = $this->actingAs($user)->get(route('orders.index'));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertDontSee('switch-cod-form-' . $order->id);
+    }
+
+    public function test_updating_shipping_address_to_outside_can_tho_recalculates_and_adds_shipping_fee(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-SHIP-TEST1',
+            'user_id' => $user->id,
+            'subtotal' => 200000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 200000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Nguyễn Cần Thơ',
+                'phone' => '0912345678',
+                'city' => 'Thành phố Cần Thơ',
+                'district' => 'Quận Ninh Kiều',
+                'address' => '123 Đường 30/4, Quận Ninh Kiều, Cần Thơ',
+            ],
+        ]);
+
+        $order->payment()->create([
+            'gateway' => 'cod',
+            'status' => 'pending',
+            'amount' => 200000,
+            'transaction_id' => 'COD_' . $order->order_code,
+        ]);
+
+        // Đổi sang TP. Hồ Chí Minh (ngoài Ninh Kiều / Cái Răng) -> cộng 30.000đ tiền ship
+        $response = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'recipient_name' => 'Nguyễn Sài Gòn',
+            'phone' => '0987654321',
+            'address_line' => '123 Nguyễn Thị Minh Khai',
+            'ward' => 'Phường Bến Nghé',
+            'district' => 'Quận 1',
+            'city' => 'Thành phố Hồ Chí Minh',
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $response->assertSessionHas('address_updated_popup');
+
+        $order->refresh();
+        $this->assertEquals(30000, (float) $order->shipping_fee);
+        $this->assertEquals(230000, (float) $order->total_amount);
+        $this->assertEquals(230000, (float) $order->payment->amount);
+        $this->assertStringContainsString('Thành phố Hồ Chí Minh', $order->shipping_address['address']);
+    }
+
+    public function test_updating_shipping_address_to_inner_can_tho_sets_shipping_fee_free(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-SHIP-TEST2',
+            'user_id' => $user->id,
+            'subtotal' => 200000,
+            'shipping_fee' => 30000,
+            'discount_amount' => 0,
+            'total_amount' => 230000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Nguyễn Hà Nội',
+                'phone' => '0912345678',
+                'city' => 'Hà Nội',
+                'district' => 'Quận Cầu Giấy',
+                'address' => '123 Cầu Giấy, Hà Nội',
+            ],
+        ]);
+
+        $order->payment()->create([
+            'gateway' => 'cod',
+            'status' => 'pending',
+            'amount' => 230000,
+            'transaction_id' => 'COD_' . $order->order_code,
+        ]);
+
+        // Đổi sang Quận Cái Răng (Cần Thơ) -> phí ship về 0đ (miễn phí)
+        $response = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'recipient_name' => 'Nguyễn Cái Răng',
+            'phone' => '0987654321',
+            'address_line' => '456 Đường Phạm Hùng',
+            'ward' => 'Phường Lê Bình',
+            'district' => 'Quận Cái Răng',
+            'city' => 'Thành phố Cần Thơ',
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $order->refresh();
+        $this->assertEquals(0, (float) $order->shipping_fee);
+        $this->assertEquals(200000, (float) $order->total_amount);
+        $this->assertEquals(200000, (float) $order->payment->amount);
+    }
+
+    public function test_order_over_1m_remains_free_shipping_even_when_changing_city(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-SHIP-TEST3',
+            'user_id' => $user->id,
+            'subtotal' => 1200000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 1200000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Khách VIP',
+                'phone' => '0912345678',
+                'city' => 'Cần Thơ',
+                'district' => 'Ninh Kiều',
+                'address' => 'Ninh Kiều, Cần Thơ',
+            ],
+        ]);
+
+        $order->payment()->create([
+            'gateway' => 'cod',
+            'status' => 'pending',
+            'amount' => 1200000,
+            'transaction_id' => 'COD_' . $order->order_code,
+        ]);
+
+        // Đơn >= 1.000.000đ khi đổi sang tỉnh thành khác vẫn được miễn phí ship
+        $response = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'recipient_name' => 'Khách VIP',
+            'phone' => '0912345678',
+            'address_line' => '100 Lê Duẩn',
+            'ward' => 'Phường Bến Nghé',
+            'district' => 'Quận 1',
+            'city' => 'Thành phố Hồ Chí Minh',
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $order->refresh();
+        $this->assertEquals(0, (float) $order->shipping_fee);
+        $this->assertEquals(1200000, (float) $order->total_amount);
+        $this->assertEquals(1200000, (float) $order->payment->amount);
+    }
+
+    public function test_updating_shipping_address_with_saved_address_outside_can_tho_adds_shipping_fee(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $savedAddrHcm = \App\Models\ShippingAddress::create([
+            'user_id' => $user->id,
+            'recipient_name' => 'Trần Thị Sài Gòn',
+            'phone' => '0933445566',
+            'address_line' => '12 Nguyễn Huệ',
+            'ward' => 'Phường Bến Nghé',
+            'district' => 'Quận 1',
+            'city' => 'Thành phố Hồ Chí Minh',
+            'is_default' => false,
+        ]);
+
+        $order = \App\Models\Order::create([
+            'order_code' => 'ORD-SHIP-SAVED',
+            'user_id' => $user->id,
+            'subtotal' => 250000,
+            'shipping_fee' => 0,
+            'discount_amount' => 0,
+            'total_amount' => 250000,
+            'order_status' => 'pending',
+            'payment_status' => 'pending',
+            'shipping_address' => [
+                'recipient_name' => 'Người Ninh Kiều',
+                'phone' => '0901112233',
+                'city' => 'Cần Thơ',
+                'district' => 'Ninh Kiều',
+                'address' => '30/4 Ninh Kiều Cần Thơ',
+            ],
+        ]);
+
+        $order->payment()->create([
+            'gateway' => 'cod',
+            'status' => 'pending',
+            'amount' => 250000,
+            'transaction_id' => 'COD_' . $order->order_code,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('orders.update-address', $order), [
+            'shipping_address_id' => $savedAddrHcm->id,
+        ]);
+
+        $response->assertRedirect(route('orders.index'));
+        $order->refresh();
+        $this->assertEquals(30000, (float) $order->shipping_fee);
+        $this->assertEquals(280000, (float) $order->total_amount);
+        $this->assertEquals(280000, (float) $order->payment->amount);
+        $this->assertStringContainsString('Thành phố Hồ Chí Minh', $order->shipping_address['address']);
+    }
 }
 
