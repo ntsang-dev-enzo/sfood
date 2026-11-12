@@ -5,7 +5,8 @@
 
     RewriteEngine On
 # Serve Laravel public assets
-RewriteRule ^(css|js|build|fonts|images|storage)/(.*)$ public/$1/$2 [L]
+RewriteRule ^(css|js|build|fonts|images|storage|bootstrap)/(.*)$ public/$1/$2 [L]
+RewriteRule ^logo\.png$ public/logo.png [L]
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
