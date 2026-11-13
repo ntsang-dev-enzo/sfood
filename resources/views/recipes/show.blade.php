@@ -98,7 +98,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="fw-bold text-danger small">{{ number_format($itemPrice) }}đ</span>
-                                        <form method="POST" action="{{ route('products.add-to-cart', $v->product->slug) }}">
+                                        <form method="POST" action="{{ route('products.add-to-cart', ['product' => $v->product->slug]) }}">
                                             @csrf
                                             <input type="hidden" name="variant_id" value="{{ $v->id }}">
                                             <input type="hidden" name="quantity" value="{{ $qty }}">

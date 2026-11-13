@@ -215,14 +215,14 @@
                         {{-- ACTION BUTTONS --}}
                         <div class="row g-2 pt-2">
                             <div class="col-sm-5">
-                                <button type="submit" name="action" value="add"
+                                <button type="submit" name="cart_action" value="add"
                                     class="btn btn-outline-success w-100 py-3 fw-bold rounded-pill d-flex align-items-center justify-content-center gap-2 shadow-sm">
                                     <i class="bi bi-cart-plus fs-5"></i>
                                     <span>{{ __('app.add_to_cart') }}</span>
                                 </button>
                             </div>
                             <div class="col-sm-5">
-                                <button type="submit" name="action" value="buy_now"
+                                <button type="submit" name="cart_action" value="buy_now"
                                     class="btn btn-success w-100 py-3 fw-bold rounded-pill d-flex align-items-center justify-content-center gap-2 shadow-sm">
                                     <i class="bi bi-lightning-charge-fill"></i>
                                     <span>{{ __('app.buy_now') }}</span>
@@ -603,7 +603,7 @@
                 if (submitter && submitter.value === 'add') {
                     e.preventDefault();
                     const formData = new FormData(cartForm);
-                    formData.set('action', 'add');
+                    formData.set('cart_action', 'add');
                     const btn = submitter;
                     btn.disabled = true;
                     const origHtml = btn.innerHTML;

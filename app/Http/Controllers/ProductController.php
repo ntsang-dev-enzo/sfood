@@ -169,7 +169,7 @@ class ProductController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        if ($request->input('action') === 'buy_now') {
+        if ($request->input('cart_action') === 'buy_now') {
             return redirect()->route('checkout.index');
         }
 
