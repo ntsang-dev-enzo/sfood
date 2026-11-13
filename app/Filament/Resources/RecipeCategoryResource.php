@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Authorization\AdminAuthorization as Authz;
 use App\Filament\Resources\RecipeCategoryResource\Pages;
 use App\Filament\Resources\RecipeCategoryResource\RelationManagers;
 use App\Models\RecipeCategory;
@@ -17,18 +18,25 @@ class RecipeCategoryResource extends Resource
 {
     protected static ?string $model = RecipeCategory::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
+
+    protected static ?string $navigationGroup = 'Nội dung';
+
+    protected static ?string $modelLabel = 'Danh mục công thức';
+    protected static ?string $pluralModelLabel = 'Danh mục công thức';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Tên danh mục')
                     ->required()
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => $operation === 'create' ? $set('slug', \Illuminate\Support\Str::slug($state)) : null),
                 Forms\Components\TextInput::make('slug')
+                    ->label('Đường dẫn (slug)')
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
@@ -40,14 +48,18 @@ class RecipeCategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Tên danh mục')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('slug')
+                    ->label('Đường dẫn')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Ngày tạo')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Cập nhật lúc')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -63,6 +75,26 @@ class RecipeCategoryResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Authz::canManageCatalog();
+    }
+
+    public static function canCreate(): bool
+    {
+        return Authz::canManageCatalog();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Authz::canManageCatalog();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Authz::isAdmin();
     }
 
     public static function getRelations(): array
