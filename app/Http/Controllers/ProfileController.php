@@ -129,18 +129,31 @@ class ProfileController extends Controller
                 'regex:/^0[0-9]{9}$/',
                 \Illuminate\Validation\Rule::unique('users', 'phone')->ignore($user->id),
             ],
-            'avatar' => 'nullable|image|max:2048',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
         ], [
             'name.required' => 'Vui lòng nhập họ và tên.',
             'phone.regex' => 'Số điện thoại không hợp lệ (gồm 10 chữ số, bắt đầu bằng số 0).',
             'phone.unique' => 'Số điện thoại này đã được sử dụng bởi tài khoản khác. Mỗi số điện thoại chỉ được dùng cho 1 tài khoản.',
+            'avatar.image' => 'Tệp tải lên phải là hình ảnh.',
+            'avatar.mimes' => 'Ảnh đại diện phải có định dạng: jpeg, png, jpg, webp, gif.',
+            'avatar.max' => 'Dung lượng ảnh đại diện không được vượt quá 5MB.',
         ]);
 
         if ($request->hasFile('avatar')) {
-            if ($user->avatar && ! str_starts_with($user->avatar, 'http')) {
-                \Storage::disk('public')->delete($user->avatar);
+            $avatarFile = $request->file('avatar');
+            if ($avatarFile && $avatarFile->isValid()) {
+                if ($user->avatar && ! str_starts_with($user->avatar, 'http')) {
+                    try {
+                        \Storage::disk('public')->delete($user->avatar);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('Delete old avatar warning: ' . $e->getMessage());
+                    }
+                }
+                $storedPath = $avatarFile->store('avatars', 'public');
+                if ($storedPath) {
+                    $data['avatar'] = $storedPath;
+                }
             }
-            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         } else {
             unset($data['avatar']);
         }

@@ -24,6 +24,11 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(Login::class, MergeGuestCart::class);
 
+        // Tự động xóa file public/hot nếu được đưa lên môi trường hosting/domain thực tế
+        if (file_exists(public_path('hot')) && ! in_array(request()->getHost(), ['localhost', '127.0.0.1', '::1'])) {
+            @unlink(public_path('hot'));
+        }
+
         View::composer('layouts.app', function ($view) {
             $view->with([
                 'cartCount' => app(CartService::class)->count(),

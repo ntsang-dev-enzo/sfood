@@ -744,5 +744,49 @@ class CartQuickAddTest extends TestCase
         $this->assertEquals(280000, (float) $order->payment->amount);
         $this->assertStringContainsString('Thành phố Hồ Chí Minh', $order->shipping_address['address']);
     }
+
+    public function test_user_can_upload_avatar_and_access_it(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $user = \App\Models\User::factory()->create();
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('my_avatar.jpg', 100, 'image/jpeg');
+
+        $response = $this->actingAs($user)->put(route('profile.update'), [
+            'name' => 'Nguyễn Có Avatar',
+            'phone' => '0912345678',
+            'avatar' => $file,
+        ]);
+
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertNotNull($user->avatar);
+        $this->assertStringStartsWith('avatars/', $user->avatar);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($user->avatar);
+    }
+
+    public function test_storage_fallback_route_serves_public_storage_files(): void
+    {
+        $testDir = storage_path('app/public');
+        if (! is_dir($testDir)) {
+            mkdir($testDir, 0755, true);
+        }
+        $filePath = $testDir . '/test_avatar_fallback.txt';
+        file_put_contents($filePath, 'sfood storage fallback');
+
+        $response = $this->get('/storage/test_avatar_fallback.txt');
+        $response->assertStatus(200);
+
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+    }
+
+    public function test_build_fallback_route_serves_manifest(): void
+    {
+        $response = $this->get('/build/manifest.json');
+        $response->assertStatus(200);
+    }
 }
 

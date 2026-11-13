@@ -15,25 +15,42 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-3">
+                <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-2"></i>Vui lòng kiểm tra lại thông tin:</div>
+                <ul class="mb-0 ps-3 small">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             
             <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 mb-4">
-                <img src="{{ MediaHelper::avatar($user->avatar, $user->name) }}" 
+                <img id="avatar-preview-img" src="{{ MediaHelper::avatar($user->avatar, $user->name) }}" 
                      class="rounded-circle object-fit-cover border border-3 border-success-subtle shadow-sm" 
                      style="width: 80px; height: 80px;" alt="{{ $user->name }}">
                 <div>
                     <label class="form-label small fw-semibold text-dark mb-1">Ảnh đại diện mới</label>
-                    <input type="file" name="avatar" accept="image/*" class="form-control form-control-sm">
-                    <small class="text-muted">Định dạng JPG, PNG, WEBP tối đa 2MB.</small>
+                    <input type="file" id="avatar-input" name="avatar" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" class="form-control form-control-sm @error('avatar') is-invalid @enderror">
+                    <small class="text-muted">Định dạng JPG, PNG, WEBP tối đa 5MB.</small>
+                    @error('avatar')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold text-dark">Họ và tên <span class="text-danger">*</span></label>
-                    <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="form-control">
+                    <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="form-control @error('name') is-invalid @enderror">
+                    @error('name')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold text-dark">Email đăng nhập</label>
@@ -41,7 +58,10 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold text-dark">Số điện thoại</label>
-                    <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="form-control" placeholder="Chưa cập nhật">
+                    <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="form-control @error('phone') is-invalid @enderror" placeholder="Chưa cập nhật">
+                    @error('phone')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold text-dark">Điểm thưởng hiện có</label>
@@ -98,4 +118,30 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const avatarInput = document.getElementById('avatar-input');
+        const previewImg = document.getElementById('avatar-preview-img');
+        if (avatarInput && previewImg) {
+            avatarInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Dung lượng tệp vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.');
+                        this.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+@endpush
 @endsection

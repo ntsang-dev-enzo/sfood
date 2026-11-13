@@ -7,7 +7,7 @@
     <title>@yield('title', 'SFood - Nông Sản & Thực Phẩm Tươi Sống')</title>
     <meta name="description" content="SFood - Cửa hàng thực phẩm tươi sống, nông sản hữu cơ đạt chuẩn VietGAP, giao hàng nhanh trong ngày.">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

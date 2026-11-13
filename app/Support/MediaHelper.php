@@ -11,7 +11,7 @@ class MediaHelper
                 return $thumbnail;
             }
 
-            if (file_exists(public_path('storage/' . $thumbnail))) {
+            if (file_exists(public_path('storage/' . $thumbnail)) || file_exists(storage_path('app/public/' . $thumbnail))) {
                 return asset('storage/' . $thumbnail);
             }
         }
@@ -42,7 +42,7 @@ class MediaHelper
                 return $thumbnail;
             }
 
-            if (file_exists(public_path('storage/' . $thumbnail))) {
+            if (file_exists(public_path('storage/' . $thumbnail)) || file_exists(storage_path('app/public/' . $thumbnail))) {
                 return asset('storage/' . $thumbnail);
             }
         }
@@ -64,7 +64,7 @@ class MediaHelper
                 return $path;
             }
 
-            if (file_exists(public_path('storage/' . $path))) {
+            if (file_exists(public_path('storage/' . $path)) || file_exists(storage_path('app/public/' . $path))) {
                 return asset('storage/' . $path);
             }
         }
@@ -85,7 +85,7 @@ class MediaHelper
                 return $avatar;
             }
 
-            if (file_exists(public_path('storage/' . $avatar))) {
+            if (file_exists(public_path('storage/' . $avatar)) || file_exists(storage_path('app/public/' . $avatar))) {
                 return asset('storage/' . $avatar);
             }
         }

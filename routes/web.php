@@ -119,3 +119,26 @@ Route::post('/dang-xuat', [AuthController::class, 'logout'])->name('logout')->mi
 
 Route::get('/payment/callback/{gateway}', [PaymentController::class, 'callback'])->name('payment.callback');
 Route::post('/payment/webhook/payos', [PaymentController::class, 'payosWebhook'])->name('payment.payos.webhook');
+
+// Fallback phục vụ file public storage khi symlink public/storage trên host bị hỏng hoặc chưa chạy storage:link
+Route::get('/storage/{path}', function (string $path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (! file_exists($fullPath) || is_dir($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.fallback');
+
+// Fallback phục vụ assets build khi document root trên host trỏ vào thư mục gốc thay vì /public
+Route::get('/build/{path}', function (string $path) {
+    $fullPath = public_path('build/' . $path);
+    if (! file_exists($fullPath) || is_dir($fullPath)) {
+        abort(404);
+    }
+    $mime = str_ends_with($path, '.css') ? 'text/css' : (str_ends_with($path, '.js') ? 'application/javascript' : null);
+    $headers = ['Cache-Control' => 'public, max-age=31536000'];
+    if ($mime) {
+        $headers['Content-Type'] = $mime;
+    }
+    return response()->file($fullPath, $headers);
+})->where('path', '.*')->name('build.fallback');
