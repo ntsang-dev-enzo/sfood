@@ -142,3 +142,18 @@ Route::get('/build/{path}', function (string $path) {
     }
     return response()->file($fullPath, $headers);
 })->where('path', '.*')->name('build.fallback');
+
+// Route phục vụ favicon.ico đảm bảo luôn trả về icon dù host cấu hình thư mục nào
+Route::get('/favicon.ico', function () {
+    $path = public_path('favicon.ico');
+    if (! file_exists($path)) {
+        $path = base_path('favicon.ico');
+    }
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'image/x-icon',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+    abort(404);
+});

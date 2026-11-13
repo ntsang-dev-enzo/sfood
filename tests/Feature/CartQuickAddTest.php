@@ -788,5 +788,12 @@ class CartQuickAddTest extends TestCase
         $response = $this->get('/build/manifest.json');
         $response->assertStatus(200);
     }
+
+    public function test_favicon_route_serves_icon(): void
+    {
+        $response = $this->get('/favicon.ico');
+        $response->assertStatus(200);
+        $this->assertEquals('image/x-icon', $response->headers->get('Content-Type'));
+    }
 }
 
